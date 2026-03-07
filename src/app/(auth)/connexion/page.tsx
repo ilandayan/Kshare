@@ -9,7 +9,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff, Store, Users } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff, Store, Users, ShieldCheck } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -39,6 +39,15 @@ const VARIANTS = {
     signupHref: "/inscription-association",
     signupLabel: "Créer un compte",
   },
+  admin: {
+    icon: ShieldCheck,
+    iconBg: "bg-[#3744C8]",
+    title: "Administration",
+    subtitle: "Accès réservé aux administrateurs",
+    btnGradient: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)",
+    signupHref: null,
+    signupLabel: null,
+  },
 } as const;
 
 type RoleKey = keyof typeof VARIANTS;
@@ -48,7 +57,10 @@ export default function ConnexionPage() {
   const searchParams = useSearchParams();
 
   const rawRole = searchParams.get("role") ?? "commerce";
-  const role: RoleKey = rawRole === "association" ? "association" : "commerce";
+  const role: RoleKey =
+    rawRole === "association" ? "association"
+    : rawRole === "admin"     ? "admin"
+    : "commerce";
   const v = VARIANTS[role];
   const IconComponent = v.icon;
 
@@ -224,13 +236,15 @@ export default function ConnexionPage() {
             {/* Divider */}
             <div className="my-6 border-t border-[#e2e5f0]" />
 
-            {/* Sign up link */}
-            <p className="text-center text-sm text-gray-500">
-              Pas encore de compte ?{" "}
-              <Link href={v.signupHref} className="text-[#3744C8] font-semibold hover:underline">
-                {v.signupLabel}
-              </Link>
-            </p>
+            {/* Sign up link — masqué pour l'admin */}
+            {v.signupHref && (
+              <p className="text-center text-sm text-gray-500">
+                Pas encore de compte ?{" "}
+                <Link href={v.signupHref} className="text-[#3744C8] font-semibold hover:underline">
+                  {v.signupLabel}
+                </Link>
+              </p>
+            )}
           </div>
 
           {/* CGU */}

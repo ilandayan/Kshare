@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -31,10 +31,26 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Public routes — always accessible
-  const publicRoutes = ["/", "/contact", "/cgu", "/confidentialite", "/connexion", "/inscription-commercant", "/inscription-association"];
-  const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith("/api/stripe/webhook"));
+  // ── Routes publiques — toujours accessibles ──────────────────
+  const publicPrefixes = [
+    "/",
+    "/notre-mission",
+    "/je-suis-client",
+    "/contact",
+    "/cgu",
+    "/confidentialite",
+    "/connexion",
+    "/inscription-commercant",
+    "/inscription-association",
+    "/mot-de-passe-oublie",
+    "/api/stripe/webhook",
+  ];
 
+  const isPublicRoute = publicPrefixes.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  // Utilisateur non connecté → rediriger vers connexion si route protégée
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
@@ -42,7 +58,6 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user) {
-    // Get user role from profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -51,28 +66,28 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role;
 
-    // Shop routes — commerce only
+    // Shop routes — commerce uniquement
     if (pathname.startsWith("/shop") && role !== "commerce") {
-      return NextResponse.redirect(new URL("/connexion", request.url));
+      return NextResponse.redirect(new URL("/connexion?role=commerce", request.url));
     }
 
-    // Asso routes — association only
+    // Asso routes — association uniquement
     if (pathname.startsWith("/asso") && role !== "association") {
-      return NextResponse.redirect(new URL("/connexion", request.url));
+      return NextResponse.redirect(new URL("/connexion?role=association", request.url));
     }
 
-    // Admin routes — admin only
+    // Admin routes — admin uniquement
     if (pathname.startsWith("/kshare-admin") && role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Redirect logged-in users away from auth pages
+    // Utilisateur connecté sur /connexion → rediriger vers son espace
     if (pathname === "/connexion" && role) {
       const redirectMap: Record<string, string> = {
-        commerce: "/shop/dashboard",
+        commerce:    "/shop/dashboard",
         association: "/asso/paniers-dons",
-        admin: "/kshare-admin",
-        client: "/",
+        admin:       "/kshare-admin",
+        client:      "/",
       };
       return NextResponse.redirect(
         new URL(redirectMap[role] ?? "/", request.url)
