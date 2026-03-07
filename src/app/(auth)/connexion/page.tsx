@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff, Store } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff, Store, Users } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -19,9 +19,40 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+/* ── Variant config ─────────────────────────────────────────── */
+const VARIANTS = {
+  commerce: {
+    icon: Store,
+    iconBg: "bg-[#3744C8]",
+    title: "Espace Commerçant",
+    subtitle: "Connectez-vous pour gérer vos paniers",
+    btnGradient: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)",
+    signupHref: "/inscription-commercant",
+    signupLabel: "Créer un compte",
+  },
+  association: {
+    icon: Users,
+    iconBg: "bg-gradient-to-br from-purple-500 to-pink-500",
+    title: "Espace Association",
+    subtitle: "Connectez-vous pour distribuer des paniers",
+    btnGradient: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+    signupHref: "/inscription-association",
+    signupLabel: "Créer un compte",
+  },
+} as const;
+
+type RoleKey = keyof typeof VARIANTS;
+
 export default function ConnexionPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+
+  const rawRole = searchParams.get("role") ?? "commerce";
+  const role: RoleKey = rawRole === "association" ? "association" : "commerce";
+  const v = VARIANTS[role];
+  const IconComponent = v.icon;
+
+  const [loading, setLoading]           = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -83,9 +114,9 @@ export default function ConnexionPage() {
 
             {/* Header */}
             <div className="flex flex-col items-center mb-8">
-              {/* Store icon */}
-              <div className="w-14 h-14 bg-[#3744C8] rounded-2xl flex items-center justify-center shadow-sm mb-4">
-                <Store className="h-7 w-7 text-white" />
+              {/* Role icon */}
+              <div className={`w-14 h-14 ${v.iconBg} rounded-2xl flex items-center justify-center shadow-sm mb-4`}>
+                <IconComponent className="h-7 w-7 text-white" />
               </div>
 
               {/* Kshare logo */}
@@ -96,8 +127,8 @@ export default function ConnexionPage() {
                 <span className="font-bold text-gray-900 text-lg">Kshare</span>
               </div>
 
-              <h1 className="text-xl font-bold text-gray-900 mb-1">Espace Commerçant</h1>
-              <p className="text-sm text-gray-400">Connectez-vous pour gérer vos paniers</p>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">{v.title}</h1>
+              <p className="text-sm text-gray-400">{v.subtitle}</p>
             </div>
 
             {/* Form */}
@@ -176,8 +207,8 @@ export default function ConnexionPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-xl font-semibold text-sm shadow-sm mt-1"
-                style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)" }}
+                className="w-full h-11 rounded-xl font-semibold text-sm text-white shadow-sm mt-1 border-0"
+                style={{ background: v.btnGradient }}
               >
                 {loading ? (
                   <>
@@ -196,8 +227,8 @@ export default function ConnexionPage() {
             {/* Sign up link */}
             <p className="text-center text-sm text-gray-500">
               Pas encore de compte ?{" "}
-              <Link href="/inscription-commercant" className="text-[#3744C8] font-semibold hover:underline">
-                Créer un compte
+              <Link href={v.signupHref} className="text-[#3744C8] font-semibold hover:underline">
+                {v.signupLabel}
               </Link>
             </p>
           </div>
