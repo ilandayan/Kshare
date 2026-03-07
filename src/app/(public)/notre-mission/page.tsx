@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicNavbar } from "@/components/shared/public-navbar";
+import { KshareLogo } from "@/components/shared/kshare-logo";
 import {
   Sparkles,
   TrendingDown,
@@ -277,13 +278,10 @@ export default function NotreMissionPage() {
       <footer className="bg-[#0F1B40] text-white pt-14 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-blue-200 gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-[#3744C8] font-bold text-sm leading-none">K</span>
-              </div>
-              <span className="font-semibold">Kshare</span>
+            <div className="flex items-center gap-3">
+              <KshareLogo size={28} variant="white" />
               <span className="text-blue-300">·</span>
-              <span>© 2024 Tous droits réservés.</span>
+              <span>© 2025 Tous droits réservés.</span>
             </div>
             <a href="mailto:contact@k-share.fr" className="flex items-center gap-1.5 hover:text-white transition-colors">
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
