@@ -1,65 +1,61 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ShoppingBag, BarChart3, User, LogOut, Wallet, CreditCard } from "lucide-react";
-
-const navItems = [
-  { href: "/shop/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/shop/paniers", label: "Mes paniers", icon: ShoppingBag },
-  { href: "/shop/statistiques", label: "Statistiques", icon: BarChart3 },
-  { href: "/shop/stripe-connect", label: "Paiements", icon: Wallet },
-  { href: "/shop/abonnement", label: "Abonnement", icon: CreditCard },
-  { href: "/shop/profil", label: "Profil", icon: User },
-];
+import { ShopTopNav } from "@/components/shop/shop-top-nav";
+import { ShopUserMenu } from "@/components/shop/shop-user-menu";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion?role=commerce");
 
-  if (!user) redirect("/connexion");
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, full_name")
+    .eq("id", user.id)
+    .single();
 
-  const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single();
-  if (profile?.role !== "commerce") redirect("/connexion");
+  if (profile?.role !== "commerce") redirect("/connexion?role=commerce");
 
-  const { data: commerce } = await supabase.from("commerces").select("name, status").eq("profile_id", user.id).single();
+  const { data: commerce } = await supabase
+    .from("commerces")
+    .select("name, status")
+    .eq("profile_id", user.id)
+    .single();
+
+  const commerceName = commerce?.name ?? "Mon commerce";
+  const userInitial = (profile?.full_name ?? commerceName).charAt(0).toUpperCase();
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-sidebar flex flex-col shrink-0">
-        <div className="p-6 border-b border-sidebar-border">
-          <Link href="/" className="text-xl font-bold text-primary">Kshare</Link>
-          <p className="text-sm text-sidebar-foreground/70 mt-1 font-medium truncate">{commerce?.name ?? "Mon commerce"}</p>
-          {commerce?.status === "pending" && (
-            <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-0.5 rounded-full mt-1 inline-block">
-              En attente de validation
-            </span>
-          )}
+    <div className="min-h-screen bg-[#F4F5F9] flex flex-col">
+      {/* ── Top header ── */}
+      <header className="bg-white border-b border-[#e2e5f0] sticky top-0 z-40">
+        <div className="px-6 h-16 flex items-center justify-between">
+          <Link href="/shop/dashboard" className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#3744C8] rounded-xl flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-lg leading-none">K</span>
+            </div>
+            <div>
+              <div className="font-bold text-gray-900 text-base leading-tight">Kshare</div>
+              <div className="text-xs text-gray-400 leading-tight">Espace Commerçant</div>
+            </div>
+          </Link>
+          <ShopUserMenu commerceName={commerceName} userInitial={userInitial} />
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-sidebar-border">
-          <form action="/api/auth/signout" method="POST">
-            <Button variant="ghost" size="sm" className="w-full justify-start text-sidebar-foreground" type="submit">
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </Button>
-          </form>
+      </header>
+
+      {/* ── Tab navigation ── */}
+      <ShopTopNav />
+
+      {/* ── Pending validation banner ── */}
+      {commerce?.status === "pending" && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-sm text-amber-800">
+          ⚠️ Votre compte est en attente de validation. Vous ne pouvez pas encore publier de paniers.
         </div>
-      </aside>
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      )}
+
+      {/* ── Content ── */}
+      <main className="flex-1 p-6">
         {children}
       </main>
     </div>

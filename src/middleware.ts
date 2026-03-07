@@ -85,7 +85,7 @@ export async function middleware(request: NextRequest) {
     if (pathname === "/connexion" && role) {
       const redirectMap: Record<string, string> = {
         commerce:    "/shop/dashboard",
-        association: "/asso/paniers-dons",
+        association: "/asso/dashboard",
         admin:       "/kshare-admin",
         client:      "/",
       };

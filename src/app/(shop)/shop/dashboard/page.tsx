@@ -1,150 +1,181 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { ShoppingBag, TrendingUp, Euro, Plus } from "lucide-react";
-import { BASKET_STATUS_LABELS } from "@/lib/constants";
+import { DashboardCharts } from "@/components/shop/dashboard-charts";
+import { TrendingUp, ShoppingBag, Heart, Euro } from "lucide-react";
 
-export default async function DashboardPage() {
+/* ── Period helpers ────────────────────────────────────────────── */
+function getPeriodStart(period: string): Date {
+  const now = new Date();
+  if (period === "month") {
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  if (period === "3months") {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - 3);
+    return d;
+  }
+  // week: Monday of current week
+  const d = new Date(now);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const TYPE_COLORS: Record<string, string> = {
+  bassari: "#3744C8",
+  halavi:  "#10b981",
+  parve:   "#f59e0b",
+  shabbat: "#8b5cf6",
+  mix:     "#ec4899",
+};
+const TYPE_EMOJIS: Record<string, string> = {
+  bassari: "🥩", halavi: "🧀", parve: "🌿", shabbat: "🍷", mix: "➕",
+};
+
+/* ── Page ──────────────────────────────────────────────────────── */
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
+  const { period: rawPeriod } = await searchParams;
+  const period = rawPeriod ?? "week";
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connexion");
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, name, status, commission_rate")
+    .select("id, name, commission_rate")
     .eq("profile_id", user.id)
     .single();
-
   if (!commerce) redirect("/inscription-commercant");
 
-  // Fetch today's baskets
-  const { data: baskets } = await supabase
-    .from("baskets")
-    .select("*")
-    .eq("commerce_id", commerce.id)
-    .in("day", ["today", "tomorrow"])
-    .neq("status", "disabled")
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const periodStart = getPeriodStart(period);
 
-  // Fetch recent orders
+  // Fetch paid orders in period
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, total_amount, net_amount, status, created_at")
+    .select("id, total_amount, quantity, created_at, is_donation")
     .eq("commerce_id", commerce.id)
-    .order("created_at", { ascending: false })
-    .limit(5);
+    .in("status", ["paid", "ready_for_pickup", "picked_up"])
+    .gte("created_at", periodStart.toISOString());
 
-  const totalRevenue = orders?.reduce((sum, o) => sum + (o.net_amount || 0), 0) ?? 0;
-  const totalOrders = orders?.length ?? 0;
-  const activeBaskets = baskets?.filter((b) => b.status === "published").length ?? 0;
+  // Fetch baskets in period for type breakdown + bar chart
+  const { data: basketsRaw } = await supabase
+    .from("baskets")
+    .select("id, type, quantity_sold, is_donation, sold_price, created_at")
+    .eq("commerce_id", commerce.id)
+    .gte("created_at", periodStart.toISOString());
+
+  const allOrders  = orders ?? [];
+  const allBaskets = basketsRaw ?? [];
+
+  const commissionRate = (commerce.commission_rate ?? 15) / 100;
+  const caGenere   = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
+  const commission = caGenere * commissionRate;
+  const caNet      = caGenere - commission;
+  const paniers    = allOrders.reduce((s, o) => s + (o.quantity ?? 1), 0);
+  const donCommerce = allBaskets.filter((b) => b.is_donation).length;
+  const donClients  = allOrders.filter((o) => o.is_donation).length;
+  const avgPrice    = paniers > 0 ? caGenere / paniers : 0;
+
+  // Bar chart — sales by day of week (last 7 days)
+  const salesByDay: Record<number, number> = {};
+  for (let i = 0; i < 7; i++) salesByDay[i] = 0;
+  allOrders.forEach((o) => {
+    const d = new Date(o.created_at);
+    let dow = d.getDay(); // 0=sun
+    dow = dow === 0 ? 6 : dow - 1; // convert to Mon=0
+    salesByDay[dow] = (salesByDay[dow] ?? 0) + (o.quantity ?? 1);
+  });
+  const barData = DAYS_FR.map((day, i) => ({ day, ventes: salesByDay[i] ?? 0 }));
+
+  // Pie chart — basket type distribution
+  const typeCounts: Record<string, number> = {};
+  allOrders.forEach((o) => {
+    // approximate: each order contributes quantity to a type — we'd need basket type join
+    // For now use a simplified count per order
+  });
+  allBaskets.forEach((b) => {
+    typeCounts[b.type] = (typeCounts[b.type] ?? 0) + (b.quantity_sold ?? 1);
+  });
+  const totalSold = Object.values(typeCounts).reduce((s, v) => s + v, 0);
+  const pieData = Object.entries(typeCounts)
+    .filter(([, v]) => v > 0)
+    .map(([type, value]) => ({
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      value: totalSold > 0 ? Math.round((value / totalSold) * 100) : 0,
+      color: TYPE_COLORS[type] ?? "#9ca3af",
+    }));
+
+  /* ── KPI cards config ───────────────────────────────────────── */
+  const kpis = [
+    {
+      label: "CA généré",
+      value: `${caGenere.toFixed(2)}€`,
+      sub: `${paniers} paniers vendus`,
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+      icon: Euro,
+    },
+    {
+      label: "CA net",
+      value: `${caNet.toFixed(2)}€`,
+      sub: `Après ${commerce.commission_rate ?? 15}% commission`,
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
+      icon: TrendingUp,
+    },
+    {
+      label: "Paniers vendus",
+      value: paniers.toString(),
+      sub: `Prix moyen ${avgPrice.toFixed(2)}€`,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      icon: ShoppingBag,
+    },
+    {
+      label: "Paniers dons",
+      value: (donCommerce + donClients).toString(),
+      sub: `${donCommerce} commerçant · ${donClients} clients`,
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+      icon: Heart,
+    },
+  ];
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Tableau de bord</h1>
-          <p className="text-muted-foreground mt-1">Bienvenue, {commerce.name}</p>
-        </div>
-        <Button asChild>
-          <Link href="/shop/paniers/nouveau">
-            <Plus className="mr-2 h-4 w-4" /> Nouveau panier
-          </Link>
-        </Button>
+    <div>
+      {/* KPI row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+        {kpis.map((k) => (
+          <div key={k.label} className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-gray-500 font-medium">{k.label}</p>
+              <div className={`w-10 h-10 ${k.iconBg} rounded-xl flex items-center justify-center`}>
+                <k.icon className={`h-5 w-5 ${k.iconColor}`} />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">{k.value}</div>
+            <p className="text-xs text-gray-400">{k.sub}</p>
+          </div>
+        ))}
       </div>
 
-      {commerce.status === "pending" && (
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            ⚠️ Votre compte est en attente de validation. Vous ne pouvez pas encore publier de paniers.
-          </p>
-        </div>
-      )}
-
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">CA net (récent)</CardTitle>
-            <Euro className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue.toFixed(2)} €</div>
-            <p className="text-xs text-muted-foreground mt-1">Commission {commerce.commission_rate}%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Commandes récentes</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalOrders}</div>
-            <p className="text-xs text-muted-foreground mt-1">Sur les dernières entrées</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Paniers actifs</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeBaskets}</div>
-            <p className="text-xs text-muted-foreground mt-1">Publiés aujourd&apos;hui/demain</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Active Baskets */}
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Paniers du jour</CardTitle>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/shop/paniers">Voir tout</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {!baskets?.length ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <ShoppingBag className="mx-auto h-10 w-10 mb-3 opacity-30" />
-              <p className="text-sm">Aucun panier pour aujourd&apos;hui ou demain</p>
-              <Button className="mt-4" size="sm" asChild>
-                <Link href="/shop/paniers/nouveau">Créer un panier</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {baskets.map((basket) => (
-                <div key={basket.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">
-                      {basket.type === "bassari" ? "🥩" : basket.type === "halavi" ? "🧀" : basket.type === "parve" ? "🌿" : basket.type === "shabbat" ? "🍷" : "➕"}
-                    </span>
-                    <div>
-                      <div className="font-medium text-sm capitalize">{basket.type}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {basket.day === "today" ? "Aujourd&apos;hui" : "Demain"} · {basket.pickup_start} – {basket.pickup_end}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="font-semibold text-sm">{basket.sold_price} €</div>
-                      <div className="text-xs text-muted-foreground">{basket.quantity_sold}/{basket.quantity_total} vendus</div>
-                    </div>
-                    <Badge variant={basket.status === "published" ? "default" : "secondary"} className="text-xs">
-                      {BASKET_STATUS_LABELS[basket.status] ?? basket.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Charts */}
+      <DashboardCharts
+        period={period}
+        barData={barData}
+        pieData={pieData}
+        avgPrice={avgPrice}
+        donCommerce={donCommerce}
+        donClients={donClients}
+      />
     </div>
   );
 }

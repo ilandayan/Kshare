@@ -1,52 +1,48 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import Link          from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Users, ShoppingBag, BarChart3, HeadphonesIcon, CreditCard, LogOut, Shield } from "lucide-react";
-
-const navItems = [
-  { href: "/kshare-admin/comptes", label: "Validation comptes", icon: Users },
-  { href: "/kshare-admin/paniers", label: "Supervision paniers", icon: ShoppingBag },
-  { href: "/kshare-admin/reporting", label: "Reporting global", icon: BarChart3 },
-  { href: "/kshare-admin/support", label: "Support tickets", icon: HeadphonesIcon },
-  { href: "/kshare-admin/finance", label: "Gestion financière", icon: CreditCard },
-];
+import { AdminTopNav }  from "@/components/admin/admin-top-nav";
+import { AdminUserMenu } from "@/components/admin/admin-user-menu";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/connexion");
+  if (!user) redirect("/connexion?role=admin");
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, full_name")
+    .eq("id", user.id)
+    .single();
   if (profile?.role !== "admin") redirect("/");
 
+  const adminName = profile?.full_name ?? "Admin Kshare";
+
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="w-64 border-r border-border bg-sidebar flex flex-col shrink-0">
-        <div className="p-6 border-b border-sidebar-border">
-          <Link href="/" className="text-xl font-bold text-primary">Kshare</Link>
-          <div className="flex items-center gap-1.5 mt-1">
-            <Shield className="h-3 w-3 text-sidebar-foreground/60" />
-            <span className="text-xs text-sidebar-foreground/60 font-medium">Administration</span>
-          </div>
+    <div className="min-h-screen bg-[#F4F5F9] flex flex-col">
+      {/* ── Top header ── */}
+      <header className="bg-white border-b border-[#e2e5f0] sticky top-0 z-40">
+        <div className="px-6 h-16 flex items-center justify-between">
+          <Link href="/kshare-admin" className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#3744C8] rounded-xl flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-lg leading-none">K</span>
+            </div>
+            <div>
+              <div className="font-bold text-gray-900 text-base leading-tight">Kshare</div>
+              <div className="text-xs text-gray-400 leading-tight">Administration</div>
+            </div>
+          </Link>
+          <AdminUserMenu adminName={adminName} />
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-sidebar-border">
-          <form action="/api/auth/signout" method="POST">
-            <Button variant="ghost" size="sm" className="w-full justify-start" type="submit">
-              <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-            </Button>
-          </form>
-        </div>
-      </aside>
-      <main className="flex-1 overflow-auto">{children}</main>
+      </header>
+
+      {/* ── Tab navigation ── */}
+      <AdminTopNav />
+
+      {/* ── Content ── */}
+      <main className="flex-1 p-6">
+        {children}
+      </main>
     </div>
   );
 }
