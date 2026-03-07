@@ -285,12 +285,12 @@ export default function NotreMissionPage() {
               <span className="text-blue-300">·</span>
               <span>© 2024 Tous droits réservés.</span>
             </div>
-            <a href="mailto:contact@kshare.fr" className="flex items-center gap-1.5 hover:text-white transition-colors">
+            <a href="mailto:contact@k-share.fr" className="flex items-center gap-1.5 hover:text-white transition-colors">
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
-              contact@kshare.fr
+              contact@k-share.fr
             </a>
           </div>
         </div>

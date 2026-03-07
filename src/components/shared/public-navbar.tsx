@@ -19,8 +19,8 @@ export function PublicNavbar() {
           <nav className="hidden md:flex items-center gap-8 text-sm text-gray-500 font-medium">
             <Link href="/" className="hover:text-gray-900 transition-colors">Accueil</Link>
             <Link href="/notre-mission" className="hover:text-gray-900 transition-colors">Notre mission</Link>
-            <Link href="/#clients" className="hover:text-gray-900 transition-colors">Je suis client</Link>
-            <Link href="/#contact" className="hover:text-gray-900 transition-colors">Contact</Link>
+            <Link href="/je-suis-client" className="hover:text-gray-900 transition-colors">Je suis client</Link>
+            <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
           </nav>
 
           {/* Right CTA */}
