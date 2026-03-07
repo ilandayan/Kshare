@@ -2,12 +2,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ShoppingBag, BarChart3, User, LogOut } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, BarChart3, User, LogOut, Wallet, CreditCard } from "lucide-react";
 
 const navItems = [
   { href: "/shop/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/shop/paniers", label: "Mes paniers", icon: ShoppingBag },
   { href: "/shop/statistiques", label: "Statistiques", icon: BarChart3 },
+  { href: "/shop/stripe-connect", label: "Paiements", icon: Wallet },
+  { href: "/shop/abonnement", label: "Abonnement", icon: CreditCard },
   { href: "/shop/profil", label: "Profil", icon: User },
 ];
 
