@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
-import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info } from "lucide-react";
+import { useState, useTransition, useRef, useEffect, useCallback } from "react";
+import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info, Camera, Keyboard } from "lucide-react";
 import { rechercherParCode, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -21,37 +21,135 @@ const BASKET_LABELS: Record<string, { label: string; color: string }> = {
 
 type OrderData = Extract<ScanResult, { success: true }>["order"];
 
+type InputMode = "code" | "qr";
+
+function QrScanner({ onScan, onError }: { onScan: (code: string) => void; onError: (msg: string) => void }) {
+  const scannerRef = useRef<HTMLDivElement>(null);
+  const html5QrRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
+  const [started, setStarted] = useState(false);
+  const [cameraError, setCameraError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function start() {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+        if (cancelled || !scannerRef.current) return;
+
+        const scannerId = "qr-reader-" + Date.now();
+        scannerRef.current.id = scannerId;
+
+        const scanner = new Html5Qrcode(scannerId);
+        html5QrRef.current = scanner;
+
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            onScan(decodedText);
+          },
+          () => {
+            // ignore scan failures (no QR in frame)
+          }
+        );
+        if (!cancelled) setStarted(true);
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : "Impossible d'accéder à la caméra";
+          setCameraError(msg);
+          onError(msg);
+        }
+      }
+    }
+
+    start();
+
+    return () => {
+      cancelled = true;
+      if (html5QrRef.current) {
+        html5QrRef.current.stop().catch(() => {});
+        html5QrRef.current.clear();
+        html5QrRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (cameraError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+        <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+        <p className="text-sm text-red-700">{cameraError}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div
+        ref={scannerRef}
+        className="rounded-xl overflow-hidden bg-black"
+        style={{ minHeight: 300 }}
+      />
+      {!started && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/60 rounded-xl">
+          <Loader2 className="w-8 h-8 text-white animate-spin" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ScanClient() {
+  const [mode, setMode] = useState<InputMode>("qr");
   const [code, setCode] = useState("");
   const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchingRef = useRef(false);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (mode === "code") {
+      inputRef.current?.focus();
+    }
+  }, [mode]);
 
-  function handleSearch() {
-    if (!code.trim()) return;
+  const doSearch = useCallback((token: string) => {
+    if (!token.trim() || searchingRef.current) return;
+    searchingRef.current = true;
     setError("");
     setOrder(null);
 
     startTransition(async () => {
-      const result = await rechercherParCode(code.trim());
+      const result = await rechercherParCode(token.trim());
+      searchingRef.current = false;
       if (result.success) {
         setOrder(result.order);
       } else {
         setError(result.error);
       }
     });
+  }, []);
+
+  function handleSearch() {
+    doSearch(code);
+  }
+
+  function handleQrScan(scannedCode: string) {
+    setCode(scannedCode);
+    doSearch(scannedCode);
   }
 
   function handleReset() {
     setCode("");
     setOrder(null);
     setError("");
-    inputRef.current?.focus();
+    searchingRef.current = false;
+    if (mode === "code") {
+      inputRef.current?.focus();
+    }
   }
 
   const statusInfo = order ? STATUS_LABELS[order.status] ?? { label: order.status, color: "text-gray-500", bg: "bg-gray-50 border-gray-200" } : null;
@@ -59,42 +157,100 @@ export function ScanClient() {
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* ── Search input ── */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1e2a78] to-[#4f6df5] flex items-center justify-center">
-            <ScanLine className="w-5 h-5 text-white" />
+      {/* ── Mode tabs ── */}
+      {!order && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          {/* Tab selector */}
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
+            <button
+              onClick={() => { setMode("qr"); setError(""); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                mode === "qr"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Camera className="w-4 h-4" />
+              Scanner QR
+            </button>
+            <button
+              onClick={() => { setMode("code"); setError(""); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                mode === "code"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Keyboard className="w-4 h-4" />
+              Code retrait
+            </button>
           </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">Code de retrait</h2>
-            <p className="text-xs text-gray-400">Saisissez le code affiché par le client</p>
-          </div>
-        </div>
 
-        <div className="flex gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Ex : 847291"
-            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-lg font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-[#2d4de0]/30 focus:border-[#2d4de0] placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-sans"
-            disabled={isPending}
-          />
-          <button
-            onClick={handleSearch}
-            disabled={isPending || !code.trim()}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-2"
-          >
-            {isPending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Search className="w-5 h-5" />
-            )}
-          </button>
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1e2a78] to-[#4f6df5] flex items-center justify-center">
+              {mode === "qr" ? (
+                <ScanLine className="w-5 h-5 text-white" />
+              ) : (
+                <Keyboard className="w-5 h-5 text-white" />
+              )}
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">
+                {mode === "qr" ? "Scanner le QR code" : "Code de retrait"}
+              </h2>
+              <p className="text-xs text-gray-400">
+                {mode === "qr"
+                  ? "Scannez le QR code affiché par le client"
+                  : "Saisissez le code affiché par le client"}
+              </p>
+            </div>
+          </div>
+
+          {/* QR mode */}
+          {mode === "qr" && !isPending && (
+            <QrScanner
+              onScan={handleQrScan}
+              onError={(msg) => setError(msg)}
+            />
+          )}
+
+          {/* QR searching state */}
+          {mode === "qr" && isPending && (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-8 h-8 text-[#2d4de0] animate-spin" />
+              <p className="text-sm text-gray-500">Recherche de la commande…</p>
+            </div>
+          )}
+
+          {/* Code mode */}
+          {mode === "code" && (
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Ex : 847291"
+                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-lg font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-[#2d4de0]/30 focus:border-[#2d4de0] placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-sans"
+                disabled={isPending}
+              />
+              <button
+                onClick={handleSearch}
+                disabled={isPending || !code.trim()}
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-2"
+              >
+                {isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Search className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* ── Error ── */}
       {error && (
