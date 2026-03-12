@@ -30,7 +30,7 @@ export default function HomePage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative py-24 md:py-40 text-center overflow-hidden">
+      <section className="relative pt-10 pb-24 md:pt-16 md:pb-40 text-center overflow-hidden">
         {/* Layered glow radials */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-70 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-30 bg-[radial-gradient(ellipse_50%_40%_at_30%_20%,#a5b4fc_0%,transparent_60%)]" />
