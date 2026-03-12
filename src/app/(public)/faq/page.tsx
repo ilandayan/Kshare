@@ -123,9 +123,9 @@ const FAQ_SECTIONS: FaqSection[] = [
         ],
       },
       {
-        question: "Que faire si le commerce est ferm\u00e9 ou si mon panier n\u2019est pas conforme ?",
+        question: "Que faire si le commerce est ferm\u00e9 ?",
         answer: [
-          "Si vous constatez que le commerce est ferm\u00e9 ou que le panier ne correspond pas \u00e0 ce qui \u00e9tait annonc\u00e9, appuyez sur le bouton \u00ab Aide \u00bb disponible sur la page de votre commande (juste \u00e0 c\u00f4t\u00e9 du bouton de validation). S\u00e9lectionnez le motif du probl\u00e8me : le paiement sera imm\u00e9diatement bloqu\u00e9 le temps que notre \u00e9quipe v\u00e9rifie la situation. Si le probl\u00e8me est confirm\u00e9, le d\u00e9bit sera annul\u00e9 et vous ne serez pas pr\u00e9lev\u00e9.",
+          "Si vous constatez que le commerce est ferm\u00e9 pendant le cr\u00e9neau de retrait, appuyez sur le bouton \u00ab Aide \u00bb disponible sur la page de votre commande (juste \u00e0 c\u00f4t\u00e9 du bouton de validation). Le paiement sera imm\u00e9diatement bloqu\u00e9 le temps que notre \u00e9quipe v\u00e9rifie la situation. Si la fermeture est confirm\u00e9e, le d\u00e9bit sera annul\u00e9 et vous ne serez pas pr\u00e9lev\u00e9.",
         ],
       },
       {
@@ -201,7 +201,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Les dons sont-ils remboursables ?",
         answer: [
-          "Les paniers offerts aux associations ne sont pas remboursables une fois la transaction valid\u00e9e, sauf en cas d\u2019indisponibilit\u00e9 du panier par le commer\u00e7ant.",
+          "Les paniers offerts aux associations ne sont pas remboursables une fois la transaction valid\u00e9e, sauf en cas d\u2019indisponibilit\u00e9 du panier par le commer\u00e7ant ou de non r\u00e9cup\u00e9ration du don par une association.",
         ],
       },
     ],
@@ -231,7 +231,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "L\u2019application est-elle disponible sur iOS et Android ?",
         answer: [
-          "L\u2019application Kshare sera prochainement disponible sur l\u2019App Store (iOS) et le Google Play Store (Android). En attendant, vous pouvez utiliser la version web sur k-share.fr.",
+          "L\u2019application Kshare est disponible sur l\u2019App Store (iOS) et le Google Play Store (Android). Vous pouvez \u00e9galement acc\u00e9der \u00e0 la version web sur k-share.fr.",
         ],
       },
       {
