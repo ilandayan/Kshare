@@ -72,7 +72,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Les produits sont-ils bien casher ?",
         answer: [
-          "Absolument. Chaque commerce partenaire est responsable de la certification casher de ses produits. Kshare v\u00e9rifie les certifications lors de l\u2019inscription du commer\u00e7ant sur la plateforme.",
+          "Absolument. L\u2019ensemble des commerces pr\u00e9sents sur la plateforme Kshare sont des commerces certifi\u00e9s casher.",
         ],
       },
     ],
@@ -94,7 +94,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Quels moyens de paiement sont accept\u00e9s ?",
         answer: [
-          "Le paiement est effectu\u00e9 en ligne de mani\u00e8re s\u00e9curis\u00e9e via Stripe. Nous acceptons les cartes bancaires (Visa, Mastercard, American Express). Aucune donn\u00e9e bancaire n\u2019est stock\u00e9e par Kshare.",
+          "Le paiement est effectu\u00e9 en ligne de mani\u00e8re s\u00e9curis\u00e9e via Stripe. Nous acceptons les cartes bancaires (Visa, Mastercard, American Express), Apple Pay et Google Pay. Aucune donn\u00e9e bancaire n\u2019est stock\u00e9e par Kshare.",
         ],
       },
       {
@@ -119,13 +119,19 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Comment r\u00e9cup\u00e9rer mon panier ?",
         answer: [
-          "Apr\u00e8s votre commande, un QR code unique est g\u00e9n\u00e9r\u00e9 dans l\u2019application (onglet \u00ab Mes paniers \u00bb). Pr\u00e9sentez-vous au commerce pendant le cr\u00e9neau de retrait indiqu\u00e9 et montrez votre QR code au commer\u00e7ant pour r\u00e9cup\u00e9rer votre panier.",
+          "Apr\u00e8s votre commande, un QR code unique est g\u00e9n\u00e9r\u00e9 dans l\u2019application (onglet \u00ab Mes paniers \u00bb). Pr\u00e9sentez-vous au commerce pendant le cr\u00e9neau de retrait indiqu\u00e9 et montrez votre QR code au commer\u00e7ant. Une fois votre panier r\u00e9cup\u00e9r\u00e9, confirmez la r\u00e9ception directement dans l\u2019application pour finaliser la transaction.",
+        ],
+      },
+      {
+        question: "Que faire si le commerce est ferm\u00e9 ou si mon panier n\u2019est pas conforme ?",
+        answer: [
+          "Si vous constatez que le commerce est ferm\u00e9 ou que le panier ne correspond pas \u00e0 ce qui \u00e9tait annonc\u00e9, appuyez sur le bouton \u00ab Aide \u00bb disponible sur la page de votre commande (juste \u00e0 c\u00f4t\u00e9 du bouton de validation). S\u00e9lectionnez le motif du probl\u00e8me : le paiement sera imm\u00e9diatement bloqu\u00e9 le temps que notre \u00e9quipe v\u00e9rifie la situation. Si le probl\u00e8me est confirm\u00e9, le d\u00e9bit sera annul\u00e9 et vous ne serez pas pr\u00e9lev\u00e9.",
         ],
       },
       {
         question: "Que se passe-t-il si je ne viens pas r\u00e9cup\u00e9rer mon panier ?",
         answer: [
-          "Si vous ne vous pr\u00e9sentez pas pendant le cr\u00e9neau de retrait, votre commande sera marqu\u00e9e comme \u00ab non retir\u00e9e \u00bb. Le panier ne pourra pas \u00eatre rembours\u00e9. Nous vous encourageons \u00e0 annuler votre commande \u00e0 l\u2019avance si vous ne pouvez pas vous d\u00e9placer.",
+          "Si vous ne vous pr\u00e9sentez pas pendant le cr\u00e9neau de retrait, votre commande sera marqu\u00e9e comme \u00ab non retir\u00e9e \u00bb. Le panier ne pourra pas \u00eatre rembours\u00e9.",
         ],
       },
     ],
@@ -149,20 +155,13 @@ const FAQ_SECTIONS: FaqSection[] = [
     ],
   },
   {
-    title: "Annulation et remboursement",
+    title: "Protection et annulation",
     icon: RotateCcw,
     items: [
       {
-        question: "Puis-je annuler ma commande ?",
-        answer: [
-          "Oui, vous pouvez annuler votre commande jusqu\u2019\u00e0 2 heures avant le d\u00e9but du cr\u00e9neau de retrait. Le remboursement int\u00e9gral est alors effectu\u00e9 automatiquement sous 5 \u00e0 10 jours ouvrables.",
-          "Au-del\u00e0 de ce d\u00e9lai, l\u2019annulation n\u2019est plus possible sauf circonstance exceptionnelle.",
-        ],
-      },
-      {
         question: "Que faire si le commerce ne peut pas fournir mon panier ?",
         answer: [
-          "Si le commer\u00e7ant est dans l\u2019impossibilit\u00e9 de fournir votre panier (rupture de stock, fermeture impr\u00e9vue), vous \u00eates automatiquement rembours\u00e9 int\u00e9gralement.",
+          "Si le commer\u00e7ant est dans l\u2019impossibilit\u00e9 de fournir votre panier (rupture de stock, fermeture impr\u00e9vue), utilisez le bouton \u00ab Aide \u00bb sur la page de votre commande pour signaler le probl\u00e8me. Le paiement sera bloqu\u00e9 et notre \u00e9quipe v\u00e9rifiera la situation. Apr\u00e8s v\u00e9rification, le d\u00e9bit sera annul\u00e9 et vous ne serez pas pr\u00e9lev\u00e9.",
         ],
       },
     ],
@@ -174,7 +173,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Comment devenir commerce partenaire ?",
         answer: [
-          "Rendez-vous sur notre page d\u2019inscription commer\u00e7ant sur k-share.fr. Remplissez le formulaire avec les informations de votre commerce. Notre \u00e9quipe v\u00e9rifiera votre dossier (certifications casher, statut professionnel) et activera votre compte.",
+          "Rendez-vous sur notre page d\u2019inscription commer\u00e7ant sur k-share.fr. Remplissez le formulaire avec les informations de votre commerce. Notre \u00e9quipe v\u00e9rifiera votre dossier et activera votre compte.",
         ],
       },
       {
