@@ -21,6 +21,7 @@ export type Database = {
           city: string
           contact: string
           created_at: string
+          department: string | null
           id: string
           name: string
           profile_id: string
@@ -36,6 +37,7 @@ export type Database = {
           city: string
           contact: string
           created_at?: string
+          department?: string | null
           id?: string
           name: string
           profile_id: string
@@ -51,6 +53,7 @@ export type Database = {
           city?: string
           contact?: string
           created_at?: string
+          department?: string | null
           id?: string
           name?: string
           profile_id?: string
@@ -164,8 +167,11 @@ export type Database = {
           iban: string | null
           id: string
           is_early_adopter: boolean
+          last_plan_change_at: string | null
+          latitude: number | null
           location: unknown
           logo_url: string | null
+          longitude: number | null
           name: string
           opening_hours: Json | null
           phone: string | null
@@ -175,6 +181,7 @@ export type Database = {
           status: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id: string | null
           stripe_customer_id: string | null
+          subscription_plan: Database["public"]["Enums"]["subscription_plan"] | null
           subscription_status:
             | Database["public"]["Enums"]["subscription_status"]
             | null
@@ -198,8 +205,11 @@ export type Database = {
           iban?: string | null
           id?: string
           is_early_adopter?: boolean
+          last_plan_change_at?: string | null
+          latitude?: number | null
           location?: unknown
           logo_url?: string | null
+          longitude?: number | null
           name: string
           opening_hours?: Json | null
           phone?: string | null
@@ -209,6 +219,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
+          subscription_plan?: Database["public"]["Enums"]["subscription_plan"] | null
           subscription_status?:
             | Database["public"]["Enums"]["subscription_status"]
             | null
@@ -232,8 +243,11 @@ export type Database = {
           iban?: string | null
           id?: string
           is_early_adopter?: boolean
+          last_plan_change_at?: string | null
+          latitude?: number | null
           location?: unknown
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           opening_hours?: Json | null
           phone?: string | null
@@ -243,6 +257,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
+          subscription_plan?: Database["public"]["Enums"]["subscription_plan"] | null
           subscription_status?:
             | Database["public"]["Enums"]["subscription_status"]
             | null
@@ -312,6 +327,7 @@ export type Database = {
           commerce_id: string
           commission_amount: number
           created_at: string
+          donation_expires_at: string | null
           id: string
           is_donation: boolean
           net_amount: number
@@ -323,6 +339,7 @@ export type Database = {
           qr_code: string | null
           qr_code_token: string | null
           quantity: number
+          service_fee_amount: number
           status: Database["public"]["Enums"]["order_status"]
           stripe_charge_id: string | null
           stripe_payment_intent_id: string | null
@@ -337,6 +354,7 @@ export type Database = {
           commerce_id: string
           commission_amount: number
           created_at?: string
+          donation_expires_at?: string | null
           id?: string
           is_donation?: boolean
           net_amount: number
@@ -348,6 +366,7 @@ export type Database = {
           qr_code?: string | null
           qr_code_token?: string | null
           quantity?: number
+          service_fee_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -362,6 +381,7 @@ export type Database = {
           commerce_id?: string
           commission_amount?: number
           created_at?: string
+          donation_expires_at?: string | null
           id?: string
           is_donation?: boolean
           net_amount?: number
@@ -373,6 +393,7 @@ export type Database = {
           qr_code?: string | null
           qr_code_token?: string | null
           quantity?: number
+          service_fee_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -413,31 +434,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          archived_at: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          is_archived: boolean
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          is_archived?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          is_archived?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -528,6 +555,9 @@ export type Database = {
           id: string
           monthly_price: number
           offer_expires_at: string | null
+          pending_plan: Database["public"]["Enums"]["subscription_plan"] | null
+          pending_plan_effective_at: string | null
+          plan: Database["public"]["Enums"]["subscription_plan"]
           status: Database["public"]["Enums"]["subscription_status"]
           stripe_mandate_id: string | null
           stripe_subscription_id: string | null
@@ -543,6 +573,8 @@ export type Database = {
           id?: string
           monthly_price?: number
           offer_expires_at?: string | null
+          pending_plan?: Database["public"]["Enums"]["subscription_plan"] | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
           status?: Database["public"]["Enums"]["subscription_status"]
           stripe_mandate_id?: string | null
           stripe_subscription_id?: string | null
@@ -558,6 +590,8 @@ export type Database = {
           id?: string
           monthly_price?: number
           offer_expires_at?: string | null
+          pending_plan?: Database["public"]["Enums"]["subscription_plan"] | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
           status?: Database["public"]["Enums"]["subscription_status"]
           stripe_mandate_id?: string | null
           stripe_subscription_id?: string | null
@@ -582,6 +616,7 @@ export type Database = {
           description: string
           id: string
           messages: Json
+          metadata: Json | null
           order_id: string | null
           photo_urls: string[] | null
           resolved_at: string | null
@@ -597,6 +632,7 @@ export type Database = {
           description: string
           id?: string
           messages?: Json
+          metadata?: Json | null
           order_id?: string | null
           photo_urls?: string[] | null
           resolved_at?: string | null
@@ -612,6 +648,7 @@ export type Database = {
           description?: string
           id?: string
           messages?: Json
+          metadata?: Json | null
           order_id?: string | null
           photo_urls?: string[] | null
           resolved_at?: string | null
@@ -646,6 +683,228 @@ export type Database = {
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          actor_id: string | null
+          action: string
+          target_type: string | null
+          target_id: string | null
+          metadata: Json | null
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor_id?: string | null
+          action: string
+          target_type?: string | null
+          target_id?: string | null
+          metadata?: Json | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          actor_id?: string | null
+          action?: string
+          target_type?: string | null
+          target_id?: string | null
+          metadata?: Json | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      ledger_entries: {
+        Row: {
+          id: string
+          commerce_id: string
+          order_id: string | null
+          payout_id: string | null
+          type: Database["public"]["Enums"]["ledger_entry_type"]
+          debit: number
+          credit: number
+          balance_after: number
+          currency: string
+          description: string | null
+          stripe_object_id: string | null
+          idempotency_key: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          commerce_id: string
+          order_id?: string | null
+          payout_id?: string | null
+          type: Database["public"]["Enums"]["ledger_entry_type"]
+          debit?: number
+          credit?: number
+          balance_after?: number
+          currency?: string
+          description?: string | null
+          stripe_object_id?: string | null
+          idempotency_key?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          commerce_id?: string
+          order_id?: string | null
+          payout_id?: string | null
+          type?: Database["public"]["Enums"]["ledger_entry_type"]
+          debit?: number
+          credit?: number
+          balance_after?: number
+          currency?: string
+          description?: string | null
+          stripe_object_id?: string | null
+          idempotency_key?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          id: string
+          commerce_id: string
+          stripe_payout_id: string
+          stripe_account_id: string
+          amount: number
+          currency: string
+          status: Database["public"]["Enums"]["payout_status"]
+          arrival_date: string | null
+          period_start: string | null
+          period_end: string | null
+          failure_message: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          commerce_id: string
+          stripe_payout_id: string
+          stripe_account_id: string
+          amount: number
+          currency?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          arrival_date?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          failure_message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          commerce_id?: string
+          stripe_payout_id?: string
+          stripe_account_id?: string
+          amount?: number
+          currency?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          arrival_date?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          failure_message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disputes: {
+        Row: {
+          id: string
+          order_id: string | null
+          commerce_id: string
+          stripe_dispute_id: string
+          stripe_charge_id: string | null
+          amount: number
+          currency: string
+          reason: string | null
+          status: Database["public"]["Enums"]["dispute_status"]
+          evidence_due_by: string | null
+          resolved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id?: string | null
+          commerce_id: string
+          stripe_dispute_id: string
+          stripe_charge_id?: string | null
+          amount: number
+          currency?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+          evidence_due_by?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string | null
+          commerce_id?: string
+          stripe_dispute_id?: string
+          stripe_charge_id?: string | null
+          amount?: number
+          currency?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+          evidence_due_by?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
             referencedColumns: ["id"]
           },
         ]
@@ -831,6 +1090,7 @@ export type Database = {
           name: string
         }[]
       }
+      custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
@@ -962,7 +1222,12 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
       gettransactionid: { Args: never; Returns: unknown }
+      is_admin: { Args: never; Returns: boolean }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
@@ -1603,6 +1868,8 @@ export type Database = {
         | "validated"
         | "refused"
         | "complement_required"
+        | "suspended"
+        | "archived"
       basket_day: "today" | "tomorrow"
       basket_status: "draft" | "published" | "sold_out" | "expired" | "disabled"
       basket_type: "bassari" | "halavi" | "parve" | "shabbat" | "mix"
@@ -1611,6 +1878,8 @@ export type Database = {
         | "validated"
         | "refused"
         | "complement_required"
+        | "suspended"
+        | "archived"
       donation_status:
         | "available"
         | "reserved_for_association"
@@ -1624,6 +1893,8 @@ export type Database = {
         | "no_show"
         | "refunded"
         | "cancelled_admin"
+        | "pending_association"
+        | "expired"
       subscription_status:
         | "active"
         | "offered"
@@ -1631,6 +1902,10 @@ export type Database = {
         | "cancellation_requested"
       ticket_status: "open" | "in_progress" | "resolved"
       user_role: "client" | "commerce" | "association" | "admin"
+      subscription_plan: "starter" | "pro"
+      ledger_entry_type: "payment" | "commission" | "service_fee" | "payout" | "refund"
+      payout_status: "pending" | "paid" | "failed"
+      dispute_status: "open" | "won" | "lost" | "under_review"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -1771,6 +2046,8 @@ export const Constants = {
         "validated",
         "refused",
         "complement_required",
+        "suspended",
+        "archived",
       ],
       basket_day: ["today", "tomorrow"],
       basket_status: ["draft", "published", "sold_out", "expired", "disabled"],
@@ -1780,6 +2057,8 @@ export const Constants = {
         "validated",
         "refused",
         "complement_required",
+        "suspended",
+        "archived",
       ],
       donation_status: [
         "available",
@@ -1795,6 +2074,8 @@ export const Constants = {
         "no_show",
         "refunded",
         "cancelled_admin",
+        "pending_association",
+        "expired",
       ],
       subscription_status: [
         "active",

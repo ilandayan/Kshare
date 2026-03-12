@@ -1,9 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, Clock, UtensilsCrossed, Milk, Leaf, Wine, Layers, Package, type LucideIcon } from "lucide-react";
+import { ReservationActions } from "@/components/asso/reservation-actions";
 import { BASKET_TYPES } from "@/lib/constants";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  UtensilsCrossed, Milk, Leaf, Wine, Layers,
+};
 
 const STATUS_COLORS: Record<string, string> = {
   created:          "bg-yellow-100 text-yellow-700",
@@ -32,7 +37,8 @@ export default async function MesReservationsPage() {
     .select(`
       *,
       baskets(type, pickup_start, pickup_end, day),
-      commerces:baskets(commerces(name, city))
+      commerces:baskets(commerces(name, city)),
+      stripe_payment_intent_id
     `)
     .eq("association_id", asso.id)
     .eq("is_donation", true)
@@ -48,7 +54,7 @@ export default async function MesReservationsPage() {
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 bg-[#3744C8] rounded-xl flex items-center justify-center">
+        <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
           <Calendar className="h-5 w-5 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Mes réservations</h1>
@@ -59,7 +65,7 @@ export default async function MesReservationsPage() {
       {orders && orders.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Total réservé", value: orders.length, color: "text-[#3744C8]" },
+            { label: "Total réservé", value: orders.length, color: "text-purple-600" },
             { label: "En attente",    value: pending,       color: "text-orange-500" },
             { label: "Collectés",     value: collected,     color: "text-green-600" },
           ].map((kpi) => (
@@ -74,8 +80,8 @@ export default async function MesReservationsPage() {
       {/* Empty state */}
       {!orders?.length ? (
         <div className="bg-white rounded-2xl border border-[#e2e5f0] p-16 text-center">
-          <div className="w-16 h-16 bg-[#EEF0F8] rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Calendar className="h-8 w-8 text-[#3744C8] opacity-50" />
+          <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Calendar className="h-8 w-8 text-purple-400" />
           </div>
           <p className="text-gray-500 font-medium">Aucune réservation pour le moment</p>
           <p className="text-gray-400 text-sm mt-1">Rendez-vous dans &quot;Paniers disponibles&quot; pour réserver</p>
@@ -96,23 +102,34 @@ export default async function MesReservationsPage() {
                 className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-5 flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 bg-[#EEF0F8] rounded-xl flex items-center justify-center text-xl shrink-0">
-                    {typeConfig?.emoji ?? "📦"}
+                  <div className="w-11 h-11 bg-[#EEF0F8] rounded-xl flex items-center justify-center shrink-0">
+                    {(() => { const Icon = typeConfig ? ICON_MAP[typeConfig.icon] : null; return Icon ? <Icon className="h-5 w-5 text-purple-600" /> : <Package className="h-5 w-5 text-purple-600" />; })()}
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Panier {typeConfig?.label}</div>
                     <div className="flex items-center gap-3 text-sm text-gray-500 mt-0.5">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
-                        {basket?.day === "today" ? "Aujourd'hui" : "Demain"} · {basket?.pickup_start} – {basket?.pickup_end}
+                        {basket?.day === "today" ? "Aujourd'hui" : "Demain"} · {basket?.pickup_start?.slice(0, 5).replace(":", "h")} – {basket?.pickup_end?.slice(0, 5).replace(":", "h")}
                       </span>
                     </div>
                     <div className="text-xs text-gray-400 mt-0.5">Qté : {order.quantity}</div>
                   </div>
                 </div>
-                <Badge className={`${statusColor} border-0 text-xs font-medium shrink-0`}>
-                  {statusLabel}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge className={`${statusColor} border-0 text-xs font-medium`}>
+                    {statusLabel}
+                  </Badge>
+                  {["created", "paid", "ready_for_pickup"].includes(order.status) && (
+                    <ReservationActions
+                      orderId={order.id}
+                      status={order.status}
+                      quantity={order.quantity ?? 1}
+                      typeName={typeConfig?.label}
+                      isClientDonation={!!order.stripe_payment_intent_id}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}

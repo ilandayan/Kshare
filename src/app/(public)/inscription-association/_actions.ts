@@ -51,13 +51,17 @@ export async function inscriptionAssociation(formData: {
     return { success: false, error: "Erreur lors de la création du profil." };
   }
 
-  // Créer l'association — zone_region sert à stocker le numéro RNA + code postal
+  // Déduire le département à partir du code postal (2 premiers chiffres)
+  const department = formData.codePostal.slice(0, 2);
+
+  // Créer l'association
   const { error: assoError } = await supabase.from("associations").insert({
     profile_id: authData.user.id,
     name: formData.nomAsso,
     contact: `${formData.nomResponsable} · ${formData.telephone}`,
     address: formData.adresse,
     city: formData.ville,
+    department,
     zone_region: `RNA: ${formData.rna} | CP: ${formData.codePostal}`,
     status: "pending",
   });

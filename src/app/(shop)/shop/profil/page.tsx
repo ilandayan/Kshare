@@ -2,7 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { UtensilsCrossed, Milk, Leaf, Wine, Layers, type LucideIcon } from "lucide-react";
 import { BASKET_TYPES } from "@/lib/constants";
+import { ShopProfileClient } from "@/components/shop/shop-profile-client";
+import { ChangePasswordForm } from "@/components/shared/change-password-form";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  UtensilsCrossed, Milk, Leaf, Wine, Layers,
+};
 
 export default async function ProfilPage() {
   const supabase = await createClient();
@@ -11,7 +18,7 @@ export default async function ProfilPage() {
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("*")
+    .select("id, name, address, postal_code, city, email, phone, commerce_type, hashgakha, basket_types, commission_rate, status, description")
     .eq("profile_id", user.id)
     .single();
 
@@ -19,7 +26,7 @@ export default async function ProfilPage() {
 
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("*")
+    .select("status")
     .eq("commerce_id", commerce.id)
     .single();
 
@@ -36,7 +43,7 @@ export default async function ProfilPage() {
               { label: "Email", value: commerce.email },
               { label: "Téléphone", value: commerce.phone ?? "—" },
               { label: "Type de commerce", value: commerce.commerce_type },
-              { label: "Hashgakha", value: commerce.hashgakha },
+              { label: "Cacherout", value: commerce.hashgakha },
             ].map((field) => (
               <div key={field.label} className="flex gap-4">
                 <span className="text-muted-foreground w-36 shrink-0">{field.label}</span>
@@ -48,7 +55,12 @@ export default async function ProfilPage() {
               <div className="flex flex-wrap gap-2">
                 {commerce.basket_types?.map((t: string) => {
                   const type = BASKET_TYPES.find((bt) => bt.value === t);
-                  return <Badge key={t} variant="secondary">{type?.emoji} {type?.label}</Badge>;
+                  const Icon = type ? ICON_MAP[type.icon] : null;
+                  return (
+                    <Badge key={t} variant="secondary" className="inline-flex items-center gap-1.5">
+                      {Icon && <Icon className="h-3.5 w-3.5" />} {type?.label}
+                    </Badge>
+                  );
                 })}
               </div>
             </div>
@@ -69,6 +81,28 @@ export default async function ProfilPage() {
             ))}
           </CardContent>
         </Card>
+
+        {/* Security — change password */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Sécurité</CardTitle></CardHeader>
+          <CardContent>
+            <ChangePasswordForm />
+          </CardContent>
+        </Card>
+
+        {/* Edit profile section */}
+        <ShopProfileClient
+          commerce={{
+            name: commerce.name,
+            address: commerce.address,
+            city: commerce.city,
+            postal_code: commerce.postal_code,
+            phone: commerce.phone,
+            email: commerce.email,
+            commerce_type: commerce.commerce_type,
+            hashgakha: commerce.hashgakha,
+          }}
+        />
       </div>
     </div>
   );

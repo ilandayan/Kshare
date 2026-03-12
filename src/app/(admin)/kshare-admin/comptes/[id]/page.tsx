@@ -35,7 +35,7 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   if (accountType === "commerce") {
     const { data: commerce } = await supabase
       .from("commerces")
-      .select("*")
+      .select("id, name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at")
       .eq("id", id)
       .single();
 
@@ -69,7 +69,7 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
                 <InfoRow label="Type de commerce" value={commerce.commerce_type} />
                 <InfoRow label="Email" value={commerce.email} />
                 <InfoRow label="Téléphone" value={commerce.phone ?? "—"} />
-                <InfoRow label="Hashgakha" value={commerce.hashgakha} />
+                <InfoRow label="Cacherout" value={commerce.hashgakha} />
                 <InfoRow label="Adresse" value={commerce.address} />
                 <InfoRow label="Ville" value={commerce.city} />
                 <InfoRow label="Code postal" value={commerce.postal_code ?? "—"} />
@@ -114,7 +114,7 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   // Association
   const { data: asso } = await supabase
     .from("associations")
-    .select("*")
+    .select("id, name, contact, address, city, zone_region, status, created_at, validated_at, availability")
     .eq("id", id)
     .single();
 

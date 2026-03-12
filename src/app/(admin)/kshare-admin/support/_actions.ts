@@ -30,7 +30,7 @@ async function requireAdmin() {
 export async function replyToTicket(
   ticketId: string,
   content: string,
-  existingMessages: Array<{ role: string; content: string; created_at: string }>
+  _existingMessages?: Array<{ role: string; content: string; created_at: string }>
 ): Promise<ReplyResult> {
   const ctx = await requireAdmin();
   if (!ctx) return { success: false, error: "Non autorisé." };
@@ -38,6 +38,17 @@ export async function replyToTicket(
   if (!content.trim()) return { success: false, error: "Le message est requis." };
 
   const { supabase, user } = ctx;
+
+  // Fetch existing messages from DB (never trust client-provided data)
+  const { data: ticket } = await supabase
+    .from("support_tickets")
+    .select("messages")
+    .eq("id", ticketId)
+    .single();
+
+  if (!ticket) return { success: false, error: "Ticket introuvable." };
+
+  const existingMessages = (ticket.messages ?? []) as Array<Record<string, unknown>>;
 
   const newMessage = {
     role: "admin",

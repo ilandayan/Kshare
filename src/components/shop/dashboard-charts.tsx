@@ -13,6 +13,7 @@ interface TypeData  { name: string; value: number; color: string }
 interface DashboardChartsProps {
   period: string;
   barData: DayData[];
+  barTitle: string;
   pieData: TypeData[];
   avgPrice: number;
   donCommerce: number;
@@ -21,9 +22,14 @@ interface DashboardChartsProps {
 
 /* ── Period selector ─────────────────────────────────────────── */
 const PERIODS = [
-  { value: "week",    label: "Cette semaine" },
-  { value: "month",   label: "Ce mois" },
-  { value: "3months", label: "3 derniers mois" },
+  { value: "today",    label: "Aujourd'hui" },
+  { value: "week",     label: "Cette semaine" },
+  { value: "month",    label: "Ce mois" },
+  { value: "3months",  label: "3 derniers mois" },
+  { value: "6months",  label: "6 derniers mois" },
+  { value: "12months", label: "12 derniers mois" },
+  { value: "year",     label: "Cette année" },
+  { value: "total",    label: "Total" },
 ] as const;
 
 export function PeriodSelector({ period }: { period: string }) {
@@ -54,7 +60,7 @@ export function PeriodSelector({ period }: { period: string }) {
 }
 
 /* ── Charts + métriques ──────────────────────────────────────── */
-export function DashboardCharts({ period, barData, pieData, avgPrice, donCommerce, donClients }: DashboardChartsProps) {
+export function DashboardCharts({ period, barData, barTitle, pieData, avgPrice, donCommerce, donClients }: DashboardChartsProps) {
   return (
     <>
       <PeriodSelector period={period} />
@@ -63,7 +69,7 @@ export function DashboardCharts({ period, barData, pieData, avgPrice, donCommerc
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         {/* Bar chart */}
         <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-6">
-          <h3 className="font-semibold text-gray-900 mb-6 text-sm">Ventes de la semaine</h3>
+          <h3 className="font-semibold text-gray-900 mb-6 text-sm">{barTitle}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={barData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e5f0" vertical={false} />

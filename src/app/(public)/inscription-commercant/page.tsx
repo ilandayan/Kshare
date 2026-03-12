@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { KshareLogo } from "@/components/shared/kshare-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +27,7 @@ const schema = z
     adresse: z.string().min(5, "L'adresse est requise"),
     ville: z.string().min(2, "La ville est requise"),
     codePostal: z.string().regex(/^\d{5}$/, "Code postal invalide (5 chiffres)"),
-    hashgakha: z.string().min(1, "La hashgakha est requise"),
+    hashgakha: z.string().min(1, "La cacherout est requise"),
     telephone: z.string().regex(/^(\+33|0)[0-9]{9}$/, "Numéro de téléphone invalide"),
     siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres"),
     cgu: z.boolean().refine((v) => v === true, { message: "Vous devez accepter les CGU" }),
@@ -100,9 +101,7 @@ export default function InscriptionCommercantPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-2xl shadow-lg">
         <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold text-primary mb-2 block">
-            Kshare
-          </Link>
+          <Link href="/" className="mb-2 block"><KshareLogo size={32} /></Link>
           <CardTitle className="text-xl">Inscription commerce partenaire</CardTitle>
           <CardDescription>
             Rejoignez notre réseau de commerces casher et réduisez vos invendus
@@ -188,7 +187,7 @@ export default function InscriptionCommercantPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hashgakha">Hashgakha (supervision casher)</Label>
+                  <Label htmlFor="hashgakha">Cacherout (supervision casher)</Label>
                   <Select onValueChange={(v) => setValue("hashgakha", v, { shouldValidate: true })}>
                     <SelectTrigger id="hashgakha">
                       <SelectValue placeholder="Sélectionner..." />
@@ -280,7 +279,7 @@ export default function InscriptionCommercantPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Envoyer ma demande d&apos;inscription
             </Button>

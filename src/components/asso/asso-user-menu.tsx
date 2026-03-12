@@ -33,19 +33,19 @@ export function AssoUserMenu({ assoName, userInitial }: AssoUserMenuProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2.5 hover:bg-gray-50 rounded-xl px-3 py-2 transition-colors"
+        className="flex items-center gap-2.5 hover:bg-white/10 rounded-xl px-3 py-2 transition-colors"
       >
         <div className="text-right">
-          <div className="text-sm font-semibold text-gray-900 leading-tight">{assoName}</div>
-          <div className="text-xs text-gray-400 leading-tight">Association</div>
+          <div className="text-sm font-semibold text-white leading-tight">{assoName}</div>
+          <div className="text-xs text-white/60 leading-tight">Association</div>
         </div>
         <div className="relative">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+          <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
             {userInitial}
           </div>
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
         </div>
-        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-white/70 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (

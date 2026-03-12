@@ -1,113 +1,65 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect }     from "next/navigation";
-import Link             from "next/link";
-import { MapPin, Clock, Package, Info, Navigation } from "lucide-react";
-import { BASKET_TYPES } from "@/lib/constants";
-
-const TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
-  bassari: { label: "Bassari", emoji: "🥩" },
-  halavi:  { label: "Halavi",  emoji: "🧀" },
-  parve:   { label: "Parvé",   emoji: "🌿" },
-  shabbat: { label: "Shabbat", emoji: "🍷" },
-  mix:     { label: "Mix",     emoji: "➕" },
-};
+import { Info, Handshake, MapPin, Heart } from "lucide-react";
+import { DonBasketCard } from "@/components/asso/don-basket-card";
+import { ClientDonationCard } from "@/components/asso/client-donation-card";
+import { DEPARTMENTS } from "@/lib/constants";
 
 export default async function PaniersDonsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/connexion?role=association");
+  if (!user) redirect("/");
 
+  // Récupérer l'association et son département
+  const { data: asso } = await supabase
+    .from("associations")
+    .select("id, city, zone_region, department")
+    .eq("profile_id", user.id)
+    .single();
+
+  if (!asso) redirect("/");
+
+  // Récupérer les paniers dons publiés avec le code postal du commerce
   const { data: baskets } = await supabase
     .from("baskets")
-    .select("*, commerces(name, city, hashgakha, address, commerce_type)")
+    .select("*, commerces(name, city, hashgakha, address, postal_code, commerce_type)")
     .eq("status", "published")
     .eq("is_donation", true)
     .order("created_at", { ascending: false });
 
-  const today    = baskets?.filter((b) => b.day === "today")    ?? [];
-  const tomorrow = baskets?.filter((b) => b.day === "tomorrow") ?? [];
+  // Récupérer les dons clients en attente d'association
+  const { data: pendingDonations } = await supabase
+    .from("orders")
+    .select(
+      "id, quantity, total_amount, pickup_start, pickup_end, donation_expires_at, basket_id, baskets(type, description), commerces:commerce_id(name, city, address, postal_code)"
+    )
+    .eq("status", "pending_association")
+    .eq("is_donation", true)
+    .order("created_at", { ascending: false });
 
-  function BasketCard({ basket }: {
-    basket: {
-      id: string; type: string; pickup_start: string; pickup_end: string;
-      quantity_total: number; quantity_sold: number;
-      commerces: { name: string; city: string; hashgakha: string; address?: string; commerce_type?: string } | null;
-    }
-  }) {
-    const t       = TYPE_LABELS[basket.type] ?? { label: basket.type, emoji: "🛒" };
-    const c       = basket.commerces;
-    const initial = c?.name?.charAt(0)?.toUpperCase() ?? "K";
-    const remaining = basket.quantity_total - basket.quantity_sold;
+  // Filtrer par département : les 2 premiers chiffres du code postal du commerce
+  const filteredBaskets = asso.department
+    ? baskets?.filter((b) => {
+        const commerce = b.commerces as { postal_code?: string } | null;
+        return commerce?.postal_code?.slice(0, 2) === asso.department;
+      }) ?? []
+    : baskets ?? [];
 
-    return (
-      <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-        {/* Card header */}
-        <div className="p-5 pb-4">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#3744C8] rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0">
-                {initial}
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900 text-sm">{c?.name}</div>
-                <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-                  <MapPin className="h-3 w-3" />
-                  {c?.city}
-                  {c?.hashgakha && <span className="ml-1 text-[#3744C8]">· {c.hashgakha}</span>}
-                </div>
-              </div>
-            </div>
-            <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold shrink-0">
-              🤝 Don
-            </span>
-          </div>
+  // Filtrer aussi les dons clients par département
+  const filteredDonations = asso.department
+    ? pendingDonations?.filter((d) => {
+        const commerce = d.commerces as { postal_code?: string } | null;
+        return commerce?.postal_code?.slice(0, 2) === asso.department;
+      }) ?? []
+    : pendingDonations ?? [];
 
-          {/* Basket info */}
-          <div className="bg-[#f8f9fc] rounded-xl p-3 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Type</span>
-              <span className="font-medium text-gray-900">{t.emoji} {t.label}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5 text-gray-500">
-                <Clock className="h-3.5 w-3.5" /> Heure retrait
-              </span>
-              <span className="font-medium text-gray-900">{basket.pickup_start} – {basket.pickup_end}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5 text-gray-500">
-                <Package className="h-3.5 w-3.5" /> Quantité
-              </span>
-              <span className={`font-medium ${remaining <= 2 ? "text-orange-500" : "text-gray-900"}`}>
-                {remaining} disponible{remaining > 1 ? "s" : ""}
-              </span>
-            </div>
-          </div>
-        </div>
+  const today    = filteredBaskets.filter((b) => b.day === "today");
+  const tomorrow = filteredBaskets.filter((b) => b.day === "tomorrow");
 
-        {/* Actions */}
-        <div className="px-5 pb-5 flex gap-3">
-          <Link
-            href={`/asso/paniers-dons/${basket.id}`}
-            className="flex-1 bg-[#3744C8] hover:bg-[#2B38B8] text-white rounded-xl py-2.5 text-sm font-semibold text-center transition-colors"
-          >
-            Voir les détails
-          </Link>
-          {c?.address && (
-            <a
-              href={`https://maps.google.com/?q=${encodeURIComponent(c.address + " " + c.city)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 border border-[#e2e5f0] text-gray-600 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors shrink-0"
-            >
-              <Navigation className="h-3.5 w-3.5" />
-              Itinéraire
-            </a>
-          )}
-        </div>
-      </div>
-    );
-  }
+  // Nom du département pour l'affichage
+  const deptLabel = asso.department
+    ? DEPARTMENTS.find((d) => d.code === asso.department)?.label ?? `Département ${asso.department}`
+    : null;
 
   function Section({ title, items }: { title: string; items: typeof today }) {
     if (items.length === 0) return null;
@@ -115,9 +67,27 @@ export default async function PaniersDonsPage() {
       <div className="mb-8">
         <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-4">{title}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {items.map((b) => (
-            <BasketCard key={b.id} basket={b as Parameters<typeof BasketCard>[0]["basket"]} />
-          ))}
+          {items.map((b) => {
+            const commerce = b.commerces as {
+              name: string; city: string; hashgakha: string; address?: string;
+            } | null;
+            return (
+              <DonBasketCard
+                key={b.id}
+                basket={{
+                  id: b.id,
+                  type: b.type,
+                  pickup_start: b.pickup_start,
+                  pickup_end: b.pickup_end,
+                  quantity_total: b.quantity_total,
+                  quantity_sold: b.quantity_sold ?? 0,
+                  quantity_reserved: b.quantity_reserved ?? 0,
+                  description: b.description,
+                  commerce,
+                }}
+              />
+            );
+          })}
         </div>
       </div>
     );
@@ -130,13 +100,70 @@ export default async function PaniersDonsPage() {
         <p className="text-sm text-gray-400 mt-0.5">Paniers offerts par les commerçants partenaires</p>
       </div>
 
-      {!baskets?.length ? (
+      {/* Zone géographique info */}
+      {deptLabel && (
+        <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+            <MapPin className="h-4 w-4 text-purple-600" />
+          </div>
+          <div className="text-sm">
+            <span className="text-gray-500">Zone de récupération :</span>{" "}
+            <span className="font-semibold text-gray-900">{deptLabel}</span>
+            <span className="text-gray-400"> ({asso.department})</span>
+          </div>
+        </div>
+      )}
+
+      {/* Dons de clients en attente */}
+      {filteredDonations.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Heart className="h-4 w-4 text-amber-600" />
+            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
+              Dons de clients en attente
+            </h2>
+            <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+              {filteredDonations.length} en attente
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {filteredDonations.map((d) => {
+              const commerce = d.commerces as {
+                name: string;
+                city: string;
+                address: string | null;
+              } | null;
+              const basket = d.baskets as {
+                type: string;
+                description: string | null;
+              } | null;
+              return (
+                <ClientDonationCard
+                  key={d.id}
+                  order={{
+                    id: d.id,
+                    quantity: d.quantity,
+                    total_amount: d.total_amount,
+                    pickup_start: d.pickup_start,
+                    pickup_end: d.pickup_end,
+                    donation_expires_at: d.donation_expires_at,
+                    basket,
+                    commerce,
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {filteredBaskets.length === 0 && filteredDonations.length === 0 ? (
         <div className="bg-white rounded-2xl border border-[#e2e5f0] p-16 text-center">
-          <div className="text-4xl mb-4">🤝</div>
+          <div className="mb-4 flex justify-center"><Handshake className="h-10 w-10 text-gray-300" /></div>
           <p className="text-gray-500 font-medium">Aucun panier don disponible pour le moment</p>
           <p className="text-gray-400 text-sm mt-1">Revenez bientôt, les commerçants publient de nouveaux paniers chaque jour</p>
         </div>
-      ) : (
+      ) : filteredBaskets.length > 0 ? (
         <>
           <Section title="Aujourd'hui" items={today} />
           <Section title="Demain"       items={tomorrow} />
@@ -155,7 +182,7 @@ export default async function PaniersDonsPage() {
             </div>
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

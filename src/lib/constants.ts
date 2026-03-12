@@ -1,18 +1,81 @@
-export const COMMISSION_RATE_DEFAULT = 15; // percentage
-export const COMMISSION_RATE_EARLY = 10; // percentage for first 50 merchants
-export const SUBSCRIPTION_PRICE = 30; // EUR/month
-export const EARLY_ADOPTER_LIMIT = 50; // first N merchants
-export const EARLY_ADOPTER_OFFER_MONTHS = 3;
-export const NEW_MERCHANT_FREE_MONTHS = 1;
+// ── Subscription Plans ────────────────────────────────────────
+export const SUBSCRIPTION_PLANS = {
+  starter: {
+    name: "Starter",
+    monthlyPrice: 0,
+    commissionRate: 18,
+    description: "Idéal pour démarrer — sans abonnement",
+  },
+  pro: {
+    name: "Pro",
+    monthlyPrice: 29,
+    commissionRate: 12,
+    description: "Pour les commerces actifs — commission réduite",
+  },
+} as const;
+
+export type SubscriptionPlanId = keyof typeof SUBSCRIPTION_PLANS;
+
+// ── Service Fee (paid by client, kept by Kshare) ─────────────
+export const SERVICE_FEE_FIXED = 0.79; // EUR
+export const SERVICE_FEE_PERCENT = 0.015; // 1.5%
+
+// ── Basket Constraints ───────────────────────────────────────
+export const BASKET_MIN_PRICE = 5; // EUR minimum sold_price
+export const BASKET_MIN_DISCOUNT = 0.40; // 40% minimum discount
+
+// ── Payout Schedule ──────────────────────────────────────────
+export const PAYOUT_WEEKLY_ANCHOR = "tuesday" as const;
+
+// ── Pickup Confirmation ──────────────────────────────────────
+export const PICKUP_CONFIRMATION_TEXT =
+  "Je confirme avoir reçu ma commande et que son contenu est conforme";
+
+// ── App ──────────────────────────────────────────────────────
 export const ADMIN_URL = "/kshare-admin";
 export const SUPPORT_EMAIL = "contact@k-share.fr";
 
 export const BASKET_TYPES = [
-  { value: "bassari", label: "Bassari", emoji: "🥩", description: "Panier viande" },
-  { value: "halavi", label: "Halavi", emoji: "🧀", description: "Panier laitier" },
-  { value: "parve", label: "Parvé", emoji: "🌿", description: "Panier neutre" },
-  { value: "shabbat", label: "Shabbat", emoji: "🍷", description: "Panier Shabbat" },
-  { value: "mix", label: "Mix", emoji: "➕", description: "Panier mélange" },
+  {
+    value: "bassari",
+    label: "Bassari",
+    icon: "UtensilsCrossed",
+    shortDescription: "Panier viande",
+    description:
+      "Panier surprise de produits carnés casher (viandes, volailles, charcuterie). Le contenu varie selon les invendus du jour et peut inclure différentes pièces de viande, des préparations ou des spécialités du commerce.",
+  },
+  {
+    value: "halavi",
+    label: "Halavi",
+    icon: "Milk",
+    shortDescription: "Panier laitier",
+    description:
+      "Panier surprise de produits laitiers casher (fromages, yaourts, desserts lactés, crèmes). Le contenu varie selon les invendus du jour et peut inclure différentes spécialités laitières du commerce.",
+  },
+  {
+    value: "parve",
+    label: "Parvé",
+    icon: "Leaf",
+    shortDescription: "Panier neutre",
+    description:
+      "Panier surprise de produits parvé casher (fruits, légumes, pains, viennoiseries, conserves, épicerie). Le contenu varie selon les invendus du jour et peut inclure différents produits neutres du commerce.",
+  },
+  {
+    value: "shabbat",
+    label: "Shabbat",
+    icon: "Wine",
+    shortDescription: "Panier Shabbat",
+    description:
+      "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat (hallot, salades, plats préparés, desserts). Le contenu varie selon les préparations du commerce.",
+  },
+  {
+    value: "mix",
+    label: "Mix",
+    icon: "Layers",
+    shortDescription: "Panier mixte",
+    description:
+      "Panier surprise mixte composé d'un assortiment varié de produits casher (viandes, laitiers et/ou parvé, selon la politique du commerce). Le contenu varie selon les invendus du jour.",
+  },
 ] as const;
 
 export const COMMERCE_TYPES = [
@@ -58,3 +121,123 @@ export const BASKET_STATUS_LABELS: Record<string, string> = {
 };
 
 export const MAX_DISTANCE_OPTIONS = [1, 3, 5, 10, 15] as const;
+
+// ── Support / Contact ────────────────────────────────────────────
+
+export const SUPPORT_CATEGORIES = [
+  { value: "question_generale", label: "Question générale", icon: "HelpCircle" },
+  { value: "probleme_commande", label: "Problème avec une commande", icon: "ShoppingBag" },
+  { value: "inscription_commerce", label: "Inscription commerce", icon: "Store" },
+  { value: "inscription_association", label: "Inscription association", icon: "Heart" },
+  { value: "abonnement_facturation", label: "Abonnement / Facturation", icon: "CreditCard" },
+  { value: "bug_technique", label: "Bug technique", icon: "Bug" },
+  { value: "partenariat", label: "Partenariat / Presse", icon: "Handshake" },
+  { value: "autre", label: "Autre", icon: "MessageSquare" },
+] as const;
+
+export type SupportCategory = (typeof SUPPORT_CATEGORIES)[number]["value"];
+
+// ── Départements français ───────────────────────────────────────
+export const DEPARTMENTS = [
+  { code: "01", label: "Ain" },
+  { code: "02", label: "Aisne" },
+  { code: "03", label: "Allier" },
+  { code: "04", label: "Alpes-de-Haute-Provence" },
+  { code: "05", label: "Hautes-Alpes" },
+  { code: "06", label: "Alpes-Maritimes" },
+  { code: "07", label: "Ardèche" },
+  { code: "08", label: "Ardennes" },
+  { code: "09", label: "Ariège" },
+  { code: "10", label: "Aube" },
+  { code: "11", label: "Aude" },
+  { code: "12", label: "Aveyron" },
+  { code: "13", label: "Bouches-du-Rhône" },
+  { code: "14", label: "Calvados" },
+  { code: "15", label: "Cantal" },
+  { code: "16", label: "Charente" },
+  { code: "17", label: "Charente-Maritime" },
+  { code: "18", label: "Cher" },
+  { code: "19", label: "Corrèze" },
+  { code: "2A", label: "Corse-du-Sud" },
+  { code: "2B", label: "Haute-Corse" },
+  { code: "21", label: "Côte-d'Or" },
+  { code: "22", label: "Côtes-d'Armor" },
+  { code: "23", label: "Creuse" },
+  { code: "24", label: "Dordogne" },
+  { code: "25", label: "Doubs" },
+  { code: "26", label: "Drôme" },
+  { code: "27", label: "Eure" },
+  { code: "28", label: "Eure-et-Loir" },
+  { code: "29", label: "Finistère" },
+  { code: "30", label: "Gard" },
+  { code: "31", label: "Haute-Garonne" },
+  { code: "32", label: "Gers" },
+  { code: "33", label: "Gironde" },
+  { code: "34", label: "Hérault" },
+  { code: "35", label: "Ille-et-Vilaine" },
+  { code: "36", label: "Indre" },
+  { code: "37", label: "Indre-et-Loire" },
+  { code: "38", label: "Isère" },
+  { code: "39", label: "Jura" },
+  { code: "40", label: "Landes" },
+  { code: "41", label: "Loir-et-Cher" },
+  { code: "42", label: "Loire" },
+  { code: "43", label: "Haute-Loire" },
+  { code: "44", label: "Loire-Atlantique" },
+  { code: "45", label: "Loiret" },
+  { code: "46", label: "Lot" },
+  { code: "47", label: "Lot-et-Garonne" },
+  { code: "48", label: "Lozère" },
+  { code: "49", label: "Maine-et-Loire" },
+  { code: "50", label: "Manche" },
+  { code: "51", label: "Marne" },
+  { code: "52", label: "Haute-Marne" },
+  { code: "53", label: "Mayenne" },
+  { code: "54", label: "Meurthe-et-Moselle" },
+  { code: "55", label: "Meuse" },
+  { code: "56", label: "Morbihan" },
+  { code: "57", label: "Moselle" },
+  { code: "58", label: "Nièvre" },
+  { code: "59", label: "Nord" },
+  { code: "60", label: "Oise" },
+  { code: "61", label: "Orne" },
+  { code: "62", label: "Pas-de-Calais" },
+  { code: "63", label: "Puy-de-Dôme" },
+  { code: "64", label: "Pyrénées-Atlantiques" },
+  { code: "65", label: "Hautes-Pyrénées" },
+  { code: "66", label: "Pyrénées-Orientales" },
+  { code: "67", label: "Bas-Rhin" },
+  { code: "68", label: "Haut-Rhin" },
+  { code: "69", label: "Rhône" },
+  { code: "70", label: "Haute-Saône" },
+  { code: "71", label: "Saône-et-Loire" },
+  { code: "72", label: "Sarthe" },
+  { code: "73", label: "Savoie" },
+  { code: "74", label: "Haute-Savoie" },
+  { code: "75", label: "Paris" },
+  { code: "76", label: "Seine-Maritime" },
+  { code: "77", label: "Seine-et-Marne" },
+  { code: "78", label: "Yvelines" },
+  { code: "79", label: "Deux-Sèvres" },
+  { code: "80", label: "Somme" },
+  { code: "81", label: "Tarn" },
+  { code: "82", label: "Tarn-et-Garonne" },
+  { code: "83", label: "Var" },
+  { code: "84", label: "Vaucluse" },
+  { code: "85", label: "Vendée" },
+  { code: "86", label: "Vienne" },
+  { code: "87", label: "Haute-Vienne" },
+  { code: "88", label: "Vosges" },
+  { code: "89", label: "Yonne" },
+  { code: "90", label: "Territoire de Belfort" },
+  { code: "91", label: "Essonne" },
+  { code: "92", label: "Hauts-de-Seine" },
+  { code: "93", label: "Seine-Saint-Denis" },
+  { code: "94", label: "Val-de-Marne" },
+  { code: "95", label: "Val-d'Oise" },
+  { code: "971", label: "Guadeloupe" },
+  { code: "972", label: "Martinique" },
+  { code: "973", label: "Guyane" },
+  { code: "974", label: "La Réunion" },
+  { code: "976", label: "Mayotte" },
+] as const;

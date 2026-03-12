@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingBag, Euro, TrendingUp, Gift } from "lucide-react";
-import { COMMISSION_RATE_DEFAULT } from "@/lib/constants";
+import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 
 export default async function ReportingPage() {
   const supabase = await createClient();
@@ -81,7 +81,7 @@ export default async function ReportingPage() {
     {
       label: "Commissions générées",
       value: `${totalCommissions.toFixed(2)} €`,
-      sub: `Taux moyen ${COMMISSION_RATE_DEFAULT}%`,
+      sub: `Starter ${SUBSCRIPTION_PLANS.starter.commissionRate}% / Pro ${SUBSCRIPTION_PLANS.pro.commissionRate}%`,
       icon: TrendingUp,
       color: "text-purple-500",
     },

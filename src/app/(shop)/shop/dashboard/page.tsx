@@ -4,26 +4,47 @@ import { DashboardCharts } from "@/components/shop/dashboard-charts";
 import { TrendingUp, ShoppingBag, Heart, Euro } from "lucide-react";
 
 /* ── Period helpers ────────────────────────────────────────────── */
-function getPeriodStart(period: string): Date {
+function getPeriodStart(period: string, commerceCreatedAt?: string): Date {
   const now = new Date();
-  if (period === "month") {
-    return new Date(now.getFullYear(), now.getMonth(), 1);
+
+  switch (period) {
+    case "today": {
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+    case "month": {
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    case "3months": {
+      return new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    }
+    case "6months": {
+      return new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    }
+    case "12months": {
+      return new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    }
+    case "year": {
+      return new Date(now.getFullYear(), 0, 1);
+    }
+    case "total": {
+      return commerceCreatedAt ? new Date(commerceCreatedAt) : new Date(2020, 0, 1);
+    }
+    default: {
+      // week: Monday of current week
+      const d = new Date(now);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
   }
-  if (period === "3months") {
-    const d = new Date(now);
-    d.setMonth(d.getMonth() - 3);
-    return d;
-  }
-  // week: Monday of current week
-  const d = new Date(now);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
 }
 
 const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const MONTHS_FR = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+const HOURS = Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, "0")}h`); // 08h–22h
+
 const TYPE_COLORS: Record<string, string> = {
   bassari: "#3744C8",
   halavi:  "#10b981",
@@ -31,8 +52,8 @@ const TYPE_COLORS: Record<string, string> = {
   shabbat: "#8b5cf6",
   mix:     "#ec4899",
 };
-const TYPE_EMOJIS: Record<string, string> = {
-  bassari: "🥩", halavi: "🧀", parve: "🌿", shabbat: "🍷", mix: "➕",
+const TYPE_ICON_NAMES: Record<string, string> = {
+  bassari: "UtensilsCrossed", halavi: "Milk", parve: "Leaf", shabbat: "Wine", mix: "Layers",
 };
 
 /* ── Page ──────────────────────────────────────────────────────── */
@@ -46,16 +67,16 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/connexion");
+  if (!user) redirect("/");
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, name, commission_rate")
+    .select("id, name, commission_rate, created_at")
     .eq("profile_id", user.id)
     .single();
   if (!commerce) redirect("/inscription-commercant");
 
-  const periodStart = getPeriodStart(period);
+  const periodStart = getPeriodStart(period, commerce.created_at);
 
   // Fetch paid orders in period
   const { data: orders } = await supabase
@@ -84,16 +105,113 @@ export default async function DashboardPage({
   const donClients  = allOrders.filter((o) => o.is_donation).length;
   const avgPrice    = paniers > 0 ? caGenere / paniers : 0;
 
-  // Bar chart — sales by day of week (last 7 days)
-  const salesByDay: Record<number, number> = {};
-  for (let i = 0; i < 7; i++) salesByDay[i] = 0;
-  allOrders.forEach((o) => {
-    const d = new Date(o.created_at);
-    let dow = d.getDay(); // 0=sun
-    dow = dow === 0 ? 6 : dow - 1; // convert to Mon=0
-    salesByDay[dow] = (salesByDay[dow] ?? 0) + (o.quantity ?? 1);
-  });
-  const barData = DAYS_FR.map((day, i) => ({ day, ventes: salesByDay[i] ?? 0 }));
+  // Bar chart — dynamic grouping based on period
+  let barData: { day: string; ventes: number }[];
+  let barTitle: string;
+
+  if (period === "today") {
+    // Group by hour (08h–22h)
+    barTitle = "Ventes par heure";
+    const salesByHour: Record<number, number> = {};
+    for (let i = 8; i <= 22; i++) salesByHour[i] = 0;
+    allOrders.forEach((o) => {
+      const h = new Date(o.created_at).getHours();
+      if (h >= 8 && h <= 22) salesByHour[h] = (salesByHour[h] ?? 0) + (o.quantity ?? 1);
+    });
+    barData = HOURS.map((label, i) => ({ day: label, ventes: salesByHour[i + 8] ?? 0 }));
+  } else if (period === "week") {
+    // Group by day of week (Mon–Sun)
+    barTitle = "Ventes de la semaine";
+    const salesByDay: Record<number, number> = {};
+    for (let i = 0; i < 7; i++) salesByDay[i] = 0;
+    allOrders.forEach((o) => {
+      const d = new Date(o.created_at);
+      let dow = d.getDay();
+      dow = dow === 0 ? 6 : dow - 1;
+      salesByDay[dow] = (salesByDay[dow] ?? 0) + (o.quantity ?? 1);
+    });
+    barData = DAYS_FR.map((day, i) => ({ day, ventes: salesByDay[i] ?? 0 }));
+  } else if (period === "month") {
+    // Group by day of month (1–31)
+    barTitle = "Ventes du mois";
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const salesByDate: Record<number, number> = {};
+    for (let i = 1; i <= daysInMonth; i++) salesByDate[i] = 0;
+    allOrders.forEach((o) => {
+      const day = new Date(o.created_at).getDate();
+      salesByDate[day] = (salesByDate[day] ?? 0) + (o.quantity ?? 1);
+    });
+    barData = Array.from({ length: daysInMonth }, (_, i) => ({ day: (i + 1).toString(), ventes: salesByDate[i + 1] ?? 0 }));
+  } else if (["3months", "6months", "12months", "year"].includes(period)) {
+    // Group by month
+    const periodLabels: Record<string, string> = {
+      "3months": "Ventes des 3 derniers mois",
+      "6months": "Ventes des 6 derniers mois",
+      "12months": "Ventes des 12 derniers mois",
+      year: "Ventes de l'année",
+    };
+    barTitle = periodLabels[period] ?? "Ventes";
+    const now = new Date();
+    const startMonth = periodStart.getMonth();
+    const startYear = periodStart.getFullYear();
+    const endMonth = now.getMonth();
+    const endYear = now.getFullYear();
+    const months: { key: string; label: string; month: number; year: number }[] = [];
+    let y = startYear, m = startMonth;
+    while (y < endYear || (y === endYear && m <= endMonth)) {
+      months.push({ key: `${y}-${m}`, label: MONTHS_FR[m], month: m, year: y });
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+    const salesByMonth: Record<string, number> = {};
+    months.forEach((mo) => { salesByMonth[mo.key] = 0; });
+    allOrders.forEach((o) => {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      salesByMonth[key] = (salesByMonth[key] ?? 0) + (o.quantity ?? 1);
+    });
+    barData = months.map((mo) => ({ day: mo.label, ventes: salesByMonth[mo.key] ?? 0 }));
+  } else {
+    // "total" — group by month (all time)
+    barTitle = "Ventes totales";
+    const now = new Date();
+    const startMonth = periodStart.getMonth();
+    const startYear = periodStart.getFullYear();
+    const endMonth = now.getMonth();
+    const endYear = now.getFullYear();
+    const totalMonths = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+
+    if (totalMonths <= 24) {
+      // Show by month
+      const months: { key: string; label: string }[] = [];
+      let y = startYear, m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        months.push({ key: `${y}-${m}`, label: `${MONTHS_FR[m]} ${y.toString().slice(2)}` });
+        m++;
+        if (m > 11) { m = 0; y++; }
+      }
+      const salesByMonth: Record<string, number> = {};
+      months.forEach((mo) => { salesByMonth[mo.key] = 0; });
+      allOrders.forEach((o) => {
+        const d = new Date(o.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        salesByMonth[key] = (salesByMonth[key] ?? 0) + (o.quantity ?? 1);
+      });
+      barData = months.map((mo) => ({ day: mo.label, ventes: salesByMonth[mo.key] ?? 0 }));
+    } else {
+      // Show by year
+      const years: number[] = [];
+      for (let y = startYear; y <= endYear; y++) years.push(y);
+      const salesByYear: Record<number, number> = {};
+      years.forEach((y) => { salesByYear[y] = 0; });
+      allOrders.forEach((o) => {
+        const y = new Date(o.created_at).getFullYear();
+        salesByYear[y] = (salesByYear[y] ?? 0) + (o.quantity ?? 1);
+      });
+      barData = years.map((y) => ({ day: y.toString(), ventes: salesByYear[y] ?? 0 }));
+    }
+  }
 
   // Pie chart — basket type distribution
   const typeCounts: Record<string, number> = {};
@@ -126,7 +244,7 @@ export default async function DashboardPage({
     {
       label: "CA net",
       value: `${caNet.toFixed(2)}€`,
-      sub: `Après ${commerce.commission_rate ?? 15}% commission`,
+      sub: "Après commission",
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
       icon: TrendingUp,
@@ -171,6 +289,7 @@ export default async function DashboardPage({
       <DashboardCharts
         period={period}
         barData={barData}
+        barTitle={barTitle}
         pieData={pieData}
         avgPrice={avgPrice}
         donCommerce={donCommerce}

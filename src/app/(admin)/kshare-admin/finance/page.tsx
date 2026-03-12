@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Euro, Clock } from "lucide-react";
-import { SUBSCRIPTION_PRICE } from "@/lib/constants";
+import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: "Actif",
@@ -91,7 +91,7 @@ export default async function FinancePage() {
     {
       label: "Revenus abonnements",
       value: `${monthlyRevenue.toFixed(2)} €`,
-      sub: `${SUBSCRIPTION_PRICE} €/mois par abonnement`,
+      sub: `Starter ${SUBSCRIPTION_PLANS.starter.monthlyPrice} € / Pro ${SUBSCRIPTION_PLANS.pro.monthlyPrice} €`,
       icon: Euro,
       color: "text-green-500",
     },

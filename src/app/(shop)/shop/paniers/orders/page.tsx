@@ -20,7 +20,7 @@ export default async function OrdersPage() {
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, name, commerce_type")
+    .select("id")
     .eq("profile_id", user.id)
     .single();
   if (!commerce) redirect("/connexion");
@@ -29,18 +29,14 @@ export default async function OrdersPage() {
     .from("orders")
     .select(`
       id, status, quantity, total_amount, created_at, is_donation,
-      baskets!inner(sold_price, type),
-      profiles!orders_client_id_fkey(full_name, email, phone),
-      associations(name)
+      baskets!inner(sold_price, type, day, pickup_start, pickup_end)
     `)
     .eq("commerce_id", commerce.id)
     .order("created_at", { ascending: false })
     .limit(100);
 
   const orders = (raw ?? []).map((o) => {
-    const basket = o.baskets as { sold_price: number; type: string } | null;
-    const profile = o.profiles as { full_name: string | null; email: string | null; phone: string | null } | null;
-    const asso    = o.associations as { name: string } | null;
+    const basket = o.baskets as { sold_price: number; type: string; day: string; pickup_start: string; pickup_end: string } | null;
     const pricePerBasket = basket?.sold_price ?? 0;
     const total  = o.total_amount ?? 0;
 
@@ -53,12 +49,9 @@ export default async function OrdersPage() {
       pricePerBasket,
       total,
       isDonation: o.is_donation ?? false,
-      clientName:    profile?.full_name  ?? "Client",
-      clientEmail:   profile?.email      ?? "",
-      clientPhone:   profile?.phone      ?? "",
-      commerceName:  commerce.name,
-      commerceType:  commerce.commerce_type ?? "Commerce",
-      associationName: asso?.name,
+      basketType: basket?.type ?? "",
+      basketDay: basket?.day === "today" ? "Aujourd'hui" : "Demain",
+      pickupTime: `${basket?.pickup_start?.slice(0, 5) ?? ""} – ${basket?.pickup_end?.slice(0, 5) ?? ""}`,
     };
   });
 
@@ -69,10 +62,10 @@ export default async function OrdersPage() {
   const dons            = orders.filter((o) => o.isDonation).length;
 
   const kpis = [
-    { label: "Total Commandes", value: totalCommandes.toString(),       borderColor: "border-l-blue-500",   icon: "🛒" },
-    { label: "Revenu Total",    value: `${revenuTotal.toFixed(2)}€`,    borderColor: "border-l-green-500",  icon: "💶" },
-    { label: "Paniers Vendus",  value: paniersVendus.toString(),         borderColor: "border-l-orange-500", icon: "🛍️" },
-    { label: "Dons (Mitzvot)",  value: dons.toString(),                  borderColor: "border-l-purple-500", icon: "🤝" },
+    { label: "Total Commandes", value: totalCommandes.toString(),       borderColor: "border-l-blue-500",   icon: "ShoppingCart" },
+    { label: "Revenu Total",    value: `${revenuTotal.toFixed(2)}€`,    borderColor: "border-l-green-500",  icon: "Wallet" },
+    { label: "Paniers Vendus",  value: paniersVendus.toString(),         borderColor: "border-l-orange-500", icon: "ShoppingBag" },
+    { label: "Dons (Mitzvot)",  value: dons.toString(),                  borderColor: "border-l-purple-500", icon: "Handshake" },
   ];
 
   return (

@@ -1,4 +1,5 @@
 import { createClient }     from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminUsersClient } from "@/components/admin/admin-users-client";
 import type {
   ClientRow, CommercantRow, AssoRow,
@@ -41,22 +42,32 @@ export default async function AdminUtilisateursPage({
   /* ── Clients ── */
   const { data: clientProfiles } = await supabase
     .from("profiles")
-    .select("id, full_name, email, phone, created_at")
+    .select("id, full_name, email, phone, created_at, is_archived")
     .eq("role", "client")
     .order("created_at", { ascending: false });
 
   const clientIds = (clientProfiles ?? []).map((p) => p.id);
 
   // Orders per client
+  type OrderRow = { client_id: string; total_amount: number; quantity: number; is_donation: boolean; created_at: string };
   const { data: clientOrders } = clientIds.length > 0
     ? await supabase
         .from("orders")
         .select("client_id, total_amount, quantity, is_donation, created_at")
         .in("client_id", clientIds)
         .in("status", ["paid", "ready_for_pickup", "picked_up"])
-    : { data: [] };
+    : { data: [] as OrderRow[] };
 
-  const ordersByClient: Record<string, typeof clientOrders> = {};
+  // Fetch banned users via admin API
+  const adminClient = createAdminClient();
+  const { data: authListData } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+  const bannedUserIds = new Set(
+    (authListData?.users ?? [])
+      .filter((u) => u.banned_until && new Date(u.banned_until) > new Date())
+      .map((u) => u.id)
+  );
+
+  const ordersByClient: Record<string, OrderRow[]> = {};
   (clientOrders ?? []).forEach((o) => {
     if (!ordersByClient[o.client_id]) ordersByClient[o.client_id] = [];
     ordersByClient[o.client_id]!.push(o);
@@ -65,6 +76,7 @@ export default async function AdminUtilisateursPage({
   const clients: ClientRow[] = (clientProfiles ?? []).map((p) => {
     const orders = ordersByClient[p.id] ?? [];
     const lastOrder = orders[0]?.created_at ?? null;
+    const isBanned = bannedUserIds.has(p.id);
     return {
       id:               p.id,
       initials:         getInitials(p.full_name),
@@ -76,7 +88,7 @@ export default async function AdminUtilisateursPage({
       basketCount:      orders.reduce((s, o) => s + (o.quantity ?? 1), 0),
       donationsAmount:  orders.filter((o) => o.is_donation).reduce((s, o) => s + (o.total_amount ?? 0), 0),
       lastActivity:     timeSince(lastOrder ?? p.created_at),
-      status:           "actif" as const,
+      status:           p.is_archived ? "archivé" as const : isBanned ? "suspendu" as const : "actif" as const,
     };
   });
 
@@ -106,7 +118,7 @@ export default async function AdminUtilisateursPage({
       proposedCount: baskets.length,
       soldCount:     baskets.reduce((s, b) => s + (b.quantity_sold ?? 0), 0),
       lastActivity:  timeSince(profile?.created_at ?? null),
-      status:        c.status === "validated" ? "actif" : "inactif",
+      status:        c.status === "validated" ? "actif" : c.status === "archived" ? "archivé" : c.status === "suspended" ? "suspendu" : "en attente",
     };
   });
 
@@ -136,7 +148,7 @@ export default async function AdminUtilisateursPage({
       distCount:      collected.reduce((s, o) => s + (o.quantity ?? 1), 0),
       famillesCount:  Math.round(collected.reduce((s, o) => s + (o.quantity ?? 1), 0) * 2.5),
       lastActivity:   timeSince(a.created_at),
-      status:         a.status === "validated" ? "actif" : "inactif",
+      status:         a.status === "validated" ? "actif" : a.status === "archived" ? "archivé" : a.status === "suspended" ? "suspendu" : "en attente",
     };
   });
 

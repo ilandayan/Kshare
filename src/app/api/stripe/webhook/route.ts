@@ -1,12 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomInt } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
+import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
+import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from "@/lib/constants";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
 function generatePickupCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // Use crypto for cryptographically secure random number generation
+  return randomInt(100000, 1000000).toString();
+}
+
+function computeDonationExpiresAt(
+  pickupEnd: string,
+  day: string
+): string {
+  // Build expiration timestamp based on pickup_end + day
+  const now = new Date();
+  const targetDate =
+    day === "tomorrow"
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const [hours, minutes] = pickupEnd.split(":").map(Number);
+  targetDate.setHours(hours, minutes, 0, 0);
+
+  return targetDate.toISOString();
 }
 
 async function handleCheckoutSessionCompleted(
@@ -14,18 +35,31 @@ async function handleCheckoutSessionCompleted(
 ): Promise<void> {
   const supabase = createAdminClient();
 
-  const { basketId, quantity, profileId, commerceId, totalAmount, commissionAmount } =
-    session.metadata ?? {};
+  const {
+    basketId,
+    quantity,
+    profileId,
+    commerceId,
+    basketAmount,
+    commissionAmount,
+    serviceFeeAmount,
+    isDonation,
+    // Legacy fallback for old metadata format
+    totalAmount: legacyTotalAmount,
+  } = session.metadata ?? {};
 
   if (!basketId || !quantity || !profileId || !commerceId) {
     console.error("[webhook] Missing metadata in checkout.session.completed", session.id);
     return;
   }
 
+  const isClientDonation = isDonation === "true";
   const quantityNum = parseInt(quantity, 10);
-  const totalAmountNum = parseInt(totalAmount ?? "0", 10) / 100;
+  // basketAmount = price of baskets only (without service fee)
+  const basketAmountNum = parseInt(basketAmount ?? legacyTotalAmount ?? "0", 10) / 100;
   const commissionAmountNum = parseInt(commissionAmount ?? "0", 10) / 100;
-  const netAmountNum = totalAmountNum - commissionAmountNum;
+  const serviceFeeAmountNum = parseInt(serviceFeeAmount ?? "0", 10) / 100;
+  const netAmountNum = basketAmountNum - commissionAmountNum;
 
   // Fetch basket info for pickup times
   const { data: basket, error: basketError } = await supabase
@@ -39,49 +73,123 @@ async function handleCheckoutSessionCompleted(
     return;
   }
 
-  const pickupCode = generatePickupCode();
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : null;
 
-  // Create order
-  const { error: orderError } = await supabase.from("orders").insert({
-    basket_id: basketId,
-    client_id: profileId,
-    commerce_id: commerceId,
-    total_amount: totalAmountNum,
-    unit_price: basket.sold_price,
-    quantity: quantityNum,
-    commission_amount: commissionAmountNum,
-    net_amount: netAmountNum,
-    stripe_payment_intent_id:
-      typeof session.payment_intent === "string"
-        ? session.payment_intent
-        : null,
-    status: "paid",
-    qr_code_token: pickupCode,
-    is_donation: false,
-    pickup_start: basket.pickup_start,
-    pickup_end: basket.pickup_end,
-    pickup_date: basket.day,
-  });
+  if (isClientDonation) {
+    // Don client: order en attente d'une association
+    const donationExpiresAt = computeDonationExpiresAt(
+      basket.pickup_end,
+      basket.day
+    );
 
-  if (orderError) {
-    console.error("[webhook] Failed to create order:", orderError);
-    return;
-  }
+    const { error: orderError } = await supabase.from("orders").insert({
+      basket_id: basketId,
+      client_id: profileId,
+      commerce_id: commerceId,
+      total_amount: basketAmountNum,
+      unit_price: basketAmountNum / quantityNum,
+      quantity: quantityNum,
+      commission_amount: 0,
+      net_amount: basketAmountNum,
+      service_fee_amount: serviceFeeAmountNum,
+      stripe_payment_intent_id: paymentIntentId,
+      status: "pending_association",
+      qr_code_token: null,
+      is_donation: true,
+      pickup_start: basket.pickup_start,
+      pickup_end: basket.pickup_end,
+      pickup_date: basket.day,
+      donation_expires_at: donationExpiresAt,
+    });
 
-  // Update basket quantities
-  const { data: currentBasket } = await supabase
-    .from("baskets")
-    .select("quantity_sold, quantity_reserved")
-    .eq("id", basketId)
-    .single();
+    if (orderError) {
+      console.error("[webhook] Failed to create donation order:", orderError);
+      return;
+    }
 
-  if (currentBasket) {
-    await supabase
+    // Increment quantity_reserved (not quantity_sold)
+    const { data: currentBasket } = await supabase
       .from("baskets")
-      .update({
-        quantity_sold: currentBasket.quantity_sold + quantityNum,
+      .select("quantity_reserved")
+      .eq("id", basketId)
+      .single();
+
+    if (currentBasket) {
+      await supabase
+        .from("baskets")
+        .update({
+          quantity_reserved: currentBasket.quantity_reserved + quantityNum,
+        })
+        .eq("id", basketId);
+    }
+  } else {
+    // Achat classique
+    const pickupCode = generatePickupCode();
+
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        basket_id: basketId,
+        client_id: profileId,
+        commerce_id: commerceId,
+        total_amount: basketAmountNum,
+        unit_price: basket.sold_price,
+        quantity: quantityNum,
+        commission_amount: commissionAmountNum,
+        net_amount: netAmountNum,
+        service_fee_amount: serviceFeeAmountNum,
+        stripe_payment_intent_id: paymentIntentId,
+        status: "paid",
+        qr_code_token: pickupCode,
+        is_donation: false,
+        pickup_start: basket.pickup_start,
+        pickup_end: basket.pickup_end,
+        pickup_date: basket.day,
       })
-      .eq("id", basketId);
+      .select("id")
+      .single();
+
+    if (orderError) {
+      console.error("[webhook] Failed to create order:", orderError);
+      return;
+    }
+
+    // Create ledger entries for the payment
+    if (order && paymentIntentId && commissionAmountNum > 0) {
+      try {
+        await createPaymentLedgerEntries({
+          commerceId,
+          orderId: order.id,
+          totalAmount: basketAmountNum,
+          commissionAmount: commissionAmountNum,
+          serviceFeeAmount: serviceFeeAmountNum,
+          netAmount: netAmountNum,
+          stripePaymentIntentId: paymentIntentId,
+        });
+      } catch (ledgerErr) {
+        // Non-blocking: log but don't fail the webhook
+        console.error("[webhook] Ledger entry failed:", ledgerErr);
+      }
+    }
+
+    // Update basket quantities
+    const { data: currentBasket } = await supabase
+      .from("baskets")
+      .select("quantity_sold")
+      .eq("id", basketId)
+      .single();
+
+    if (currentBasket) {
+      await supabase
+        .from("baskets")
+        .update({
+          quantity_sold: currentBasket.quantity_sold + quantityNum,
+        })
+        .eq("id", basketId);
+    }
   }
 }
 
@@ -110,9 +218,11 @@ async function handleSubscriptionCreatedOrUpdated(
       ? subscription.customer
       : subscription.customer.id;
 
+  // Fetch commerce with current state BEFORE any updates
+  // (needed to distinguish admin-suspend from auto-suspend for non-payment)
   const { data: commerce, error: commerceError } = await supabase
     .from("commerces")
-    .select("id")
+    .select("id, status, subscription_status")
     .eq("stripe_customer_id", customerId)
     .single();
 
@@ -120,6 +230,9 @@ async function handleSubscriptionCreatedOrUpdated(
     console.error("[webhook] Commerce not found for customer:", customerId);
     return;
   }
+
+  const previousStatus = commerce.status;
+  const previousSubscriptionStatus = commerce.subscription_status;
 
   const statusMap: Record<string, "active" | "offered" | "unpaid" | "cancellation_requested"> = {
     active: "active",
@@ -142,15 +255,21 @@ async function handleSubscriptionCreatedOrUpdated(
     ? new Date(firstItem.current_period_end * 1000).toISOString()
     : null;
 
+  // Determine plan from subscription metadata
+  const plan = (subscription.metadata?.plan ?? "pro") as SubscriptionPlanId;
+  const planConfig = SUBSCRIPTION_PLANS[plan] ?? SUBSCRIPTION_PLANS.pro;
+
   // Upsert subscription record
   const { error: upsertError } = await supabase.from("subscriptions").upsert(
     {
       commerce_id: commerce.id,
       stripe_subscription_id: subscription.id,
       status: mappedStatus,
+      plan,
       current_period_start: periodStart,
       current_period_end: periodEnd,
-      monthly_price: 30,
+      monthly_price: planConfig.monthlyPrice,
+      commission_rate: planConfig.commissionRate,
     },
     { onConflict: "commerce_id" }
   );
@@ -159,11 +278,38 @@ async function handleSubscriptionCreatedOrUpdated(
     console.error("[webhook] Failed to upsert subscription:", upsertError);
   }
 
-  // Update commerce subscription_status
+  // Update commerce subscription_status + plan + commission_rate
   await supabase
     .from("commerces")
-    .update({ subscription_status: mappedStatus })
+    .update({
+      subscription_status: mappedStatus,
+      subscription_plan: plan,
+      commission_rate: planConfig.commissionRate,
+    })
     .eq("id", commerce.id);
+
+  // Auto-suspend commerce when subscription becomes unpaid
+  // (only if commerce was previously validated — don't re-suspend an already suspended commerce)
+  if (mappedStatus === "unpaid" && previousStatus === "validated") {
+    await supabase
+      .from("commerces")
+      .update({ status: "suspended" })
+      .eq("id", commerce.id);
+  }
+
+  // Auto-restore commerce when subscription becomes active again
+  // ONLY if the suspension was caused by non-payment (previous subscription_status was "unpaid")
+  // This prevents restoring commerces suspended manually by admin for other reasons
+  if (
+    (mappedStatus === "active" || mappedStatus === "offered") &&
+    previousStatus === "suspended" &&
+    previousSubscriptionStatus === "unpaid"
+  ) {
+    await supabase
+      .from("commerces")
+      .update({ status: "validated" })
+      .eq("id", commerce.id);
+  }
 }
 
 async function handleSubscriptionDeleted(
@@ -187,17 +333,26 @@ async function handleSubscriptionDeleted(
     return;
   }
 
+  // Downgrade to Starter plan (commerce stays active, just loses Pro benefits)
   await supabase
     .from("subscriptions")
     .update({
-      status: "cancellation_requested",
+      status: "active",
+      plan: "starter",
+      monthly_price: 0,
+      commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
       canceled_at: new Date().toISOString(),
+      stripe_subscription_id: null,
     })
     .eq("commerce_id", commerce.id);
 
   await supabase
     .from("commerces")
-    .update({ subscription_status: "cancellation_requested" })
+    .update({
+      subscription_status: "active",
+      subscription_plan: "starter",
+      commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
+    })
     .eq("id", commerce.id);
 }
 

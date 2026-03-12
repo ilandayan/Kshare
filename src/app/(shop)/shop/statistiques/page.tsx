@@ -13,14 +13,14 @@ export default async function StatistiquesPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("total_amount, commission_amount, net_amount, status, created_at, is_donation")
+    .select("total_amount, net_amount, status, created_at, is_donation")
     .eq("commerce_id", commerce.id)
     .neq("status", "cancelled_admin");
 
   const paidOrders = orders?.filter((o) => ["paid", "picked_up", "ready_for_pickup"].includes(o.status)) ?? [];
   const cabrut = paidOrders.reduce((s, o) => s + (o.total_amount || 0), 0);
-  const commissions = paidOrders.reduce((s, o) => s + (o.commission_amount || 0), 0);
   const canet = paidOrders.reduce((s, o) => s + (o.net_amount || 0), 0);
+  const paniersVendus = paidOrders.filter((o) => !o.is_donation).length;
   const donations = orders?.filter((o) => o.is_donation).length ?? 0;
 
   return (
@@ -29,8 +29,8 @@ export default async function StatistiquesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
           { label: "CA brut TTC", value: `${cabrut.toFixed(2)} €`, icon: TrendingUp },
-          { label: "Commission Kshare", value: `${commissions.toFixed(2)} €`, icon: Euro },
           { label: "CA net", value: `${canet.toFixed(2)} €`, icon: Euro },
+          { label: "Paniers vendus", value: paniersVendus.toString(), icon: ShoppingBag },
           { label: "Paniers dons", value: donations.toString(), icon: Gift },
         ].map((kpi) => (
           <Card key={kpi.label}>

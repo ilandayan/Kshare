@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+# Windows reserved device name (can appear as a real file on NTFS via Unix tools)
+nul
 
 # debug
 npm-debug.log*

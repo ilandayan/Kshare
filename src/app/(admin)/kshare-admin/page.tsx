@@ -1,22 +1,40 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminCharts }  from "@/components/admin/admin-charts";
-import { Euro, TrendingUp, ShoppingBag, Package, BarChart3, Store, Heart, Gift } from "lucide-react";
+import { Euro, TrendingUp, ShoppingBag, Package, BarChart3, Store, Heart, Gift, CreditCard } from "lucide-react";
 
 function getPeriodStart(period: string): Date {
   const now = new Date();
-  if (period === "month") return new Date(now.getFullYear(), now.getMonth(), 1);
-  if (period === "3months") { const d = new Date(now); d.setMonth(d.getMonth() - 3); return d; }
-  const d = new Date(now);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  switch (period) {
+    case "today":
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    case "month":
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    case "3months":
+      return new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    case "6months":
+      return new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    case "12months":
+      return new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    case "year":
+      return new Date(now.getFullYear(), 0, 1);
+    case "total":
+      return new Date(2020, 0, 1);
+    default: {
+      const d = new Date(now);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+  }
 }
 
 const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const TYPE_EMOJIS: Record<string, string> = {
-  bassari: "🥩", halavi: "🧀", parve: "🌿", shabbat: "🍷", mix: "➕",
+const MONTHS_FR = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+const HOURS = Array.from({ length: 15 }, (_, i) => `${(i + 8).toString().padStart(2, "0")}h`);
+const TYPE_ICON_NAMES: Record<string, string> = {
+  bassari: "UtensilsCrossed", halavi: "Milk", parve: "Leaf", shabbat: "Wine", mix: "Layers",
 };
 const TYPE_LABELS_FR: Record<string, string> = {
   bassari: "Bassari", halavi: "Halavi", parve: "Parvé", shabbat: "Shabbat", mix: "Mix",
@@ -25,24 +43,38 @@ const TYPE_LABELS_FR: Record<string, string> = {
 export default async function AdminDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; commerce?: string }>;
 }) {
-  const { period: rawPeriod } = await searchParams;
+  const { period: rawPeriod, commerce: rawCommerce } = await searchParams;
   const period = rawPeriod ?? "week";
+  const commerce = rawCommerce ?? "";
 
   const supabase    = await createClient();
   const periodStart = getPeriodStart(period);
 
-  const { data: orders } = await supabase
+  // Fetch validated commerces list for filter
+  const { data: commercesList } = await supabase
+    .from("commerces")
+    .select("id, name, city, commission_rate")
+    .eq("status", "validated")
+    .order("name");
+
+  // Orders — filtered by commerce if selected
+  let ordersQuery = supabase
     .from("orders")
-    .select("id, total_amount, quantity, created_at, is_donation")
+    .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount")
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
+  if (commerce) ordersQuery = ordersQuery.eq("commerce_id", commerce);
+  const { data: orders } = await ordersQuery;
 
-  const { data: baskets } = await supabase
+  // Baskets — filtered by commerce if selected
+  let basketsQuery = supabase
     .from("baskets")
     .select("id, type, quantity_sold, is_donation, created_at")
     .gte("created_at", periodStart.toISOString());
+  if (commerce) basketsQuery = basketsQuery.eq("commerce_id", commerce);
+  const { data: baskets } = await basketsQuery;
 
   const { count: activeCommerces } = await supabase
     .from("commerces")
@@ -52,27 +84,154 @@ export default async function AdminDashboard({
   const allOrders  = orders  ?? [];
   const allBaskets = baskets ?? [];
 
-  const caGenere     = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
-  const commission   = caGenere * 0.15;
-  const caNet        = caGenere - commission;
-  const paniersVendus = allOrders.reduce((s, o) => s + (o.quantity ?? 1), 0);
-  const avgPrice     = paniersVendus > 0 ? caGenere / paniersVendus : 0;
-  const donCommerce  = allBaskets.filter((b) => b.is_donation).length;
-  const donClients   = allOrders.filter((o) => o.is_donation).length;
+  // Commission rate: use commerce-specific rate when filtered, otherwise 15%
+  const selectedCommerce = commerce ? commercesList?.find((c) => c.id === commerce) : null;
+  const commissionRate = selectedCommerce ? (selectedCommerce.commission_rate ?? 15) / 100 : 0.15;
 
-  const salesByDay: Record<number, { ca: number; ventes: number }> = {};
-  for (let i = 0; i < 7; i++) salesByDay[i] = { ca: 0, ventes: 0 };
-  allOrders.forEach((o) => {
-    let dow = new Date(o.created_at).getDay();
-    dow = dow === 0 ? 6 : dow - 1;
-    salesByDay[dow].ca     += o.total_amount ?? 0;
-    salesByDay[dow].ventes += o.quantity ?? 1;
-  });
-  const dayData = DAYS_FR.map((day, i) => ({
-    day,
-    ca:     Math.round(salesByDay[i]?.ca ?? 0),
-    ventes: salesByDay[i]?.ventes ?? 0,
-  }));
+  const caGenere      = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
+  const commission    = caGenere * commissionRate;
+  const serviceFees   = allOrders.reduce((s, o) => s + (o.service_fee_amount ?? 0), 0);
+  const caNet         = caGenere - commission;
+  const paniersVendus = allOrders.reduce((s, o) => s + (o.quantity ?? 1), 0);
+  const avgPrice      = paniersVendus > 0 ? caGenere / paniersVendus : 0;
+  const donCommerce   = allBaskets.filter((b) => b.is_donation).length;
+  const donClients    = allOrders.filter((o) => o.is_donation).length;
+  const revenuKshare  = commission + serviceFees;
+
+  // ── Ranking: aggregate ALL orders for the period (no commerce filter) ──
+  const { data: rankingOrders } = await supabase
+    .from("orders")
+    .select("commerce_id, total_amount, commission_amount, quantity")
+    .in("status", ["paid", "ready_for_pickup", "picked_up"])
+    .gte("created_at", periodStart.toISOString());
+
+  const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number }>();
+  for (const c of commercesList ?? []) {
+    rankingMap.set(c.id, { name: c.name, city: c.city ?? "", ca: 0, commission: 0, paniers: 0 });
+  }
+  for (const o of rankingOrders ?? []) {
+    const entry = rankingMap.get(o.commerce_id);
+    if (entry) {
+      entry.ca += o.total_amount ?? 0;
+      entry.commission += o.commission_amount ?? 0;
+      entry.paniers += o.quantity ?? 1;
+    }
+  }
+  const ranking = [...rankingMap.values()]
+    .filter((c) => c.ca > 0 || c.paniers > 0)
+    .sort((a, b) => b.ca - a.ca);
+
+  // ── Dynamic chart data based on period ──
+  let dayData: { day: string; ca: number; ventes: number }[];
+  let caTitle: string;
+  let ventesTitle: string;
+
+  if (period === "today") {
+    caTitle = "CA par heure";
+    ventesTitle = "Paniers vendus par heure";
+    const byHour: Record<number, { ca: number; ventes: number }> = {};
+    for (let i = 8; i <= 22; i++) byHour[i] = { ca: 0, ventes: 0 };
+    allOrders.forEach((o) => {
+      const h = new Date(o.created_at).getHours();
+      if (h >= 8 && h <= 22) {
+        byHour[h].ca += o.total_amount ?? 0;
+        byHour[h].ventes += o.quantity ?? 1;
+      }
+    });
+    dayData = HOURS.map((label, i) => ({ day: label, ca: Math.round(byHour[i + 8]?.ca ?? 0), ventes: byHour[i + 8]?.ventes ?? 0 }));
+  } else if (period === "week") {
+    caTitle = "CA de la semaine";
+    ventesTitle = "Paniers vendus cette semaine";
+    const byDay: Record<number, { ca: number; ventes: number }> = {};
+    for (let i = 0; i < 7; i++) byDay[i] = { ca: 0, ventes: 0 };
+    allOrders.forEach((o) => {
+      let dow = new Date(o.created_at).getDay();
+      dow = dow === 0 ? 6 : dow - 1;
+      byDay[dow].ca += o.total_amount ?? 0;
+      byDay[dow].ventes += o.quantity ?? 1;
+    });
+    dayData = DAYS_FR.map((day, i) => ({ day, ca: Math.round(byDay[i]?.ca ?? 0), ventes: byDay[i]?.ventes ?? 0 }));
+  } else if (period === "month") {
+    caTitle = "CA du mois";
+    ventesTitle = "Paniers vendus ce mois";
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const byDate: Record<number, { ca: number; ventes: number }> = {};
+    for (let i = 1; i <= daysInMonth; i++) byDate[i] = { ca: 0, ventes: 0 };
+    allOrders.forEach((o) => {
+      const d = new Date(o.created_at).getDate();
+      byDate[d].ca += o.total_amount ?? 0;
+      byDate[d].ventes += o.quantity ?? 1;
+    });
+    dayData = Array.from({ length: daysInMonth }, (_, i) => ({ day: (i + 1).toString(), ca: Math.round(byDate[i + 1]?.ca ?? 0), ventes: byDate[i + 1]?.ventes ?? 0 }));
+  } else if (["3months", "6months", "12months", "year"].includes(period)) {
+    const labels: Record<string, string[]> = {
+      "3months":  ["CA (3 derniers mois)", "Paniers vendus (3 derniers mois)"],
+      "6months":  ["CA (6 derniers mois)", "Paniers vendus (6 derniers mois)"],
+      "12months": ["CA (12 derniers mois)", "Paniers vendus (12 derniers mois)"],
+      year:       ["CA de l'année", "Paniers vendus cette année"],
+    };
+    caTitle = labels[period]?.[0] ?? "CA";
+    ventesTitle = labels[period]?.[1] ?? "Paniers vendus";
+    const now = new Date();
+    const months: { key: string; label: string }[] = [];
+    let y = periodStart.getFullYear(), m = periodStart.getMonth();
+    while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
+      months.push({ key: `${y}-${m}`, label: MONTHS_FR[m] });
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+    const byMonth: Record<string, { ca: number; ventes: number }> = {};
+    months.forEach((mo) => { byMonth[mo.key] = { ca: 0, ventes: 0 }; });
+    allOrders.forEach((o) => {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (byMonth[key]) {
+        byMonth[key].ca += o.total_amount ?? 0;
+        byMonth[key].ventes += o.quantity ?? 1;
+      }
+    });
+    dayData = months.map((mo) => ({ day: mo.label, ca: Math.round(byMonth[mo.key]?.ca ?? 0), ventes: byMonth[mo.key]?.ventes ?? 0 }));
+  } else {
+    // "total"
+    caTitle = "CA total";
+    ventesTitle = "Paniers vendus (total)";
+    const now = new Date();
+    const totalMonths = (now.getFullYear() - periodStart.getFullYear()) * 12 + (now.getMonth() - periodStart.getMonth()) + 1;
+    if (totalMonths <= 24) {
+      const months: { key: string; label: string }[] = [];
+      let y = periodStart.getFullYear(), m = periodStart.getMonth();
+      while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
+        months.push({ key: `${y}-${m}`, label: `${MONTHS_FR[m]} ${y.toString().slice(2)}` });
+        m++;
+        if (m > 11) { m = 0; y++; }
+      }
+      const byMonth: Record<string, { ca: number; ventes: number }> = {};
+      months.forEach((mo) => { byMonth[mo.key] = { ca: 0, ventes: 0 }; });
+      allOrders.forEach((o) => {
+        const d = new Date(o.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        if (byMonth[key]) {
+          byMonth[key].ca += o.total_amount ?? 0;
+          byMonth[key].ventes += o.quantity ?? 1;
+        }
+      });
+      dayData = months.map((mo) => ({ day: mo.label, ca: Math.round(byMonth[mo.key]?.ca ?? 0), ventes: byMonth[mo.key]?.ventes ?? 0 }));
+    } else {
+      const years: number[] = [];
+      for (let y = periodStart.getFullYear(); y <= now.getFullYear(); y++) years.push(y);
+      const byYear: Record<number, { ca: number; ventes: number }> = {};
+      years.forEach((y) => { byYear[y] = { ca: 0, ventes: 0 }; });
+      allOrders.forEach((o) => {
+        const y = new Date(o.created_at).getFullYear();
+        if (byYear[y]) {
+          byYear[y].ca += o.total_amount ?? 0;
+          byYear[y].ventes += o.quantity ?? 1;
+        }
+      });
+      dayData = years.map((y) => ({ day: y.toString(), ca: Math.round(byYear[y]?.ca ?? 0), ventes: byYear[y]?.ventes ?? 0 }));
+    }
+  }
 
   const typeCounts: Record<string, number> = {};
   allBaskets.forEach((b) => {
@@ -85,19 +244,20 @@ export default async function AdminDashboard({
       type:    TYPE_LABELS_FR[type] ?? type,
       count,
       percent: totalBasketCount > 0 ? Math.round((count / totalBasketCount) * 100) : 0,
-      emoji:   TYPE_EMOJIS[type] ?? "🛒",
+      iconName: TYPE_ICON_NAMES[type] ?? "ShoppingCart",
       color:   "#3744C8",
     }));
 
   const kpis = [
-    { label: "CA généré",         value: `${caGenere.toFixed(2)}€`,   sub: undefined,      iconBg: "bg-green-100",  iconColor: "text-green-600",  icon: Euro },
-    { label: "CA net",            value: `${caNet.toFixed(2)}€`,      sub: undefined,      iconBg: "bg-blue-100",   iconColor: "text-blue-600",   icon: TrendingUp },
-    { label: "Commission Kshare", value: `${commission.toFixed(2)}€`, sub: "10% du CA",   iconBg: "bg-purple-100", iconColor: "text-purple-600", icon: BarChart3 },
-    { label: "Paniers vendus",    value: paniersVendus.toString(),     sub: undefined,      iconBg: "bg-yellow-100", iconColor: "text-yellow-600", icon: Package },
-    { label: "Prix moyen",        value: `${avgPrice.toFixed(2)}€`,   sub: undefined,      iconBg: "bg-indigo-100", iconColor: "text-indigo-600", icon: ShoppingBag },
-    { label: "Commerces actifs",  value: (activeCommerces ?? 0).toString(), sub: undefined, iconBg: "bg-orange-100", iconColor: "text-orange-600", icon: Store },
-    { label: "Dons commerçants",  value: donCommerce.toString(),       sub: undefined,      iconBg: "bg-pink-100",   iconColor: "text-pink-500",   icon: Heart },
-    { label: "Dons clients",      value: donClients.toString(),        sub: undefined,      iconBg: "bg-rose-100",   iconColor: "text-rose-500",   icon: Gift },
+    { label: "CA généré",         value: `${caGenere.toFixed(2)}€`,      sub: undefined,                          iconBg: "bg-green-100",  iconColor: "text-green-600",  icon: Euro },
+    { label: "Revenu Kshare",     value: `${revenuKshare.toFixed(2)}€`,  sub: `Commission ${commission.toFixed(2)}€ + Frais ${serviceFees.toFixed(2)}€`, iconBg: "bg-purple-100", iconColor: "text-purple-600", icon: BarChart3 },
+    { label: "Frais de service",  value: `${serviceFees.toFixed(2)}€`,   sub: undefined,                          iconBg: "bg-cyan-100",   iconColor: "text-cyan-600",   icon: CreditCard },
+    { label: "CA net commerces",  value: `${caNet.toFixed(2)}€`,         sub: undefined,                          iconBg: "bg-blue-100",   iconColor: "text-blue-600",   icon: TrendingUp },
+    { label: "Paniers vendus",    value: paniersVendus.toString(),        sub: undefined,                          iconBg: "bg-yellow-100", iconColor: "text-yellow-600", icon: Package },
+    { label: "Prix moyen",        value: `${avgPrice.toFixed(2)}€`,      sub: undefined,                          iconBg: "bg-indigo-100", iconColor: "text-indigo-600", icon: ShoppingBag },
+    { label: "Commerces actifs",  value: (activeCommerces ?? 0).toString(), sub: undefined,                        iconBg: "bg-orange-100", iconColor: "text-orange-600", icon: Store },
+    { label: "Dons commerçants",  value: donCommerce.toString(),          sub: undefined,                          iconBg: "bg-pink-100",   iconColor: "text-pink-500",   icon: Heart },
+    { label: "Dons clients",      value: donClients.toString(),           sub: undefined,                          iconBg: "bg-rose-100",   iconColor: "text-rose-500",   icon: Gift },
   ];
 
   return (
@@ -118,8 +278,17 @@ export default async function AdminDashboard({
         ))}
       </div>
 
-      {/* Charts + type breakdown */}
-      <AdminCharts period={period} dayData={dayData} typeData={typeData} />
+      {/* Charts + type breakdown + ranking */}
+      <AdminCharts
+        period={period}
+        commerce={commerce}
+        commercesList={(commercesList ?? []).map((c) => ({ id: c.id, name: c.name }))}
+        dayData={dayData}
+        typeData={typeData}
+        caTitle={caTitle}
+        ventesTitle={ventesTitle}
+        ranking={ranking}
+      />
     </div>
   );
 }

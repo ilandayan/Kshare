@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Search, ChevronDown, ChevronUp, Calendar, Package, Clock, ShoppingCart, Wallet, ShoppingBag, Handshake, CheckCircle, XCircle, Loader2, type LucideIcon } from "lucide-react";
+import { marquerPretRetrait, confirmerRetrait, marquerNoShow } from "@/app/(shop)/shop/paniers/orders/_actions";
+import { toast } from "sonner";
+
+const KPI_ICONS: Record<string, LucideIcon> = {
+  ShoppingCart, Wallet, ShoppingBag, Handshake,
+};
 
 interface Order {
   id: string;
@@ -12,12 +19,9 @@ interface Order {
   pricePerBasket: number;
   total: number;
   isDonation: boolean;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  commerceName: string;
-  commerceType: string;
-  associationName?: string;
+  basketType: string;
+  basketDay: string;
+  pickupTime: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
@@ -30,9 +34,27 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
   created:          { label: "Créée",      cls: "bg-gray-100 text-gray-600" },
 };
 
+const TYPE_LABELS: Record<string, string> = {
+  bassari: "Bassari", halavi: "Halavi", parve: "Parvé", shabbat: "Shabbat", mix: "Mix",
+};
+
 function OrderRow({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const status = STATUS_CONFIG[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-500" };
+
+  function handleAction(action: (id: string) => Promise<{ success: boolean; error?: string }>, successMsg: string) {
+    startTransition(async () => {
+      const result = await action(order.id);
+      if (result.success) {
+        toast.success(successMsg);
+        router.refresh();
+      } else {
+        toast.error("error" in result ? (result as { error: string }).error : "Erreur");
+      }
+    });
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm overflow-hidden mb-3">
@@ -57,19 +79,10 @@ function OrderRow({ order }: { order: Order }) {
             <span className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" /> {order.date}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Package className="h-3.5 w-3.5" /> {order.quantity} panier{order.quantity > 1 ? "s" : ""}
-            </span>
           </div>
         </div>
         <div className="flex items-center gap-6 shrink-0">
           <div className="text-right">
-            <div className="text-xs text-gray-400">Prix/panier</div>
-            <div className="text-sm font-medium text-gray-700">
-              {order.isDonation ? "Gratuit" : `${order.pricePerBasket.toFixed(2)}€`}
-            </div>
-          </div>
-          <div className="text-right min-w-[80px]">
             <div className="text-xs text-gray-400">Total</div>
             <div className={`text-base font-bold ${order.isDonation ? "text-purple-600" : "text-gray-900"}`}>
               {order.isDonation ? "Don" : `${order.total.toFixed(2)}€`}
@@ -84,37 +97,68 @@ function OrderRow({ order }: { order: Order }) {
       {/* Expanded details */}
       {expanded && (
         <div className="px-6 pb-5 pt-1 border-t border-[#f0f1f5]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Client / Association */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-[#fafbff] rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                {order.isDonation
-                  ? <Store className="h-4 w-4 text-purple-500" />
-                  : <User className="h-4 w-4 text-[#3744C8]" />}
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  {order.isDonation ? "Association" : "Client"}
-                </span>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Package className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Type</span>
               </div>
-              <div className="font-semibold text-gray-900 text-sm mb-1">
-                {order.isDonation ? (order.associationName ?? "Association") : order.clientName}
-              </div>
-              {!order.isDonation && (
-                <>
-                  <div className="text-xs text-gray-400">{order.clientEmail}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{order.clientPhone}</div>
-                </>
-              )}
+              <div className="font-semibold text-gray-900 text-sm">{TYPE_LABELS[order.basketType] ?? order.basketType}</div>
             </div>
-            {/* Commerce */}
             <div className="bg-[#fafbff] rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Store className="h-4 w-4 text-[#3744C8]" />
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Commerçant</span>
+              <div className="flex items-center gap-1.5 mb-2">
+                <ShoppingBag className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Quantité</span>
               </div>
-              <div className="font-semibold text-gray-900 text-sm mb-1">{order.commerceName}</div>
-              <div className="text-xs text-gray-400">{order.commerceType}</div>
+              <div className="font-semibold text-gray-900 text-sm">{order.quantity} panier{order.quantity > 1 ? "s" : ""} x {order.pricePerBasket.toFixed(2)}€</div>
+            </div>
+            <div className="bg-[#fafbff] rounded-xl p-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Jour</span>
+              </div>
+              <div className="font-semibold text-gray-900 text-sm">{order.basketDay}</div>
+            </div>
+            <div className="bg-[#fafbff] rounded-xl p-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Clock className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Retrait</span>
+              </div>
+              <div className="font-semibold text-gray-900 text-sm">{order.pickupTime}</div>
             </div>
           </div>
+
+          {/* Action buttons */}
+          {["paid", "ready_for_pickup"].includes(order.status) && (
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#f0f1f5]">
+              {order.status === "paid" && (
+                <button
+                  disabled={isPending}
+                  onClick={() => handleAction(marquerPretRetrait, "Commande marquée prête !")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clock className="h-3.5 w-3.5" />}
+                  Prêt pour retrait
+                </button>
+              )}
+              <button
+                disabled={isPending}
+                onClick={() => handleAction(confirmerRetrait, "Retrait confirmé !")}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+              >
+                {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                Confirmer retrait
+              </button>
+              <button
+                disabled={isPending}
+                onClick={() => handleAction(marquerNoShow, "Commande marquée comme non venu")}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+              >
+                {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                Non venu
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -125,9 +169,7 @@ export function ShopOrdersClient({ orders, kpis }: { orders: Order[]; kpis: { la
   const [search, setSearch] = useState("");
 
   const filtered = orders.filter((o) =>
-    o.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-    o.clientName.toLowerCase().includes(search.toLowerCase()) ||
-    o.commerceName.toLowerCase().includes(search.toLowerCase())
+    o.orderNumber.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -140,7 +182,7 @@ export function ShopOrdersClient({ orders, kpis }: { orders: Order[]; kpis: { la
               <div className="text-xs text-gray-400 font-medium mb-1">{k.label}</div>
               <div className="text-2xl font-bold text-gray-900">{k.value}</div>
             </div>
-            <span className="text-3xl">{k.icon}</span>
+            {(() => { const Icon = KPI_ICONS[k.icon]; return Icon ? <Icon className="h-7 w-7 text-gray-400" /> : null; })()}
           </div>
         ))}
       </div>
@@ -151,7 +193,7 @@ export function ShopOrdersClient({ orders, kpis }: { orders: Order[]; kpis: { la
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher par commande, client ou commerçant..."
+            placeholder="Rechercher par numéro de commande..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 text-sm bg-[#f8f9fc] border border-[#e2e5f0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3744C8]/25 focus:border-[#3744C8] transition-colors placeholder:text-gray-400"

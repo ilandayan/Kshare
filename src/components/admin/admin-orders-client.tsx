@@ -1,7 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package, ShoppingCart, Wallet, ShoppingBag, Handshake, Mail, Phone, RotateCcw, XCircle, ArrowRightLeft, Loader2, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
+import {
+  adminRembourserCommande,
+  adminAnnulerCommande,
+  adminChangerStatutCommande,
+} from "@/app/(admin)/kshare-admin/commandes/_actions";
+
+const KPI_ICONS: Record<string, LucideIcon> = {
+  ShoppingCart, Wallet, ShoppingBag, Handshake,
+};
 
 export interface AdminOrder {
   id: string;
@@ -32,9 +43,46 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
   created:          { label: "Créée",      cls: "bg-gray-100 text-gray-600" },
 };
 
+const NEXT_STATUS: Record<string, { label: string; value: string }> = {
+  created:          { label: "Marquer payée",      value: "paid" },
+  paid:             { label: "Prête pour retrait",  value: "ready_for_pickup" },
+  ready_for_pickup: { label: "Retrait effectué",    value: "picked_up" },
+};
+
 function OrderRow({ order }: { order: AdminOrder }) {
+  const router = useRouter();
   const [expanded, setExpanded] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const status = STATUS_CONFIG[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-500" };
+
+  const canRefund = !["refunded", "cancelled_admin"].includes(order.status);
+  const canCancel = !["refunded", "cancelled_admin", "picked_up"].includes(order.status);
+  const nextStatus = NEXT_STATUS[order.status];
+
+  function handleRefund() {
+    startTransition(async () => {
+      const res = await adminRembourserCommande(order.id);
+      if (res.success) { toast.success("Commande remboursee."); router.refresh(); }
+      else toast.error(res.error);
+    });
+  }
+
+  function handleCancel() {
+    startTransition(async () => {
+      const res = await adminAnnulerCommande(order.id);
+      if (res.success) { toast.success("Commande annulee."); router.refresh(); }
+      else toast.error(res.error);
+    });
+  }
+
+  function handleNextStatus() {
+    if (!nextStatus) return;
+    startTransition(async () => {
+      const res = await adminChangerStatutCommande(order.id, nextStatus.value);
+      if (res.success) { toast.success(`Statut mis a jour: ${nextStatus.label}`); router.refresh(); }
+      else toast.error(res.error);
+    });
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm overflow-hidden mb-3">
@@ -93,13 +141,13 @@ function OrderRow({ order }: { order: AdminOrder }) {
               </div>
               {order.isDonation ? (
                 <>
-                  {order.associationEmail && <div className="text-xs text-gray-400">✉️ {order.associationEmail}</div>}
-                  {order.associationPhone && <div className="text-xs text-gray-400 mt-0.5">📞 {order.associationPhone}</div>}
+                  {order.associationEmail && <div className="text-xs text-gray-400 flex items-center gap-1"><Mail className="h-3 w-3" /> {order.associationEmail}</div>}
+                  {order.associationPhone && <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1"><Phone className="h-3 w-3" /> {order.associationPhone}</div>}
                 </>
               ) : (
                 <>
-                  <div className="text-xs text-gray-400">✉️ {order.clientEmail}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">📞 {order.clientPhone}</div>
+                  <div className="text-xs text-gray-400 flex items-center gap-1"><Mail className="h-3 w-3" /> {order.clientEmail}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1"><Phone className="h-3 w-3" /> {order.clientPhone}</div>
                 </>
               )}
             </div>
@@ -113,6 +161,40 @@ function OrderRow({ order }: { order: AdminOrder }) {
               <div className="font-semibold text-gray-900 text-sm mb-1">{order.commerceName}</div>
               <div className="text-xs text-gray-400">{order.commerceType}</div>
             </div>
+          </div>
+
+          {/* ── Admin action buttons ── */}
+          <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-[#f0f1f5]">
+            {nextStatus && (
+              <button
+                onClick={handleNextStatus}
+                disabled={isPending}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#3744C8] bg-[#3744C8]/5 rounded-lg hover:bg-[#3744C8]/10 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowRightLeft className="h-3 w-3" />}
+                {nextStatus.label}
+              </button>
+            )}
+            {canRefund && (
+              <button
+                onClick={handleRefund}
+                disabled={isPending}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                Rembourser
+              </button>
+            )}
+            {canCancel && (
+              <button
+                onClick={handleCancel}
+                disabled={isPending}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                Annuler
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -144,7 +226,7 @@ export function AdminOrdersClient({
         {kpis.map((k) => (
           <div key={k.label} className={`bg-white rounded-2xl border-l-4 ${k.borderColor} border-t border-r border-b border-[#e2e5f0] shadow-sm p-5 flex items-center justify-between`}>
             <div><div className="text-xs text-gray-400 mb-1">{k.label}</div><div className="text-2xl font-bold text-gray-900">{k.value}</div></div>
-            <span className="text-3xl">{k.icon}</span>
+            {(() => { const Icon = KPI_ICONS[k.icon]; return Icon ? <Icon className="h-7 w-7 text-gray-400" /> : null; })()}
           </div>
         ))}
       </div>

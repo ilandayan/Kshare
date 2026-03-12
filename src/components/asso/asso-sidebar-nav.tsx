@@ -24,8 +24,8 @@ export function AssoSidebarNav() {
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
               active
-                ? "bg-[#3744C8] text-white shadow-sm"
-                : "text-gray-600 hover:bg-[#EEF0F8] hover:text-[#3744C8]"
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm"
+                : "text-gray-600 hover:bg-purple-50 hover:text-purple-600"
             )}
           >
             <item.icon className="h-4 w-4 shrink-0" />

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff, Store, Users, ShieldCheck } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff, Store, Heart, ShieldCheck } from "lucide-react";
+import { KshareLogo } from "@/components/shared/kshare-logo";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -23,7 +24,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 const VARIANTS = {
   commerce: {
     icon: Store,
-    iconBg: "bg-[#3744C8]",
+    iconBg: "bg-gradient-to-br from-blue-500 to-indigo-600",
     title: "Espace Commerçant",
     subtitle: "Connectez-vous pour gérer vos paniers",
     btnGradient: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)",
@@ -31,7 +32,7 @@ const VARIANTS = {
     signupLabel: "Créer un compte",
   },
   association: {
-    icon: Users,
+    icon: Heart,
     iconBg: "bg-gradient-to-br from-purple-500 to-pink-500",
     title: "Espace Association",
     subtitle: "Connectez-vous pour distribuer des paniers",
@@ -41,7 +42,7 @@ const VARIANTS = {
   },
   admin: {
     icon: ShieldCheck,
-    iconBg: "bg-[#3744C8]",
+    iconBg: "bg-gradient-to-br from-red-500 to-red-700",
     title: "Administration",
     subtitle: "Accès réservé aux administrateurs",
     btnGradient: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)",
@@ -53,7 +54,14 @@ const VARIANTS = {
 type RoleKey = keyof typeof VARIANTS;
 
 export default function ConnexionPage() {
-  const router       = useRouter();
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#3744C8]" /></div>}>
+      <ConnexionContent />
+    </Suspense>
+  );
+}
+
+function ConnexionContent() {
   const searchParams = useSearchParams();
 
   const rawRole = searchParams.get("role") ?? "commerce";
@@ -88,21 +96,26 @@ export default function ConnexionPage() {
       return;
     }
 
-    const { data: profile } = await supabase
+    // Récupérer le rôle depuis la table profiles (source de vérité)
+    const { data: profileData } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", authData.user.id)
       .single();
 
+    const userRole = profileData?.role as string | undefined;
+
     const redirectMap: Record<string, string> = {
       commerce:    "/shop/dashboard",
-      association: "/asso/paniers-dons",
+      association: "/asso/dashboard",
       admin:       "/kshare-admin",
-      client:      "/",
+      client:      "/client/paniers",
     };
 
-    router.push(redirectMap[profile?.role ?? "client"] ?? "/");
-    router.refresh();
+    const destination = redirectMap[userRole ?? "client"] ?? "/";
+
+    // Hard redirect pour que le serveur reçoive les cookies d'auth frais
+    window.location.href = destination;
   }
 
   return (
@@ -133,10 +146,7 @@ export default function ConnexionPage() {
 
               {/* Kshare logo */}
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-[#3744C8] rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold text-xs leading-none">K</span>
-                </div>
-                <span className="font-bold text-gray-900 text-lg">Kshare</span>
+                <KshareLogo size={28} />
               </div>
 
               <h1 className="text-xl font-bold text-gray-900 mb-1">{v.title}</h1>
@@ -187,7 +197,8 @@ export default function ConnexionPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -219,7 +230,7 @@ export default function ConnexionPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-xl font-semibold text-sm text-white shadow-sm mt-1 border-0"
+                className="w-full h-11 rounded-xl font-semibold text-sm text-white shadow-sm mt-1 border-0 cursor-pointer"
                 style={{ background: v.btnGradient }}
               >
                 {loading ? (

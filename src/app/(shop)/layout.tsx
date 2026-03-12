@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { AlertTriangle } from "lucide-react";
 import { ShopTopNav } from "@/components/shop/shop-top-nav";
 import { ShopUserMenu } from "@/components/shop/shop-user-menu";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/connexion?role=commerce");
+  if (!user) redirect("/connexion");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -15,7 +16,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "commerce") redirect("/connexion?role=commerce");
+  if (profile?.role !== "commerce") redirect("/");
 
   const { data: commerce } = await supabase
     .from("commerces")
@@ -29,15 +30,20 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-screen bg-[#F4F5F9] flex flex-col">
       {/* ── Top header ── */}
-      <header className="bg-white border-b border-[#e2e5f0] sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-[#1e2a78] via-[#2d4de0] to-[#4f6df5] sticky top-0 z-40">
         <div className="px-6 h-16 flex items-center justify-between">
           <Link href="/shop/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#3744C8] rounded-xl flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-lg leading-none">K</span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-k-blanc.png"
+              alt="Kshare"
+              width={36}
+              height={36}
+              className="rounded-lg"
+            />
             <div>
-              <div className="font-bold text-gray-900 text-base leading-tight">Kshare</div>
-              <div className="text-xs text-gray-400 leading-tight">Espace Commerçant</div>
+              <div className="font-bold text-white text-base leading-tight">Kshare</div>
+              <div className="text-xs text-white/60 leading-tight">Espace Commerçant</div>
             </div>
           </Link>
           <ShopUserMenu commerceName={commerceName} userInitial={userInitial} />
@@ -49,8 +55,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
       {/* ── Pending validation banner ── */}
       {commerce?.status === "pending" && (
-        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-sm text-amber-800">
-          ⚠️ Votre compte est en attente de validation. Vous ne pouvez pas encore publier de paniers.
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-sm text-amber-800 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" /> Votre compte est en attente de validation. Vous ne pouvez pas encore publier de paniers.
         </div>
       )}
 

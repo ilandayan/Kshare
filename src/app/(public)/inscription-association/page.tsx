@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { KshareLogo } from "@/components/shared/kshare-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,9 +98,7 @@ export default function InscriptionAssociationPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-2xl shadow-lg">
         <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold text-primary mb-2 block">
-            Kshare
-          </Link>
+          <Link href="/" className="mb-2 block"><KshareLogo size={32} /></Link>
           <CardTitle className="text-xl">Inscription association</CardTitle>
           <CardDescription>
             Accédez aux paniers dons des commerces casher partenaires
@@ -254,7 +253,7 @@ export default function InscriptionAssociationPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Envoyer ma demande d&apos;inscription
             </Button>

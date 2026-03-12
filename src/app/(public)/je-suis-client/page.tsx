@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicNavbar } from "@/components/shared/public-navbar";
-import { KshareLogo } from "@/components/shared/kshare-logo";
+import { SharedFooter } from "@/components/shared/footer";
 import {
   Smartphone,
   Tag,
@@ -11,7 +11,14 @@ import {
   Star,
   Bell,
   CheckCircle,
-  ArrowRight,
+  MapPin,
+  Zap,
+  Search,
+  UtensilsCrossed,
+  Milk,
+  Leaf,
+  Wine,
+  Layers,
 } from "lucide-react";
 
 export default function JeSuisClientPage() {
@@ -20,39 +27,139 @@ export default function JeSuisClientPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[500px] opacity-50 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left */}
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-[#3744C8] leading-tight mb-6">
+              <div className="anim-hidden animate-fade-in-up inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#e2e5f0] rounded-full px-4 py-2 text-sm text-[#3744C8] font-medium mb-6 shadow-sm">
+                <Smartphone className="h-3.5 w-3.5" />
+                Application mobile
+              </div>
+              <h1 className="anim-hidden animate-fade-in-up delay-100 font-display text-4xl md:text-5xl font-bold text-[#3744C8] leading-tight mb-6">
                 Sauvez des paniers<br />casher
               </h1>
-              <p className="text-gray-500 text-lg leading-relaxed mb-8">
+              <p className="anim-hidden animate-fade-in-up delay-200 text-gray-500 text-lg leading-relaxed mb-8">
                 Accédez à des produits casher de qualité à prix réduits tout en luttant contre
                 le gaspillage alimentaire. Une démarche simple, rapide et solidaire.
               </p>
-              <Button
-                size="lg"
-                className="bg-[#3744C8] hover:bg-[#2B38B8] text-white h-12 px-8 rounded-xl shadow-sm"
-                asChild
-              >
-                <Link href="#">
-                  <Smartphone className="mr-2.5 h-5 w-5" />
-                  Télécharger l&apos;app
+              <div className="anim-hidden animate-fade-in-up delay-300 flex gap-3 flex-wrap">
+                <Link
+                  href="#"
+                  className="flex items-center gap-3 bg-gray-900 hover:bg-gray-800 rounded-xl px-5 py-3 transition-colors cursor-pointer"
+                >
+                  <svg className="h-5 w-5 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                  </svg>
+                  <div>
+                    <div className="text-[10px] text-gray-400 leading-none">Télécharger sur</div>
+                    <div className="text-sm font-semibold text-white leading-snug">App Store</div>
+                  </div>
                 </Link>
-              </Button>
+                <Link
+                  href="#"
+                  className="flex items-center gap-3 bg-gray-900 hover:bg-gray-800 rounded-xl px-5 py-3 transition-colors cursor-pointer"
+                >
+                  <svg className="h-5 w-5 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/>
+                  </svg>
+                  <div>
+                    <div className="text-[10px] text-gray-400 leading-none">Télécharger sur</div>
+                    <div className="text-sm font-semibold text-white leading-snug">Google Play</div>
+                  </div>
+                </Link>
+              </div>
             </div>
 
-            {/* Right — Photo */}
-            <div className="relative">
-              <div className="bg-white rounded-3xl shadow-md overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80"
-                  alt="Clients utilisant l'application Kshare"
-                  className="w-full h-[340px] object-cover"
-                />
+            {/* Right — Phone mockup */}
+            <div className="anim-hidden animate-fade-in-up delay-200 flex justify-center">
+              <div className="relative">
+                {/* Glow behind phone */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#3744C8]/20 to-[#5B6EF5]/10 rounded-[3rem] blur-2xl scale-110" />
+                {/* Phone */}
+                <div className="relative w-52">
+                  <div className="bg-gray-900 rounded-[3rem] p-2.5 shadow-2xl shadow-gray-400/30">
+                    <div className="bg-[#F8F9FC] rounded-[2.5rem] overflow-hidden h-[420px]">
+                      {/* Status bar */}
+                      <div className="bg-white px-5 pt-3 pb-2 flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-gray-800">9:41</span>
+                        <div className="flex gap-1">
+                          <div className="w-4 h-1.5 bg-gray-800 rounded-full" />
+                          <div className="w-2 h-1.5 bg-gray-300 rounded-full" />
+                        </div>
+                      </div>
+
+                      {/* Header */}
+                      <div className="bg-white px-4 pb-3 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-0.5">
+                              <MapPin className="h-2.5 w-2.5 text-[#3744C8]" />
+                              <span className="text-[10px] font-bold text-gray-800">Paris 16e</span>
+                            </div>
+                            <div className="text-[8px] text-gray-400">Disponible maintenant</div>
+                          </div>
+                          <div className="w-6 h-6 bg-[#EEF0F8] rounded-full flex items-center justify-center">
+                            <Bell className="h-2.5 w-2.5 text-[#3744C8]" />
+                          </div>
+                        </div>
+
+                        {/* Search bar mock */}
+                        <div className="mt-2 bg-gray-100 rounded-xl px-3 py-1.5 flex items-center gap-1.5">
+                          <Search className="h-2.5 w-2.5 text-gray-400" />
+                          <span className="text-[9px] text-gray-400">Chercher un commerce...</span>
+                        </div>
+                      </div>
+
+                      {/* Category chips */}
+                      <div className="bg-white px-3 pt-2 pb-1 flex gap-1.5 overflow-hidden border-b border-gray-50">
+                        {[
+                          { icon: UtensilsCrossed, c: "#EF4444", label: "Bassari" },
+                          { icon: Milk,            c: "#3B82F6", label: "Halavi" },
+                          { icon: Leaf,            c: "#10B981", label: "Parvé" },
+                        ].map((cat) => (
+                          <div key={cat.label} className="flex items-center gap-0.5 px-2 py-1 rounded-lg text-white text-[8px] font-bold shrink-0" style={{ backgroundColor: cat.c }}>
+                            <cat.icon className="h-2 w-2" />
+                            <span>{cat.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Cards */}
+                      <div className="p-2 space-y-2">
+                        {[
+                          { icon: UtensilsCrossed, name: "Boucherie Cohen",  price: "5,90€", orig: "18€", type: "Bassari", color: "#FEF2F2", badge: "#EF4444", iconColor: "#EF4444", time: "17h-18h" },
+                          { icon: Milk,            name: "Fromagerie Levi",  price: "4,50€", orig: "14€", type: "Halavi",  color: "#EFF6FF", badge: "#3B82F6", iconColor: "#3B82F6", time: "18h-19h" },
+                          { icon: Leaf,            name: "Bio Casher Store", price: "3,90€", orig: "12€", type: "Parvé",   color: "#F0FDF4", badge: "#10B981", iconColor: "#10B981", time: "17h-18h30" },
+                        ].map((card) => (
+                          <div key={card.name} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-2 p-2">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: card.color }}>
+                                <card.icon className="h-4 w-4" style={{ color: card.iconColor }} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[10px] font-bold text-gray-800 truncate">{card.name}</div>
+                                <div className="flex items-center gap-0.5 mt-0.5">
+                                  <span className="text-[7px] font-bold text-white px-1 py-0.5 rounded" style={{ backgroundColor: card.badge }}>{card.type}</span>
+                                  <span className="text-[7px] text-gray-400">• {card.time}</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="text-[10px] font-bold text-[#3744C8]">{card.price}</div>
+                                <div className="text-[8px] text-gray-400 line-through">{card.orig}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Notch */}
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-gray-700 rounded-full" />
+                </div>
               </div>
             </div>
           </div>
@@ -63,51 +170,32 @@ export default function JeSuisClientPage() {
       <section className="py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#3744C8] mb-3">Pourquoi utiliser Kshare ?</h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+              Pourquoi utiliser Kshare ?
+            </h2>
             <p className="text-gray-500">Des avantages concrets pour vous et pour la planète</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
-              {
-                icon: Tag,
-                title: "Prix réduits",
-                desc: "Économisez jusqu'à -50% sur des produits casher de qualité",
-              },
-              {
-                icon: Heart,
-                title: "Action solidaire",
-                desc: "Chaque achat contribue à réduire le gaspillage alimentaire",
-              },
-              {
-                icon: Clock,
-                title: "Commande rapide",
-                desc: "Réservez vos paniers en quelques clics depuis votre mobile",
-              },
-              {
-                icon: ShoppingBag,
-                title: "Large choix",
-                desc: "Paniers Bassari, Halavi, Parvé, Mix et spécial Shabbat",
-              },
-              {
-                icon: Star,
-                title: "Hashgakha garantie",
-                desc: "Tous les produits sont certifiés et contrôlés",
-              },
-              {
-                icon: Bell,
-                title: "Simple et efficace",
-                desc: "Notifications en temps réel pour les nouveaux paniers",
-              },
+              { icon: Tag,      topBar: "from-emerald-400 to-green-500", title: "Prix réduits",      desc: "Économisez jusqu'à -70% sur des produits casher de qualité",           delay: "delay-100" },
+              { icon: Heart,    topBar: "from-pink-400 to-red-500",      title: "Action solidaire",  desc: "Chaque achat contribue à réduire le gaspillage alimentaire",           delay: "delay-200" },
+              { icon: Clock,    topBar: "from-blue-400 to-indigo-500",   title: "Commande rapide",   desc: "Réservez vos paniers en quelques clics depuis votre mobile",           delay: "delay-300" },
+              { icon: ShoppingBag, topBar: "from-purple-400 to-violet-500", title: "Large choix",   desc: "Paniers Bassari, Halavi, Parvé, Mix et spécial Shabbat",               delay: "delay-100" },
+              { icon: Star,     topBar: "from-amber-400 to-orange-500",  title: "Cacherout garantie", desc: "Tous les produits sont certifiés et contrôlés",                      delay: "delay-200" },
+              { icon: Bell,     topBar: "from-teal-400 to-cyan-500",     title: "Simple et efficace", desc: "Notifications en temps réel pour les nouveaux paniers disponibles",  delay: "delay-300" },
             ].map((card) => (
               <div
                 key={card.title}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-[#e2e5f0]/60 hover:shadow-md transition-shadow"
+                className={`anim-hidden animate-fade-in-up ${card.delay} bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated`}
               >
-                <div className="w-11 h-11 bg-[#3744C8] rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                  <card.icon className="h-5 w-5 text-white" />
+                <div className={`h-1 bg-gradient-to-r ${card.topBar}`} />
+                <div className="p-6">
+                  <div className="w-11 h-11 bg-[#3744C8] rounded-xl flex items-center justify-center mb-4 shadow-sm">
+                    <card.icon className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="font-display font-bold text-gray-900 mb-1.5">{card.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1.5">{card.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
               </div>
             ))}
           </div>
@@ -118,28 +206,28 @@ export default function JeSuisClientPage() {
       <section className="py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-[#3744C8] mb-3">Comment ça marche ?</h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+              Comment ça marche ?
+            </h2>
             <p className="text-gray-500">4 étapes simples pour sauver des paniers</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
-              { step: "1", title: "Téléchargez l'app",     desc: "Installez gratuitement l'application mobile Kshare" },
-              { step: "2", title: "Créez votre compte",    desc: "Inscrivez-vous en quelques secondes" },
-              { step: "3", title: "Choisissez vos paniers",desc: "Parcourez les paniers disponibles près de chez vous" },
-              { step: "4", title: "Récupérez et savourez", desc: "Retirez vos paniers aux horaires indiqués" },
+              { step: "1", icon: Smartphone, title: "Téléchargez l'app",      desc: "Installez gratuitement l'application mobile Kshare",              delay: "delay-100" },
+              { step: "2", icon: Zap,        title: "Créez votre compte",     desc: "Inscrivez-vous en quelques secondes avec votre email",             delay: "delay-200" },
+              { step: "3", icon: MapPin,     title: "Choisissez vos paniers", desc: "Parcourez les paniers disponibles près de chez vous",              delay: "delay-300" },
+              { step: "4", icon: CheckCircle,title: "Récupérez et savourez",  desc: "Retirez vos paniers aux horaires indiqués avec votre QR code",     delay: "delay-400" },
             ].map((item, i) => (
-              <div key={item.step} className="relative flex flex-col items-center">
-                {/* Step bubble */}
-                <div className="w-10 h-10 rounded-full bg-[#3744C8] text-white flex items-center justify-center text-sm font-bold mb-5 shadow-sm z-10">
+              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] text-white flex items-center justify-center text-sm font-display font-bold mb-5 shadow-md z-10">
                   {item.step}
                 </div>
-                {/* Dashed connector */}
                 {i < 3 && (
                   <div className="hidden md:block absolute top-5 left-[calc(50%+20px)] right-0 h-px border-t-2 border-dashed border-[#3744C8]/30" />
                 )}
-                {/* Card */}
-                <div className="bg-white rounded-2xl p-5 text-center shadow-sm border border-[#e2e5f0]/60 w-full">
-                  <div className="font-semibold text-gray-900 mb-2 text-sm">{item.title}</div>
+                <div className="bg-white rounded-2xl p-5 text-center border border-[#e2e5f0]/60 w-full card-elevated">
+                  <item.icon className="h-6 w-6 text-[#3744C8] mx-auto mb-3" />
+                  <div className="font-display font-semibold text-gray-900 mb-2 text-sm">{item.title}</div>
                   <div className="text-xs text-gray-500 leading-relaxed">{item.desc}</div>
                 </div>
               </div>
@@ -151,40 +239,31 @@ export default function JeSuisClientPage() {
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
       <section className="py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-3xl shadow-sm border border-[#e2e5f0]/60 overflow-hidden">
-            <div className="grid md:grid-cols-2">
-              {/* Left */}
-              <div className="p-10">
-                <h2 className="text-3xl font-bold text-[#3744C8] mb-3">Différents types<br />de paniers</h2>
-                <p className="text-gray-500 text-sm mb-7 leading-relaxed">
-                  Retrouvez dans l&apos;application mobile une variété de paniers adaptés à vos besoins :
-                </p>
-                <ul className="space-y-3">
-                  {[
-                    "Bassari (Viande)",
-                    "Halavi (Laitier)",
-                    "Parvé (Neutre)",
-                    "Mix (Varié)",
-                    "Spécial Shabbat",
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-gray-700">
-                      <div className="w-6 h-6 rounded-full border-2 border-[#3744C8] flex items-center justify-center shrink-0">
-                        <CheckCircle className="h-3.5 w-3.5 text-[#3744C8]" />
-                      </div>
-                      <span className="text-sm font-medium">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {/* Right — Photo */}
-              <div className="relative h-64 md:h-auto">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=600&q=80"
-                  alt="Paniers casher"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          <div className="bg-white rounded-3xl shadow-sm border border-[#e2e5f0]/60 p-10">
+            <div className="text-center mb-8">
+              <h2 className="font-display text-3xl font-bold text-[#3744C8] mb-3">
+                Différents types de paniers
+              </h2>
+              <p className="text-gray-500 text-sm leading-relaxed max-w-lg mx-auto">
+                Retrouvez dans l&apos;application mobile une variété de paniers adaptés à vos besoins :
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3">
+              {[
+                { label: "Bassari",  icon: UtensilsCrossed, cls: "bg-red-50 border-red-200 text-red-700" },
+                { label: "Halavi",   icon: Milk,             cls: "bg-blue-50 border-blue-200 text-blue-700" },
+                { label: "Parvé",    icon: Leaf,             cls: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+                { label: "Mix",      icon: Layers,           cls: "bg-purple-50 border-purple-200 text-purple-700" },
+                { label: "Shabbat",  icon: Wine,             cls: "bg-amber-50 border-amber-200 text-amber-700" },
+              ].map((chip) => (
+                <span
+                  key={chip.label}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium ${chip.cls}`}
+                >
+                  <chip.icon className="h-4 w-4" />
+                  {chip.label}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -194,84 +273,57 @@ export default function JeSuisClientPage() {
       <section className="py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
-            className="rounded-3xl p-12 text-center text-white shadow-lg"
-            style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)" }}
+            className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #3744C8 0%, #1E2A9E 100%)" }}
           >
-            <Smartphone className="h-10 w-10 mx-auto mb-6 opacity-70" />
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Tout se passe sur l&apos;application mobile !
-            </h2>
-            <p className="text-white/70 text-sm md:text-base mb-8 max-w-md mx-auto leading-relaxed">
-              Pour commander vos paniers, recevez des notifications en temps réel et gérer vos
-              réservations, téléchargez notre application mobile gratuite.
-            </p>
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/5" />
+            <div className="relative">
+              <Smartphone className="h-10 w-10 mx-auto mb-6 opacity-70" />
+              <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
+                Tout se passe sur l&apos;application mobile !
+              </h2>
+              <p className="text-white/70 text-sm md:text-base mb-8 max-w-md mx-auto leading-relaxed">
+                Pour commander vos paniers, recevoir des notifications en temps réel et gérer vos
+                réservations, téléchargez notre application mobile gratuite.
+              </p>
 
-            {/* App buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/50 text-white hover:bg-white hover:text-[#3744C8] bg-transparent h-11"
-                asChild
-              >
-                <Link href="#">
-                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                  </svg>
-                  App Store
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/50 text-white hover:bg-white hover:text-[#3744C8] bg-transparent h-11"
-                asChild
-              >
-                <Link href="#">
-                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3.18 23.76c.35.2.76.23 1.15.08L15.31 12 3.33.16C2.94.01 2.53.04 2.18.24 1.48.64 1 1.38 1 2.23v19.54c0 .85.48 1.59 1.18 1.99zm14.55-12.36l-2.91-2.91-9.4 9.4 12.31-6.49zM17.73.24L5.42 6.73l2.91 2.91 9.4-9.4zM20.82 10.7l-2.95-1.56-3.16 3.16 3.16 3.16 2.95-1.56c.84-.45 1.18-1.28 1.18-2 0-.72-.34-1.55-1.18-2z"/>
-                  </svg>
-                  Google Play
-                </Link>
-              </Button>
-            </div>
+              {/* App buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/50 text-white hover:bg-white hover:text-[#3744C8] bg-transparent h-11 font-display font-semibold cursor-pointer"
+                  asChild
+                >
+                  <Link href="#">
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    App Store
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/50 text-white hover:bg-white hover:text-[#3744C8] bg-transparent h-11 font-display font-semibold cursor-pointer"
+                  asChild
+                >
+                  <Link href="#">
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/>
+                    </svg>
+                    Google Play
+                  </Link>
+                </Button>
+              </div>
 
-            {/* Divider */}
-            <div className="border-t border-white/20 pt-6">
-              <p className="text-white/50 text-sm mb-3">L&apos;application mobile n&apos;est pas encore disponible ?</p>
-              <Button
-                variant="outline"
-                className="border-white/40 text-white hover:bg-white hover:text-[#3744C8] bg-transparent"
-                asChild
-              >
-                <Link href="/connexion">
-                  Découvrir la version web (démo) <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─────────────── FOOTER ─────────────── */}
-      <footer className="bg-[#0F1B40] text-white pt-8 pb-8 mt-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-blue-200 gap-3">
-            <div className="flex items-center gap-3">
-              <KshareLogo size={28} variant="white" />
-              <span className="text-blue-300">·</span>
-              <span>© 2025 Tous droits réservés.</span>
-            </div>
-            <a href="mailto:contact@k-share.fr" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
-              contact@k-share.fr
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SharedFooter variant="minimal" />
     </div>
   );
 }

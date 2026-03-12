@@ -6,17 +6,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, UtensilsCrossed, Milk, Leaf, Wine, Layers, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { BASKET_TYPES } from "@/lib/constants";
 import { createBasket } from "./_actions";
 import type { Database } from "@/types/database.types";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  UtensilsCrossed, Milk, Leaf, Wine, Layers,
+};
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
 type BasketDay = Database["public"]["Enums"]["basket_day"];
@@ -29,7 +32,6 @@ const schema = z
     day: z.enum(["today", "tomorrow"] as const, {
       error: "Le jour est requis",
     }),
-    description: z.string().max(500, "La description ne doit pas dépasser 500 caractères").optional(),
     originalPrice: z
       .number({ error: "Prix invalide" })
       .positive("Le prix doit être positif"),
@@ -43,10 +45,13 @@ const schema = z
       .max(100, "La quantité maximum est 100"),
     pickupStart: z.string().min(1, "L'heure de début de retrait est requise"),
     pickupEnd: z.string().min(1, "L'heure de fin de retrait est requise"),
-    isDonation: z.boolean(),
   })
   .refine((data) => data.soldPrice < data.originalPrice, {
     message: "Le prix de vente doit être inférieur au prix original",
+    path: ["soldPrice"],
+  })
+  .refine((data) => data.soldPrice <= data.originalPrice * 0.8, {
+    message: "La réduction doit être d'au moins 20 %",
     path: ["soldPrice"],
   })
   .refine((data) => data.pickupEnd > data.pickupStart, {
@@ -55,6 +60,10 @@ const schema = z
   });
 
 type FormValues = z.infer<typeof schema>;
+
+// Heures (00→23) et minutes (00, 15, 30, 45)
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTES = ["00", "15", "30", "45"];
 
 export default function NouveauPanierPage() {
   const [loading, setLoading] = useState(false);
@@ -68,13 +77,15 @@ export default function NouveauPanierPage() {
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      isDonation: false,
       quantityTotal: 1,
     },
   });
 
+  const selectedType = watch("type");
   const originalPrice = watch("originalPrice");
   const soldPrice = watch("soldPrice");
+
+  const selectedTypeConfig = BASKET_TYPES.find((t) => t.value === selectedType);
 
   const reduction =
     originalPrice && soldPrice && originalPrice > 0 && soldPrice < originalPrice
@@ -84,16 +95,17 @@ export default function NouveauPanierPage() {
   async function onSubmit(data: FormValues) {
     setLoading(true);
     try {
+      const typeDescription = BASKET_TYPES.find((t) => t.value === data.type)?.description ?? "";
       await createBasket({
         type: data.type as BasketType,
         day: data.day as BasketDay,
-        description: data.description ?? "",
+        description: typeDescription,
         originalPrice: data.originalPrice,
         soldPrice: data.soldPrice,
         quantityTotal: data.quantityTotal,
         pickupStart: data.pickupStart,
         pickupEnd: data.pickupEnd,
-        isDonation: data.isDonation,
+        isDonation: false,
       });
     } catch (err) {
       // redirect() throws — if it's a redirect error, let Next.js handle it
@@ -135,11 +147,17 @@ export default function NouveauPanierPage() {
                         <SelectValue placeholder="Sélectionner..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {BASKET_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
-                            {t.emoji} {t.label}
-                          </SelectItem>
-                        ))}
+                        {BASKET_TYPES.map((t) => {
+                          const IconComp = ICON_MAP[t.icon];
+                          return (
+                            <SelectItem key={t.value} value={t.value}>
+                              <span className="inline-flex items-center gap-2">
+                                {IconComp && <IconComp className="h-4 w-4" />}
+                                {t.label}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   )}
@@ -168,22 +186,15 @@ export default function NouveauPanierPage() {
               </div>
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">
-                Description{" "}
-                <span className="text-muted-foreground font-normal">(optionnel)</span>
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="Panier surprise du vendredi — assortiment de viandes et spécialités..."
-                rows={3}
-                {...register("description")}
-              />
-              {errors.description && (
-                <p className="text-xs text-destructive">{errors.description.message}</p>
-              )}
-            </div>
+            {/* Description automatique */}
+            {selectedTypeConfig && (
+              <div className="space-y-2">
+                <Label>Description du panier</Label>
+                <div className="rounded-lg border border-input bg-muted/50 px-4 py-3 text-sm text-muted-foreground leading-relaxed">
+                  {selectedTypeConfig.description}
+                </div>
+              </div>
+            )}
 
             <Separator />
 
@@ -221,12 +232,17 @@ export default function NouveauPanierPage() {
 
               <div className="pb-0.5">
                 {reduction !== null ? (
-                  <div className="inline-flex items-center px-3 py-2 bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 rounded-lg text-sm font-semibold">
+                  <div className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-semibold ${
+                    reduction >= 20
+                      ? "bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200"
+                      : "bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200"
+                  }`}>
                     -{reduction}% de réduction
+                    {reduction < 20 && <span className="ml-1 text-xs font-normal">(min. 20 %)</span>}
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground">
-                    La réduction s&apos;affichera ici
+                    Réduction min. 20 %
                   </div>
                 )}
               </div>
@@ -252,11 +268,38 @@ export default function NouveauPanierPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pickupStart">Retrait à partir de</Label>
-                <Input
-                  id="pickupStart"
-                  type="time"
-                  {...register("pickupStart")}
+                <Label>Retrait à partir de</Label>
+                <Controller
+                  name="pickupStart"
+                  control={control}
+                  render={({ field }) => {
+                    const [h, m] = (field.value ?? ":").split(":");
+                    return (
+                      <div className="flex items-center gap-1">
+                        <Select value={h || undefined} onValueChange={(v) => field.onChange(`${v}:${m || "00"}`)}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="HH" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HOURS.map((hr) => (
+                              <SelectItem key={hr} value={hr}>{hr}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="text-lg font-semibold text-gray-400">:</span>
+                        <Select value={m || undefined} onValueChange={(v) => field.onChange(`${h || "00"}:${v}`)}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="MM" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MINUTES.map((mn) => (
+                              <SelectItem key={mn} value={mn}>{mn}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }}
                 />
                 {errors.pickupStart && (
                   <p className="text-xs text-destructive">{errors.pickupStart.message}</p>
@@ -264,32 +307,43 @@ export default function NouveauPanierPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pickupEnd">Retrait jusqu&apos;à</Label>
-                <Input
-                  id="pickupEnd"
-                  type="time"
-                  {...register("pickupEnd")}
+                <Label>Retrait jusqu&apos;à</Label>
+                <Controller
+                  name="pickupEnd"
+                  control={control}
+                  render={({ field }) => {
+                    const [h, m] = (field.value ?? ":").split(":");
+                    return (
+                      <div className="flex items-center gap-1">
+                        <Select value={h || undefined} onValueChange={(v) => field.onChange(`${v}:${m || "00"}`)}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="HH" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HOURS.map((hr) => (
+                              <SelectItem key={hr} value={hr}>{hr}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="text-lg font-semibold text-gray-400">:</span>
+                        <Select value={m || undefined} onValueChange={(v) => field.onChange(`${h || "00"}:${v}`)}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="MM" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MINUTES.map((mn) => (
+                              <SelectItem key={mn} value={mn}>{mn}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }}
                 />
                 {errors.pickupEnd && (
                   <p className="text-xs text-destructive">{errors.pickupEnd.message}</p>
                 )}
               </div>
-            </div>
-
-            <Separator />
-
-            {/* Don */}
-            <div className="flex items-center gap-3">
-              <input
-                id="isDonation"
-                type="checkbox"
-                className="h-4 w-4 rounded border-input accent-primary"
-                {...register("isDonation")}
-              />
-              <Label htmlFor="isDonation" className="cursor-pointer">
-                Proposer ce panier comme don pour les associations{" "}
-                <span className="text-muted-foreground font-normal">(tsedaka / mitzva)</span>
-              </Label>
             </div>
 
             <div className="flex gap-3 pt-2">

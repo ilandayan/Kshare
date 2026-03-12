@@ -48,6 +48,11 @@ export async function updateBasket(
   const commerceId = await getCommerceId(supabase, user.id);
   if (!commerceId) return { success: false, error: "Commerce introuvable." };
 
+  // Validate minimum 20% discount for non-donation baskets
+  if (!data.isDonation && data.originalPrice > 0 && data.soldPrice > data.originalPrice * 0.8) {
+    return { success: false, error: "La réduction doit être d'au moins 20 %." };
+  }
+
   const { error } = await supabase
     .from("baskets")
     .update({
@@ -97,6 +102,59 @@ export async function toggleBasketStatus(
 
   if (error) {
     return { success: false, error: "Erreur lors du changement de statut." };
+  }
+
+  return { success: true };
+}
+
+/** Publish a draft basket (draft → published) */
+export async function publishBasket(
+  basketId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non authentifié." };
+
+  const commerceId = await getCommerceId(supabase, user.id);
+  if (!commerceId) return { success: false, error: "Commerce introuvable." };
+
+  // Verify the basket is in draft status
+  const { data: basket } = await supabase
+    .from("baskets")
+    .select("id, status, commerce_id")
+    .eq("id", basketId)
+    .single();
+
+  if (!basket || basket.commerce_id !== commerceId) {
+    return { success: false, error: "Panier introuvable." };
+  }
+
+  if (basket.status !== "draft") {
+    return { success: false, error: "Seuls les paniers en brouillon peuvent être publiés." };
+  }
+
+  // Check commerce is validated before allowing publish
+  const { data: commerce } = await supabase
+    .from("commerces")
+    .select("status")
+    .eq("id", commerceId)
+    .single();
+
+  if (commerce?.status !== "validated") {
+    return { success: false, error: "Votre commerce doit être validé pour publier des paniers." };
+  }
+
+  const { error } = await supabase
+    .from("baskets")
+    .update({ status: "published" })
+    .eq("id", basketId)
+    .eq("commerce_id", commerceId);
+
+  if (error) {
+    return { success: false, error: "Erreur lors de la publication." };
   }
 
   return { success: true };

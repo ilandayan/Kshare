@@ -1,11 +1,25 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
+import { checkRateLimit, getClientIp, AUTH_RATE_LIMIT } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    // Rate limiting — 30 requests/minute per IP
+    const ip = getClientIp(request);
+    const { allowed, resetAt } = checkRateLimit(`connect-onboard:${ip}`, AUTH_RATE_LIMIT);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Trop de requêtes. Veuillez réessayer dans quelques instants." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)) },
+        }
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -14,6 +28,17 @@ export async function GET(): Promise<NextResponse> {
 
     if (userError || !user) {
       return NextResponse.redirect(new URL("/connexion", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"));
+    }
+
+    // Vérifier le rôle commerce
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "commerce") {
+      return NextResponse.json({ error: "Accès réservé aux commerçants" }, { status: 403 });
     }
 
     const { data: commerce, error: commerceError } = await supabase
@@ -37,6 +62,14 @@ export async function GET(): Promise<NextResponse> {
         type: "express",
         country: "FR",
         email: commerce.email,
+        settings: {
+          payouts: {
+            schedule: {
+              interval: "weekly",
+              weekly_anchor: "tuesday",
+            },
+          },
+        },
       });
 
       accountId = account.id;

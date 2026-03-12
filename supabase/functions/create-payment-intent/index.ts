@@ -2,13 +2,26 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://k-share.fr",
+  "https://www.k-share.fr",
+  "http://localhost:3000",
+  "http://localhost:8081",
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") ?? "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
+
   // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -68,7 +81,7 @@ Deno.serve(async (req: Request) => {
         quantity_total, quantity_reserved, quantity_sold,
         status, is_donation, pickup_start, pickup_end, commerce_id,
         commerces (
-          id, name, stripe_account_id, commission_rate, status
+          id, name, stripe_account_id, commission_rate, subscription_plan, status
         )
       `,
       )
@@ -105,6 +118,7 @@ Deno.serve(async (req: Request) => {
       name: string;
       stripe_account_id: string | null;
       commission_rate: number;
+      subscription_plan: string | null;
       status: string;
     };
 
@@ -122,9 +136,28 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Calculate commission
-    const commissionRate = commerce.commission_rate ?? 15;
-    const applicationFee = Math.round(amount * (commissionRate / 100));
+    // ── Fee calculations ──
+    // Plan-based commission rate (fallback to DB value then 18%)
+    const PLAN_RATES: Record<string, number> = { starter: 18, pro: 12 };
+    const commissionRate =
+      PLAN_RATES[commerce.subscription_plan ?? "starter"] ??
+      commerce.commission_rate ??
+      18;
+    const commissionInCents = Math.round(amount * (commissionRate / 100));
+
+    // Service fee: 1.5% + 0.79€ (paid by client, kept by Kshare)
+    const SERVICE_FEE_PERCENT = 0.015;
+    const SERVICE_FEE_FIXED_CENTS = 79;
+    const serviceFeeInCents =
+      Math.round(amount * SERVICE_FEE_PERCENT) + SERVICE_FEE_FIXED_CENTS;
+
+    // Client pays basket price + service fee
+    const totalAmountInCents = amount + serviceFeeInCents;
+    // Kshare keeps commission + service fee
+    const applicationFee = commissionInCents + serviceFeeInCents;
+
+    // Idempotency key for ledger deduplication
+    const idempotencyKey = crypto.randomUUID();
 
     // Init Stripe
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -136,7 +169,7 @@ Deno.serve(async (req: Request) => {
 
     // Create Stripe Payment Intent with Connect
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount: totalAmountInCents,
       currency: "eur",
       application_fee_amount: applicationFee,
       transfer_data: {
@@ -147,6 +180,10 @@ Deno.serve(async (req: Request) => {
         commerce_id: commerce.id,
         user_id: user.id,
         commission_rate: String(commissionRate),
+        basket_amount: String(amount),
+        commission_amount: String(commissionInCents),
+        service_fee_amount: String(serviceFeeInCents),
+        idempotency_key: idempotencyKey,
       },
       automatic_payment_methods: { enabled: true },
     });
@@ -161,7 +198,7 @@ Deno.serve(async (req: Request) => {
         basket_id,
         client_id: user.id,
         quantity: 1,
-        total_amount: amount / 100, // store in euros
+        total_amount: totalAmountInCents / 100, // store in euros (basket + service fee)
         status: "created",
         stripe_payment_intent_id: paymentIntent.id,
         is_donation: basket.is_donation ?? false,
@@ -187,6 +224,9 @@ Deno.serve(async (req: Request) => {
         clientSecret: paymentIntent.client_secret,
         orderId: order.id,
         pickupToken,
+        basketAmountCents: amount,
+        serviceFeeCents: serviceFeeInCents,
+        totalAmountCents: totalAmountInCents,
       }),
       {
         status: 200,

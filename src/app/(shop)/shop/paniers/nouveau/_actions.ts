@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { validateBasketPrice } from "@/lib/stripe/client";
 import type { Database } from "@/types/database.types";
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
@@ -33,13 +34,45 @@ export async function createBasket(data: CreateBasketData): Promise<CreateBasket
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, status")
+    .select("id, status, subscription_plan")
     .eq("profile_id", user.id)
     .single();
 
   if (!commerce) return { success: false, error: "Commerce introuvable." };
+  if (commerce.status === "suspended") {
+    return { success: false, error: "Votre compte est suspendu. Veuillez régulariser votre abonnement pour créer des paniers." };
+  }
   if (commerce.status !== "validated") {
     return { success: false, error: "Votre compte doit être validé pour créer des paniers." };
+  }
+
+  // Must choose a plan before publishing
+  if (!commerce.subscription_plan) {
+    return { success: false, error: "Vous devez choisir un plan (Starter ou Pro) avant de publier des paniers." };
+  }
+
+  // Server-side validation of prices and quantities
+  if (typeof data.originalPrice !== "number" || data.originalPrice <= 0) {
+    return { success: false, error: "Le prix original doit être un nombre positif." };
+  }
+  if (typeof data.soldPrice !== "number" || data.soldPrice <= 0) {
+    return { success: false, error: "Le prix de vente doit être un nombre positif." };
+  }
+  if (data.soldPrice > data.originalPrice) {
+    return { success: false, error: "Le prix de vente ne peut pas dépasser le prix original." };
+  }
+
+  // Validate basket price constraints (min 5€, min 40% discount)
+  const priceError = validateBasketPrice(data.soldPrice, data.originalPrice, data.isDonation);
+  if (priceError) {
+    return { success: false, error: priceError };
+  }
+
+  if (typeof data.quantityTotal !== "number" || data.quantityTotal < 1 || !Number.isInteger(data.quantityTotal)) {
+    return { success: false, error: "La quantité doit être un entier positif." };
+  }
+  if (!data.pickupStart || !data.pickupEnd) {
+    return { success: false, error: "Les horaires de retrait sont requis." };
   }
 
   const { error } = await supabase.from("baskets").insert({

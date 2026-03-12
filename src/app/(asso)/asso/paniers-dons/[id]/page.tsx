@@ -1,13 +1,22 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Clock, ShoppingBag, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, ShoppingBag, Star, UtensilsCrossed, Milk, Leaf, Wine, Layers, Handshake, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { BASKET_TYPES } from "@/lib/constants";
-import { reserverPanierDon } from "./_actions";
+import { DonDetailReserver } from "@/components/asso/don-detail-reserver";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  UtensilsCrossed, Milk, Leaf, Wine, Layers,
+};
+
+function formatTime(time: string): string {
+  const parts = time.split(":");
+  return `${parts[0]}h${parts[1]}`;
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -42,7 +51,7 @@ export default async function PanierDonDetailPage({ params }: PageProps) {
     average_rating: number | null;
   } | null;
 
-  const available = basket.quantity_total - basket.quantity_reserved;
+  const available = basket.quantity_total - (basket.quantity_reserved ?? 0) - (basket.quantity_sold ?? 0);
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -59,13 +68,13 @@ export default async function PanierDonDetailPage({ params }: PageProps) {
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-4xl">{typeConfig?.emoji}</span>
+              {typeConfig && ICON_MAP[typeConfig.icon] && (() => { const Icon = ICON_MAP[typeConfig.icon]; return <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center"><Icon className="h-6 w-6 text-purple-600" /></div>; })()}
               <div>
                 <CardTitle className="text-xl">{typeConfig?.label}</CardTitle>
-                <p className="text-sm text-muted-foreground mt-0.5">{typeConfig?.description}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{typeConfig?.shortDescription}</p>
               </div>
             </div>
-            <Badge variant="secondary" className="shrink-0">Don 🤝</Badge>
+            <Badge variant="secondary" className="shrink-0 inline-flex items-center gap-1">Don <Handshake className="h-3.5 w-3.5" /></Badge>
           </div>
         </CardHeader>
 
@@ -105,7 +114,7 @@ export default async function PanierDonDetailPage({ params }: PageProps) {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 shrink-0" />
                 <span>
-                  {basket.pickup_start} – {basket.pickup_end}
+                  {formatTime(basket.pickup_start)} – {formatTime(basket.pickup_end)}
                 </span>
               </div>
             </div>
@@ -118,7 +127,7 @@ export default async function PanierDonDetailPage({ params }: PageProps) {
                     available > 0 ? "text-green-600 dark:text-green-400" : "text-destructive"
                   }`}
                 >
-                  {available > 0 ? `${available} disponible(s)` : "Plus disponible"}
+                  {available > 0 ? `${available} disponible${available > 1 ? "s" : ""}` : "Plus disponible"}
                 </span>
                 <span className="text-muted-foreground"> / {basket.quantity_total} total</span>
               </div>
@@ -139,27 +148,11 @@ export default async function PanierDonDetailPage({ params }: PageProps) {
           <Separator />
 
           {/* CTA */}
-          <div className="space-y-3">
-            {available > 0 ? (
-              <form
-                action={async () => {
-                  "use server";
-                  await reserverPanierDon(id);
-                }}
-              >
-                <Button type="submit" className="w-full" size="lg">
-                  Réserver ce panier don
-                </Button>
-              </form>
-            ) : (
-              <Button className="w-full" size="lg" disabled>
-                Panier non disponible
-              </Button>
-            )}
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/asso/paniers-dons">Retour à la liste</Link>
-            </Button>
-          </div>
+          <DonDetailReserver basketId={id} available={available} />
+
+          <Button variant="outline" className="w-full cursor-pointer" asChild>
+            <Link href="/asso/paniers-dons">Retour à la liste</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

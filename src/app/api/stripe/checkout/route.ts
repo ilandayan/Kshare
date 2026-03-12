@@ -1,16 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getStripe, calculateCommission } from "@/lib/stripe/client";
+import { getStripe, calculateCommission, calculateServiceFee, getCommissionRateForPlan } from "@/lib/stripe/client";
+import { checkRateLimit, getClientIp, PAYMENT_RATE_LIMIT } from "@/lib/rate-limit";
+import { logAuditEvent } from "@/lib/audit-log";
+import { BASKET_MIN_PRICE, type SubscriptionPlanId } from "@/lib/constants";
+import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
 interface CheckoutRequestBody {
   basketId: string;
   quantity: number;
+  isDonation?: boolean;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Rate limiting — 5 requests/minute per IP
+    const ip = getClientIp(request);
+    const { allowed, resetAt } = checkRateLimit(`checkout:${ip}`, PAYMENT_RATE_LIMIT);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Trop de requêtes. Veuillez réessayer dans quelques instants." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)) },
+        }
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -21,6 +39,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
+    // Vérifier que l'utilisateur a le rôle client
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.role !== "client") {
+      return NextResponse.json({ error: "Accès réservé aux clients" }, { status: 403 });
+    }
+
     let body: CheckoutRequestBody;
     try {
       body = (await request.json()) as CheckoutRequestBody;
@@ -28,7 +57,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
     }
 
-    const { basketId, quantity } = body;
+    const { basketId, quantity, isDonation: isClientDonation } = body;
 
     if (!basketId || typeof basketId !== "string") {
       return NextResponse.json({ error: "basketId requis" }, { status: 400 });
@@ -37,11 +66,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "quantity invalide" }, { status: 400 });
     }
 
-    // Fetch basket with commerce
     const { data: basket, error: basketError } = await supabase
       .from("baskets")
       .select(
-        "id, sold_price, type, description, commerce_id, quantity_total, quantity_sold, quantity_reserved, status, pickup_start, pickup_end, pickup_date:day, commerces(id, name, stripe_account_id, commission_rate, email)"
+        "id, sold_price, original_price, type, description, commerce_id, quantity_total, quantity_sold, quantity_reserved, status, pickup_start, pickup_end, pickup_date:day, is_donation, commerces(id, name, stripe_account_id, commission_rate, subscription_plan, email)"
       )
       .eq("id", basketId)
       .single();
@@ -68,6 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       name: string;
       stripe_account_id: string | null;
       commission_rate: number;
+      subscription_plan: string | null;
       email: string;
     } | null;
 
@@ -82,10 +111,57 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const totalAmount = basket.sold_price * quantity;
-    const { commission } = calculateCommission(totalAmount, commerce.commission_rate);
-    const commissionInCents = Math.round(commission * 100);
-    const totalInCents = Math.round(totalAmount * 100);
+    // Safeguard: validate basket minimum price (already enforced at creation)
+    if (!isClientDonation && basket.sold_price < BASKET_MIN_PRICE) {
+      return NextResponse.json(
+        { error: `Le prix minimum d'un panier est de ${BASKET_MIN_PRICE} €.` },
+        { status: 400 }
+      );
+    }
+
+    // Déterminer si c'est un don (commerçant ou client)
+    const isBasketDonation = !!(basket as Record<string, unknown>).is_donation;
+
+    // --- Price, commission & service fee calculations ---
+    // service_fee = (basket_price * 1.5%) + 0.79€ — covers Stripe costs, paid by client, kept by Kshare
+    // commission = basket_price * commission_rate% — Kshare revenue
+    // application_fee_amount = commission + service_fee (total kept by Kshare)
+    // Client pays: basket_price + service_fee (for regular purchases)
+
+    let unitPrice: number; // basket price per unit (what commerce receives)
+    let commissionInCents: number;
+    let serviceFeeInCents: number;
+
+    if (isClientDonation) {
+      // Don client: prix = sold_price - commission Kshare, no service fee
+      const planRate = getCommissionRateForPlan(
+        (commerce.subscription_plan as SubscriptionPlanId) ?? "starter"
+      );
+      const { commission } = calculateCommission(basket.sold_price, planRate);
+      unitPrice = Math.round((basket.sold_price - commission) * 100) / 100;
+      commissionInCents = 0;
+      serviceFeeInCents = 0;
+    } else if (isBasketDonation) {
+      unitPrice = basket.sold_price;
+      commissionInCents = 0;
+      serviceFeeInCents = 0;
+    } else {
+      unitPrice = basket.sold_price;
+      const basketTotal = basket.sold_price * quantity;
+      const planRate = getCommissionRateForPlan(
+        (commerce.subscription_plan as SubscriptionPlanId) ?? "starter"
+      );
+      const { commission } = calculateCommission(basketTotal, planRate);
+      commissionInCents = Math.round(commission * 100);
+      const serviceFee = calculateServiceFee(basketTotal);
+      serviceFeeInCents = Math.round(serviceFee * 100);
+    }
+
+    // application_fee = commission + service_fee (both kept by Kshare)
+    const applicationFeeInCents = commissionInCents + serviceFeeInCents;
+    const basketTotalInCents = Math.round(unitPrice * quantity * 100);
+    // Client pays basket price + service fee
+    const totalChargedInCents = basketTotalInCents + serviceFeeInCents;
 
     const stripe = getStripe();
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -99,26 +175,48 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
     const basketLabel = basketTypeLabels[basket.type] ?? "Panier";
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `${basketLabel} — ${commerce.name}`,
-              description: basket.description ?? undefined,
-            },
-            unit_amount: Math.round(basket.sold_price * 100),
+    // Build line items: basket + service fee (separate line)
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: isClientDonation
+              ? `${basketLabel} — Don pour une association`
+              : `${basketLabel} — ${commerce.name}`,
+            description: isClientDonation
+              ? `Don solidaire via ${commerce.name}`
+              : (basket.description ?? undefined),
           },
-          quantity,
+          unit_amount: Math.round(unitPrice * 100),
         },
-      ],
+        quantity,
+      },
+    ];
+
+    // Add service fee as a separate line item (visible on Stripe Checkout)
+    if (serviceFeeInCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: "Frais de service plateforme",
+          },
+          unit_amount: serviceFeeInCents,
+        },
+        quantity: 1,
+      });
+    }
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      payment_method_types: ["card"],
+      line_items: lineItems,
       payment_intent_data: {
-        application_fee_amount: commissionInCents,
+        application_fee_amount: applicationFeeInCents,
         transfer_data: {
           destination: commerce.stripe_account_id,
         },
+        ...(isClientDonation ? { capture_method: "manual" as const } : {}),
       },
       mode: "payment",
       metadata: {
@@ -126,11 +224,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         quantity: String(quantity),
         profileId: user.id,
         commerceId: commerce.id,
-        totalAmount: String(totalInCents),
+        basketAmount: String(basketTotalInCents),
         commissionAmount: String(commissionInCents),
+        serviceFeeAmount: String(serviceFeeInCents),
+        idempotencyKey: crypto.randomUUID(),
+        ...(isClientDonation ? { isDonation: "true" } : {}),
       },
-      success_url: `${baseUrl}/shop/paniers/orders?success=1`,
-      cancel_url: `${baseUrl}/shop/paniers`,
+      success_url: isClientDonation
+        ? `${baseUrl}/client/commandes?donation=1`
+        : `${baseUrl}/client/commandes?success=1`,
+      cancel_url: `${baseUrl}/client/paniers`,
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    logAuditEvent({
+      action: isClientDonation ? "payment.checkout_donation" : "payment.checkout_created",
+      actor_id: user.id,
+      ip,
+      metadata: { basketId, quantity, commerceId: commerce.id, totalChargedInCents },
     });
 
     return NextResponse.json({ url: session.url });
