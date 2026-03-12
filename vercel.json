@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/expire-donations",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/no-show",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 22 * * *"
     }
   ]
 }
