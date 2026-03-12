@@ -10,11 +10,13 @@ interface EditClientProfileProps {
     id: string;
     full_name: string;
     email: string;
+    phone: string;
   };
 }
 
 export function EditClientProfile({ profile }: EditClientProfileProps) {
   const [fullName, setFullName] = useState(profile.full_name ?? "");
+  const [phone, setPhone] = useState(profile.phone ?? "");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function EditClientProfile({ profile }: EditClientProfileProps) {
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ full_name: fullName.trim() })
+      .update({ full_name: fullName.trim(), phone: phone.trim() || null })
       .eq("id", profile.id);
 
     if (updateError) {
@@ -62,6 +64,17 @@ export function EditClientProfile({ profile }: EditClientProfileProps) {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Votre nom"
+          className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1.5 block">Téléphone</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="06 12 34 56 78"
           className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
         />
       </div>

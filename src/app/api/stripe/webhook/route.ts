@@ -175,6 +175,28 @@ async function handleCheckoutSessionCompleted(
       }
     }
 
+    // Fetch real Stripe fee from the charge's balance_transaction
+    if (order && paymentIntentId) {
+      try {
+        const stripe = getStripe();
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+          expand: ["latest_charge.balance_transaction"],
+        });
+        const charge = pi.latest_charge as Stripe.Charge | null;
+        const bt = charge?.balance_transaction as Stripe.BalanceTransaction | null;
+        if (bt) {
+          const stripeFee = bt.fee / 100; // cents → EUR
+          await supabase
+            .from("orders")
+            .update({ stripe_fee_amount: stripeFee } as Record<string, unknown>)
+            .eq("id", order.id);
+        }
+      } catch (feeErr) {
+        // Non-blocking: log but don't fail the webhook
+        console.error("[webhook] Failed to fetch Stripe fee:", feeErr);
+      }
+    }
+
     // Update basket quantities
     const { data: currentBasket } = await supabase
       .from("baskets")

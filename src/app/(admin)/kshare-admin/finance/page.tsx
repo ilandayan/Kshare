@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Euro, Clock } from "lucide-react";
+import { BarChart3, CreditCard, Receipt, Banknote, Clock } from "lucide-react";
 import { SUBSCRIPTION_PLANS } from "@/lib/constants";
+import { ReconcileButton } from "./reconcile-button";
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: "Actif",
@@ -18,14 +19,26 @@ const SUBSCRIPTION_STATUS_COLORS: Record<string, string> = {
   cancellation_requested: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
+type OrderRow = {
+  total_amount: number;
+  commission_amount: number;
+  service_fee_amount: number;
+  stripe_fee_amount: number | null;
+  is_donation: boolean;
+};
+
 export default async function FinancePage() {
   const supabase = await createClient();
 
-  const [{ data: subscriptions }, { data: pendingOrders }] = await Promise.all([
+  const [{ data: subscriptions }, { data: paidOrders }, { data: pendingOrders }] = await Promise.all([
     supabase
       .from("subscriptions")
       .select("*, commerces(name, city, email)")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("orders")
+      .select("total_amount, commission_amount, service_fee_amount, stripe_fee_amount, is_donation" as string)
+      .in("status", ["paid", "ready_for_pickup", "picked_up"]) as unknown as { data: OrderRow[] | null; error: unknown },
     supabase
       .from("orders")
       .select("id, commerce_id, net_amount, created_at, commerces(name)")
@@ -35,15 +48,39 @@ export default async function FinancePage() {
       .limit(50),
   ]);
 
-  const activeSubscriptions = subscriptions?.filter((s) =>
-    ["active", "offered"].includes(s.status)
-  ) ?? [];
+  const orders = (paidOrders ?? []) as OrderRow[];
+
+  // ── KPI calculations ──
+  const totalCommissions = orders
+    .filter((o) => !o.is_donation)
+    .reduce((sum, o) => sum + (o.commission_amount ?? 0), 0);
+
+  const totalServiceFees = orders.reduce(
+    (sum, o) => sum + (o.service_fee_amount ?? 0),
+    0
+  );
+
+  const totalStripeFees = orders.reduce(
+    (sum, o) => sum + (o.stripe_fee_amount ?? 0),
+    0
+  );
+
+  const ordersWithoutFee = orders.filter(
+    (o) => !o.is_donation && (!o.stripe_fee_amount || o.stripe_fee_amount === 0) && o.total_amount > 0
+  ).length;
+
+  const activeSubscriptions =
+    subscriptions?.filter((s) => ["active", "offered"].includes(s.status)) ?? [];
 
   const monthlyRevenue = activeSubscriptions
     .filter((s) => s.status === "active")
     .reduce((sum, s) => sum + s.monthly_price, 0);
 
-  // Agréger les reversements en attente par commerce
+  // ── Bilan ──
+  const totalRevenus = totalCommissions + monthlyRevenue + totalServiceFees;
+  const resultatNet = totalRevenus - totalStripeFees;
+
+  // ── Reversements en attente ──
   type ReversementEntry = {
     commerceId: string;
     commerceName: string;
@@ -82,25 +119,38 @@ export default async function FinancePage() {
 
   const kpis = [
     {
-      label: "Abonnements actifs",
-      value: activeSubscriptions.length.toString(),
-      sub: "Commerçants abonnés",
+      label: "Commissions",
+      value: `${totalCommissions.toFixed(2)} €`,
+      sub: "18% Starter / 12% Pro",
+      icon: BarChart3,
+      color: "text-violet-500",
+      bgColor: "bg-violet-50 dark:bg-violet-950/30",
+    },
+    {
+      label: "Abonnements",
+      value: `${monthlyRevenue.toFixed(2)} €/mois`,
+      sub: `${activeSubscriptions.length} abonné(s) actif(s)`,
       icon: CreditCard,
       color: "text-blue-500",
+      bgColor: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
-      label: "Revenus abonnements",
-      value: `${monthlyRevenue.toFixed(2)} €`,
-      sub: `Starter ${SUBSCRIPTION_PLANS.starter.monthlyPrice} € / Pro ${SUBSCRIPTION_PLANS.pro.monthlyPrice} €`,
-      icon: Euro,
-      color: "text-green-500",
+      label: "Frais de service",
+      value: `${totalServiceFees.toFixed(2)} €`,
+      sub: "0.79€ + 1.5% par commande",
+      icon: Receipt,
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-50 dark:bg-cyan-950/30",
     },
     {
-      label: "Reversements en attente",
-      value: `${totalPendingAmount.toFixed(2)} €`,
-      sub: `${reversements.length} commerce(s)`,
-      icon: Clock,
-      color: "text-orange-500",
+      label: "Frais Stripe réels",
+      value: `${totalStripeFees.toFixed(2)} €`,
+      sub: ordersWithoutFee > 0
+        ? `${ordersWithoutFee} commande(s) sans frais réconciliés`
+        : "Tous les frais sont réconciliés",
+      icon: Banknote,
+      color: "text-red-500",
+      bgColor: "bg-red-50 dark:bg-red-950/30",
     },
   ];
 
@@ -108,15 +158,19 @@ export default async function FinancePage() {
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Gestion financière</h1>
-        <p className="text-muted-foreground mt-1">Abonnements et reversements commerçants</p>
+        <p className="text-muted-foreground mt-1">
+          Vue scindée : commissions, abonnements, frais de service et frais Stripe
+        </p>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+      {/* 4 KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {kpis.map((kpi) => (
-          <Card key={kpi.label}>
+          <Card key={kpi.label} className={kpi.bgColor}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.label}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {kpi.label}
+              </CardTitle>
               <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
             </CardHeader>
             <CardContent>
@@ -127,8 +181,122 @@ export default async function FinancePage() {
         ))}
       </div>
 
-      {/* Abonnements commerçants */}
+      {/* Bilan Kshare */}
+      <Card className="mb-8 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20">
+        <CardHeader>
+          <CardTitle className="text-base text-emerald-800 dark:text-emerald-200">
+            Bilan Kshare
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Total revenus</span>
+            <span className="text-sm font-semibold text-foreground">
+              {totalRevenus.toFixed(2)} €
+            </span>
+          </div>
+          <div className="flex items-center justify-between pl-4">
+            <span className="text-sm text-muted-foreground">
+              Commissions
+            </span>
+            <span className="text-sm text-foreground">
+              {totalCommissions.toFixed(2)} €
+            </span>
+          </div>
+          <div className="flex items-center justify-between pl-4">
+            <span className="text-sm text-muted-foreground">
+              Abonnements
+            </span>
+            <span className="text-sm text-foreground">
+              {monthlyRevenue.toFixed(2)} €/mois
+            </span>
+          </div>
+          <div className="flex items-center justify-between pl-4">
+            <span className="text-sm text-muted-foreground">
+              Frais de service
+            </span>
+            <span className="text-sm text-foreground">
+              {totalServiceFees.toFixed(2)} €
+            </span>
+          </div>
+          <div className="border-t border-emerald-200 dark:border-emerald-800 my-2" />
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-red-600 dark:text-red-400">
+              Charges Stripe
+            </span>
+            <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+              −{totalStripeFees.toFixed(2)} €
+            </span>
+          </div>
+          <div className="border-t border-emerald-200 dark:border-emerald-800 my-2" />
+          <div className="flex items-center justify-between">
+            <span className="text-base font-bold text-emerald-800 dark:text-emerald-200">
+              Résultat net
+            </span>
+            <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+              {resultatNet.toFixed(2)} €
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reconcile button */}
+      {ordersWithoutFee > 0 && (
+        <div className="mb-8">
+          <ReconcileButton ordersWithoutFee={ordersWithoutFee} />
+        </div>
+      )}
+
+      {/* Reversements en attente */}
       <Card className="mb-8">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Reversements en attente</CardTitle>
+          <div className="flex items-center gap-2 text-sm text-orange-500">
+            <Clock className="h-4 w-4" />
+            {totalPendingAmount.toFixed(2)} €
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {reversements.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground text-sm">
+              Aucun reversement en attente
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Commerce</th>
+                    <th className="text-right py-3 px-4 text-muted-foreground font-medium">Montant net (€)</th>
+                    <th className="text-right py-3 px-4 text-muted-foreground font-medium">Commandes</th>
+                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Dernière vente</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reversements.map((r) => (
+                    <tr
+                      key={r.commerceId}
+                      className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors"
+                    >
+                      <td className="py-3 px-4 font-medium text-foreground">{r.commerceName}</td>
+                      <td className="py-3 px-4 text-right font-semibold text-green-600 dark:text-green-400">
+                        {r.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-right text-muted-foreground">{r.orderCount}</td>
+                      <td className="py-3 px-4 text-muted-foreground">
+                        {new Date(r.lastOrderDate).toLocaleDateString("fr-FR")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Abonnements commerçants */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Abonnements commerçants</CardTitle>
         </CardHeader>
@@ -182,50 +350,6 @@ export default async function FinancePage() {
                       </tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Reversements en attente */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Reversements en attente</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {reversements.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground text-sm">
-              Aucun reversement en attente
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Commerce</th>
-                    <th className="text-right py-3 px-4 text-muted-foreground font-medium">Montant net (€)</th>
-                    <th className="text-right py-3 px-4 text-muted-foreground font-medium">Commandes</th>
-                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Dernière vente</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reversements.map((r) => (
-                    <tr
-                      key={r.commerceId}
-                      className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors"
-                    >
-                      <td className="py-3 px-4 font-medium text-foreground">{r.commerceName}</td>
-                      <td className="py-3 px-4 text-right font-semibold text-green-600 dark:text-green-400">
-                        {r.totalAmount.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-4 text-right text-muted-foreground">{r.orderCount}</td>
-                      <td className="py-3 px-4 text-muted-foreground">
-                        {new Date(r.lastOrderDate).toLocaleDateString("fr-FR")}
-                      </td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
             </div>
