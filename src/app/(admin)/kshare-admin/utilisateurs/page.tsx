@@ -68,7 +68,7 @@ export default async function AdminUtilisateursPage({
   );
 
   const ordersByClient: Record<string, OrderRow[]> = {};
-  (clientOrders ?? []).forEach((o) => {
+  ((clientOrders ?? []) as OrderRow[]).forEach((o) => {
     if (!ordersByClient[o.client_id]) ordersByClient[o.client_id] = [];
     ordersByClient[o.client_id]!.push(o);
   });
