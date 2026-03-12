@@ -63,6 +63,12 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
+    // Transmettre le rôle pour afficher le bon variant de connexion
+    if (pathname.startsWith("/kshare-admin")) {
+      url.searchParams.set("role", "admin");
+    } else if (pathname.startsWith("/asso")) {
+      url.searchParams.set("role", "association");
+    }
     return NextResponse.redirect(url);
   }
 

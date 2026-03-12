@@ -41,6 +41,13 @@ export function EditProfileForm({ commerce, onClose }: EditProfileFormProps) {
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const initialHashgakha = commerce.hashgakha ?? "";
+  const isCustomHashgakha =
+    initialHashgakha !== "" &&
+    !(HASHGAKHA_LIST as readonly string[]).includes(initialHashgakha);
+
+  const [hashgakhaAutre, setHashgakhaAutre] = useState(isCustomHashgakha);
+
   const [form, setForm] = useState({
     name: commerce.name ?? "",
     address: commerce.address ?? "",
@@ -49,7 +56,7 @@ export function EditProfileForm({ commerce, onClose }: EditProfileFormProps) {
     phone: commerce.phone ?? "",
     email: commerce.email ?? "",
     commerceType: commerce.commerce_type ?? "",
-    hashgakha: commerce.hashgakha ?? "",
+    hashgakha: initialHashgakha,
   });
 
   function handleChange(
@@ -284,8 +291,16 @@ export function EditProfileForm({ commerce, onClose }: EditProfileFormProps) {
           </label>
           <select
             name="hashgakha"
-            value={form.hashgakha}
-            onChange={handleChange}
+            value={hashgakhaAutre ? "Autre" : form.hashgakha}
+            onChange={(e) => {
+              if (e.target.value === "Autre") {
+                setHashgakhaAutre(true);
+                setForm((prev) => ({ ...prev, hashgakha: "" }));
+              } else {
+                setHashgakhaAutre(false);
+                setForm((prev) => ({ ...prev, hashgakha: e.target.value }));
+              }
+            }}
             className={inputCls}
           >
             <option value="">Selectionner</option>
@@ -295,6 +310,15 @@ export function EditProfileForm({ commerce, onClose }: EditProfileFormProps) {
               </option>
             ))}
           </select>
+          {hashgakhaAutre && (
+            <input
+              name="hashgakha"
+              value={form.hashgakha}
+              onChange={handleChange}
+              placeholder="Précisez la cacherout..."
+              className={`${inputCls} mt-2`}
+            />
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">

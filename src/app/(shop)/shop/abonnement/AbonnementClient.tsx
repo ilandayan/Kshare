@@ -18,6 +18,7 @@ import {
   TriangleAlert,
   Zap,
   Crown,
+  PlusCircle,
 } from "lucide-react";
 import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 import type { Database } from "@/types/database.types";
@@ -173,7 +174,7 @@ export default function AbonnementClient({
       {/* Plan cards */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* Starter */}
-        <Card className={`relative ${currentPlan === "starter" ? "ring-2 ring-primary" : ""}`}>
+        <Card className={`relative flex flex-col ${currentPlan === "starter" ? "ring-2 ring-primary" : ""}`}>
           {currentPlan === "starter" && (
             <Badge className="absolute -top-2.5 left-4">Plan actuel</Badge>
           )}
@@ -188,7 +189,7 @@ export default function AbonnementClient({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col flex-1 space-y-4">
             <div>
               <p className="text-3xl font-bold text-foreground">
                 {SUBSCRIPTION_PLANS.starter.monthlyPrice} €
@@ -199,7 +200,7 @@ export default function AbonnementClient({
               </p>
             </div>
 
-            <ul className="space-y-2">
+            <ul className="space-y-2 flex-1">
               {[
                 "Publication illimitée de paniers",
                 "Tableau de bord et statistiques",
@@ -234,7 +235,7 @@ export default function AbonnementClient({
         </Card>
 
         {/* Pro */}
-        <Card className={`relative ${currentPlan === "pro" ? "ring-2 ring-primary" : ""}`}>
+        <Card className={`relative flex flex-col ${currentPlan === "pro" ? "ring-2 ring-primary" : ""}`}>
           {currentPlan === "pro" && (
             <Badge className="absolute -top-2.5 left-4">Plan actuel</Badge>
           )}
@@ -249,7 +250,7 @@ export default function AbonnementClient({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col flex-1 space-y-4">
             <div>
               <p className="text-3xl font-bold text-foreground">
                 {SUBSCRIPTION_PLANS.pro.monthlyPrice} €
@@ -260,17 +261,15 @@ export default function AbonnementClient({
               </p>
             </div>
 
-            <ul className="space-y-2">
-              {[
-                "Tout le plan Starter",
-                "Commission réduite (12% au lieu de 18%)",
-                "Support prioritaire",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
-                  {item}
-                </li>
-              ))}
+            <ul className="space-y-2 flex-1">
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                Tout le plan Starter
+              </li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <PlusCircle className="h-4 w-4 text-green-500 shrink-0" />
+                Commission réduite (12% au lieu de 18%)
+              </li>
             </ul>
 
             {currentPlan !== "pro" && (

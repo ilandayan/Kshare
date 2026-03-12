@@ -43,6 +43,8 @@ export default function InscriptionCommercantPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const [hashgakhaAutre, setHashgakhaAutre] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -188,7 +190,15 @@ export default function InscriptionCommercantPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="hashgakha">Cacherout (supervision casher)</Label>
-                  <Select onValueChange={(v) => setValue("hashgakha", v, { shouldValidate: true })}>
+                  <Select onValueChange={(v) => {
+                    if (v === "Autre") {
+                      setHashgakhaAutre(true);
+                      setValue("hashgakha", "", { shouldValidate: false });
+                    } else {
+                      setHashgakhaAutre(false);
+                      setValue("hashgakha", v, { shouldValidate: true });
+                    }
+                  }}>
                     <SelectTrigger id="hashgakha">
                       <SelectValue placeholder="Sélectionner..." />
                     </SelectTrigger>
@@ -200,6 +210,13 @@ export default function InscriptionCommercantPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {hashgakhaAutre && (
+                    <Input
+                      placeholder="Précisez la cacherout..."
+                      {...register("hashgakha")}
+                      className="mt-2"
+                    />
+                  )}
                   {errors.hashgakha && (
                     <p className="text-xs text-destructive">{errors.hashgakha.message}</p>
                   )}
