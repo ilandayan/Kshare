@@ -94,7 +94,7 @@ const SECTIONS = [
     content: [
       "Le commer\u00e7ant est le vendeur l\u00e9gal (merchant of record) des paniers propos\u00e9s sur la plateforme. Le prix de chaque panier est librement fix\u00e9 par le commer\u00e7ant. Il est affich\u00e9 toutes taxes comprises (TTC) sur la plateforme.",
       "Le paiement est effectu\u00e9 en ligne de mani\u00e8re s\u00e9curis\u00e9e par l\u2019interm\u00e9diaire de notre partenaire de paiement Stripe. Kshare ne stocke aucune donn\u00e9e bancaire. Les transactions sont prot\u00e9g\u00e9es par le protocole de s\u00e9curit\u00e9 PCI-DSS.",
-      "Kshare facture uniquement un service de mise en relation sous forme de commission de 15 % (quinze pour cent) sur chaque panier vendu via la plateforme. Ce taux peut \u00eatre r\u00e9duit \u00e0 10 % pendant les trois premiers mois d\u2019activit\u00e9 pour les commer\u00e7ants b\u00e9n\u00e9ficiant de l\u2019offre de lancement.",
+      "Kshare facture un service de mise en relation sous forme de commission sur chaque panier vendu via la plateforme. Le taux de commission d\u00e9pend de la formule choisie par le commer\u00e7ant : 18 % (dix-huit pour cent) pour la formule Starter (sans abonnement) ou 12 % (douze pour cent) pour la formule Pro (avec abonnement mensuel).",
       "Les commer\u00e7ants re\u00e7oivent le versement du montant de leurs ventes, d\u00e9duction faite de la commission Kshare, de mani\u00e8re hebdomadaire via virement bancaire op\u00e9r\u00e9 par Stripe Connect.",
     ],
   },
@@ -103,8 +103,8 @@ const SECTIONS = [
     title: "Abonnement commer\u00e7ant",
     icon: CalendarCheck,
     content: [
-      "L\u2019utilisation de la plateforme par les commerçants est soumise \u00e0 un abonnement mensuel de 30 \u20ac (trente euros) hors taxes, pr\u00e9lev\u00e9 par pr\u00e9l\u00e8vement SEPA (Single Euro Payments Area).",
-      "Offre de lancement : les 50 premiers commerçants inscrits b\u00e9n\u00e9ficient de 3 mois d\u2019abonnement gratuits et d\u2019un taux de commission r\u00e9duit \u00e0 10 % pendant cette p\u00e9riode. Les commerçants suivants b\u00e9n\u00e9ficient d\u2019un mois d\u2019abonnement offert.",
+      "Kshare propose deux formules aux commer\u00e7ants : la formule Starter, gratuite et sans engagement, avec une commission de 18 % par panier vendu ; et la formule Pro, \u00e0 29 \u20ac (vingt-neuf euros) hors taxes par mois, avec une commission r\u00e9duite \u00e0 12 % par panier vendu. Le paiement de l\u2019abonnement Pro est effectu\u00e9 par pr\u00e9l\u00e8vement SEPA (Single Euro Payments Area) ou carte bancaire.",
+      "Tous les commer\u00e7ants d\u00e9marrent automatiquement sur la formule Starter. Ils peuvent passer \u00e0 la formule Pro \u00e0 tout moment depuis leur espace personnel.",
       "L\u2019abonnement est renouvel\u00e9 automatiquement chaque mois. Le commer\u00e7ant peut r\u00e9silier son abonnement \u00e0 tout moment depuis son espace personnel, avec prise d\u2019effet \u00e0 la fin de la p\u00e9riode en cours. Aucun remboursement ne sera effectu\u00e9 pour la p\u00e9riode d\u00e9j\u00e0 entam\u00e9e.",
       "En cas de d\u00e9faut de paiement r\u00e9p\u00e9t\u00e9, Kshare se r\u00e9serve le droit de suspendre l\u2019acc\u00e8s du commer\u00e7ant \u00e0 la plateforme jusqu\u2019\u00e0 r\u00e9gularisation.",
     ],
@@ -209,7 +209,7 @@ export default function CguPage() {
               {/* Last updated */}
               <div className="mb-10 pb-6 border-b border-gray-100">
                 <p className="text-sm text-gray-400">
-                  Derni&egrave;re mise &agrave; jour : 8 mars 2026
+                  Derni&egrave;re mise &agrave; jour : 12 mars 2026
                 </p>
               </div>
 

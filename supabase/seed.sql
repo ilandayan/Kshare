@@ -32,7 +32,7 @@ INSERT INTO public.profiles (id, email, full_name, phone, role) VALUES
   ('00000000-0000-0000-0000-000000000002', 'david.levy@demo.kshare.fr',    'David Levy',        '0612345002', 'client'),
   ('00000000-0000-0000-0000-000000000003', 'rachel.benami@demo.kshare.fr', 'Rachel Ben Ami',    '0612345003', 'client'),
   ('00000000-0000-0000-0000-000000000011', 'boucherie@demo.kshare.fr',     'Moshe Abitbol',     '0612345011', 'commerce'),
-  ('00000000-0000-0000-0000-000000000012', 'fromagerie@demo.kshare.fr',    'Yael Peretz',       '0612345012', 'commerce'),
+  ('00000000-0000-0000-0000-000000000012', 'boulangerie-ge@demo.kshare.fr', 'Yael Peretz',       '0612345012', 'commerce'),
   ('00000000-0000-0000-0000-000000000013', 'traiteur@demo.kshare.fr',      'Nathan Azoulay',    '0612345013', 'commerce'),
   ('00000000-0000-0000-0000-000000000014', 'boulangerie@demo.kshare.fr',   'Miriam Toledano',   '0612345014', 'commerce'),
   ('00000000-0000-0000-0000-000000000021', 'asso@demo.kshare.fr',          'Shimon Dahan',      '0612345021', 'association'),
@@ -63,15 +63,15 @@ INSERT INTO public.commerces (id, profile_id, name, email, phone, address, city,
   (
     '10000000-0000-0000-0000-000000000002',
     '00000000-0000-0000-0000-000000000012',
-    'Fromagerie Gan Eden',
-    'fromagerie@demo.kshare.fr',
+    'Boulangerie Gan Eden',
+    'boulangerie-ge@demo.kshare.fr',
     '0145678902',
     '28 Rue des Rosiers',
     'Paris',
     '75004',
-    'Fromagerie',
+    'Boulangerie',
     'OK Kosher',
-    'Fromagerie artisanale casher. Fromages frais, affines et specialites israeliennes.',
+    'Boulangerie artisanale casher. Pains, viennoiseries et specialites.',
     18,
     'validated',
     ARRAY['halavi']::basket_type[],
@@ -145,7 +145,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '16:00', '19:00',
     false, 'published', now()
   ),
-  -- Fromagerie: Panier Halavi
+  -- Boulangerie Gan Eden: Panier Halavi
   (
     '30000000-0000-0000-0000-000000000002',
     '10000000-0000-0000-0000-000000000002',

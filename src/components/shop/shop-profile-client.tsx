@@ -16,6 +16,8 @@ interface ShopProfileClientProps {
     email: string | null;
     commerce_type: string | null;
     hashgakha: string | null;
+    photos: string[] | null;
+    logo_url: string | null;
   };
 }
 

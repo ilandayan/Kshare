@@ -46,7 +46,7 @@ const MOCK_ACTIVE: OrderData[] = [
     pickup_end: "16:00",
     pickup_date: "today",
     basket_type: "halavi",
-    commerce_name: "Fromagerie Gan Eden",
+    commerce_name: "Boulangerie Gan Eden",
     commerce_city: "Paris 11e",
   },
   {
@@ -119,7 +119,7 @@ const MOCK_PAST: OrderData[] = [
     pickup_end: "13:00",
     pickup_date: null,
     basket_type: "halavi",
-    commerce_name: "Fromagerie Gan Eden",
+    commerce_name: "Boulangerie Gan Eden",
     commerce_city: "Paris 11e",
   },
 ];

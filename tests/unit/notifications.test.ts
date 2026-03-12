@@ -11,9 +11,9 @@ describe("ORDER_NOTIFICATIONS templates", () => {
   });
 
   it("generates correct notification for ready_for_pickup", () => {
-    const notif = ORDER_NOTIFICATIONS.ready_for_pickup("Fromagerie Eden");
+    const notif = ORDER_NOTIFICATIONS.ready_for_pickup("Boulangerie Eden");
     expect(notif.title).toContain("pret");
-    expect(notif.body).toContain("Fromagerie Eden");
+    expect(notif.body).toContain("Boulangerie Eden");
     expect(notif.type).toBe("order_ready");
   });
 

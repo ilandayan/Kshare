@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 
 export type InscriptionCommercantResult =
   | { success: true }
@@ -65,7 +66,9 @@ export async function inscriptionCommercant(formData: {
     phone: formData.telephone,
     status: "pending",
     basket_types: [],
-    commission_rate: 15,
+    commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
+    subscription_plan: "starter",
+    subscription_status: "active",
   });
 
   if (commerceError) {

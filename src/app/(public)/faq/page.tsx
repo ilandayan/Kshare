@@ -178,9 +178,12 @@ const FAQ_SECTIONS: FaqSection[] = [
         ],
       },
       {
-        question: "Combien co\u00fbte l\u2019abonnement commer\u00e7ant ?",
+        question: "Combien co\u00fbte l\u2019utilisation de Kshare pour les commer\u00e7ants ?",
         answer: [
-          "L\u2019abonnement commer\u00e7ant est de 30 \u20ac/mois. Offre de lancement : les 50 premiers commerces inscrits b\u00e9n\u00e9ficient de 3 mois gratuits et d\u2019une commission r\u00e9duite \u00e0 10 %. Les suivants b\u00e9n\u00e9ficient d\u2019un mois offert.",
+          "Kshare propose deux formules aux commer\u00e7ants :",
+          "Starter (gratuit) \u2014 Aucun abonnement, commission de 18 % par panier vendu. Id\u00e9al pour d\u00e9marrer sans engagement.",
+          "Pro (29 \u20ac/mois) \u2014 Abonnement mensuel avec commission r\u00e9duite \u00e0 12 % par panier vendu. Recommand\u00e9 pour les commerces actifs.",
+          "Le paiement de l\u2019abonnement Pro s\u2019effectue par pr\u00e9l\u00e8vement SEPA ou carte bancaire.",
         ],
       },
     ],

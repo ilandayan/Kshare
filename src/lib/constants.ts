@@ -84,10 +84,7 @@ export const COMMERCE_TYPES = [
   "Supermarché",
   "Traiteur",
   "Épicerie",
-  "Fromagerie",
   "Restaurant",
-  "Pâtisserie",
-  "Autre",
 ] as const;
 
 export const HASHGAKHA_LIST = [

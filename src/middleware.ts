@@ -38,6 +38,7 @@ export async function middleware(request: NextRequest) {
     "/je-suis-client",
     "/contact",
     "/cgu",
+    "/faq",
     "/confidentialite",
     "/connexion",
     "/inscription-commercant",

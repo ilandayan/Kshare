@@ -84,9 +84,9 @@ export default async function AdminDashboard({
   const allOrders  = orders  ?? [];
   const allBaskets = baskets ?? [];
 
-  // Commission rate: use commerce-specific rate when filtered, otherwise 15%
+  // Commission rate: use commerce-specific rate when filtered, otherwise starter default (18%)
   const selectedCommerce = commerce ? commercesList?.find((c) => c.id === commerce) : null;
-  const commissionRate = selectedCommerce ? (selectedCommerce.commission_rate ?? 15) / 100 : 0.15;
+  const commissionRate = selectedCommerce ? (selectedCommerce.commission_rate ?? 18) / 100 : 0.18;
 
   const caGenere      = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
   const commission    = caGenere * commissionRate;

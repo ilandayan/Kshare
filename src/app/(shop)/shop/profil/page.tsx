@@ -18,7 +18,7 @@ export default async function ProfilPage() {
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, name, address, postal_code, city, email, phone, commerce_type, hashgakha, basket_types, commission_rate, status, description")
+    .select("id, name, address, postal_code, city, email, phone, commerce_type, hashgakha, basket_types, commission_rate, status, description, photos, logo_url")
     .eq("profile_id", user.id)
     .single();
 
@@ -101,6 +101,8 @@ export default async function ProfilPage() {
             email: commerce.email,
             commerce_type: commerce.commerce_type,
             hashgakha: commerce.hashgakha,
+            photos: commerce.photos,
+            logo_url: commerce.logo_url,
           }}
         />
       </div>

@@ -410,7 +410,7 @@ export default function HomePage() {
                       {/* Mock cards */}
                       {[
                         { icon: UtensilsCrossed, name: "Boucherie Cohen",  price: "5,90€", orig: "18€", type: "Bassari", color: "#FEF2F2", badge: "#EF4444", iconColor: "#EF4444" },
-                        { icon: Milk,            name: "Fromagerie Levi",  price: "4,50€", orig: "14€", type: "Halavi",  color: "#EFF6FF", badge: "#3B82F6", iconColor: "#3B82F6" },
+                        { icon: Milk,            name: "Boulangerie Levi",  price: "4,50€", orig: "14€", type: "Halavi",  color: "#EFF6FF", badge: "#3B82F6", iconColor: "#3B82F6" },
                         { icon: Leaf,            name: "Bio Casher Store", price: "3,90€", orig: "12€", type: "Parvé",   color: "#F0FDF4", badge: "#10B981", iconColor: "#10B981" },
                       ].map((card) => (
                         <div key={card.name} className="bg-white mx-3 my-1.5 rounded-xl overflow-hidden border border-gray-100">
