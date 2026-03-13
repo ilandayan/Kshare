@@ -50,30 +50,36 @@ export async function rechercherParCode(
 
   const cleanToken = token.trim();
 
+  // Query order directly — avoid joining profiles (RLS blocks cross-user reads)
+  // and baskets (pickup times already stored on order row)
   const { data: order } = await supabase
     .from("orders")
     .select(`
       id, status, quantity, total_amount, is_donation, qr_code_token, created_at,
-      baskets!inner(type, pickup_start, pickup_end),
-      profiles!inner(full_name)
+      pickup_start, pickup_end, pickup_date, client_id,
+      baskets(type)
     `)
     .eq("commerce_id", commerce.id)
     .eq("qr_code_token", cleanToken)
     .single();
 
   if (!order) {
-    return { success: false, error: "Aucune commande trouvee avec ce code." };
+    return { success: false, error: "Aucune commande trouvée avec ce code." };
   }
 
-  const basket = order.baskets as {
-    type: string;
-    pickup_start: string;
-    pickup_end: string;
-  } | null;
+  // Fetch client name separately using the commerce's own context
+  // (RLS on profiles only allows reading own profile, so we fall back gracefully)
+  let clientName = "Client";
+  if (order.client_id) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", order.client_id)
+      .single();
+    if (profile?.full_name) clientName = profile.full_name;
+  }
 
-  const profile = order.profiles as {
-    full_name: string | null;
-  } | null;
+  const basket = order.baskets as { type: string } | null;
 
   const year = new Date(order.created_at).getFullYear();
   const short = order.id.replace(/-/g, "").slice(-4).toUpperCase();
@@ -88,9 +94,9 @@ export async function rechercherParCode(
       totalAmount: order.total_amount ?? 0,
       isDonation: order.is_donation ?? false,
       basketType: basket?.type ?? "",
-      pickupStart: basket?.pickup_start?.slice(0, 5) ?? "",
-      pickupEnd: basket?.pickup_end?.slice(0, 5) ?? "",
-      clientName: profile?.full_name || "Client",
+      pickupStart: order.pickup_start?.slice(0, 5) ?? "",
+      pickupEnd: order.pickup_end?.slice(0, 5) ?? "",
+      clientName,
       qrCodeToken: order.qr_code_token ?? "",
     },
   };
