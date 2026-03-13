@@ -42,7 +42,7 @@ export const BASKET_TYPES = [
     icon: "UtensilsCrossed",
     shortDescription: "Panier viande",
     description:
-      "Panier surprise de produits carnés casher (viandes, volailles, charcuterie). Le contenu varie selon les invendus du jour et peut inclure différentes pièces de viande, des préparations ou des spécialités du commerce.",
+      "Panier surprise de produits carnés casher.",
   },
   {
     value: "halavi",
@@ -50,7 +50,7 @@ export const BASKET_TYPES = [
     icon: "Milk",
     shortDescription: "Panier laitier",
     description:
-      "Panier surprise de produits laitiers casher (fromages, yaourts, desserts lactés, crèmes). Le contenu varie selon les invendus du jour et peut inclure différentes spécialités laitières du commerce.",
+      "Panier surprise de produits laitiers casher.",
   },
   {
     value: "parve",
@@ -58,7 +58,7 @@ export const BASKET_TYPES = [
     icon: "Leaf",
     shortDescription: "Panier neutre",
     description:
-      "Panier surprise de produits parvé casher (fruits, légumes, pains, viennoiseries, conserves, épicerie). Le contenu varie selon les invendus du jour et peut inclure différents produits neutres du commerce.",
+      "Panier surprise de produits parvé casher.",
   },
   {
     value: "shabbat",
@@ -66,7 +66,7 @@ export const BASKET_TYPES = [
     icon: "Wine",
     shortDescription: "Panier Shabbat",
     description:
-      "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat (hallot, salades, plats préparés, desserts). Le contenu varie selon les préparations du commerce.",
+      "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat.",
   },
   {
     value: "mix",
@@ -74,7 +74,7 @@ export const BASKET_TYPES = [
     icon: "Layers",
     shortDescription: "Panier mixte",
     description:
-      "Panier surprise mixte composé d'un assortiment varié de produits casher (viandes, laitiers et/ou parvé, selon la politique du commerce). Le contenu varie selon les invendus du jour.",
+      "Panier surprise mixte composé d'un assortiment varié de produits casher.",
   },
 ] as const;
 
@@ -86,6 +86,36 @@ export const COMMERCE_TYPES = [
   "Épicerie",
   "Restaurant",
 ] as const;
+
+/** Basket types available per commerce type */
+export const BASKET_TYPES_BY_COMMERCE: Record<string, string[]> = {
+  Boucherie:    ["bassari", "shabbat"],
+  Boulangerie:  ["parve", "halavi"],
+  Supermarché:  ["bassari", "halavi", "parve", "shabbat", "mix"],
+  Traiteur:     ["bassari", "halavi", "parve", "shabbat", "mix"],
+  Épicerie:     ["parve", "halavi", "mix"],
+  Restaurant:   ["bassari", "halavi", "parve", "mix"],
+};
+
+/** Subscription status labels in French */
+export const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
+  active: "Actif",
+  offered: "Offert",
+  trialing: "Période d'essai",
+  past_due: "Impayé",
+  canceled: "Résilié",
+  incomplete: "Incomplet",
+  incomplete_expired: "Expiré",
+  unpaid: "Impayé",
+};
+
+/** Commerce account status labels in French */
+export const COMMERCE_STATUS_LABELS: Record<string, string> = {
+  pending: "En attente",
+  validated: "Validé",
+  suspended: "Suspendu",
+  rejected: "Rejeté",
+};
 
 export const HASHGAKHA_LIST = [
   "Beth Din de Paris",
