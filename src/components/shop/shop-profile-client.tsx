@@ -26,6 +26,7 @@ import {
 } from "@/app/(shop)/shop/profil/_actions";
 import { toast } from "sonner";
 import { COMMERCE_TYPES, HASHGAKHA_LIST, BASKET_TYPES } from "@/lib/constants";
+import { ChangePasswordForm } from "@/components/shared/change-password-form";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   UtensilsCrossed,
@@ -456,7 +457,7 @@ export function ShopProfileClient({
         </Card>
 
         {/* Logo */}
-        <Card className="flex flex-col w-48">
+        <Card className="flex flex-col w-56">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Logo</CardTitle>
           </CardHeader>
@@ -507,25 +508,36 @@ export function ShopProfileClient({
         </Card>
       </div>
 
-      {/* ── Row 2: Subscription & Commission ── */}
-      <Card className="max-w-xl">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Abonnement & Commission
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <InfoRow
-            label="Statut abonnement"
-            value={subscriptionStatus ?? "Non configuré"}
-          />
-          <InfoRow
-            label="Taux de commission"
-            value={`${commerce.commission_rate} %`}
-          />
-          <InfoRow label="Statut compte" value={commerce.status} />
-        </CardContent>
-      </Card>
+      {/* ── Row 2: Subscription + Security side by side ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Abonnement & Commission
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow
+              label="Statut abonnement"
+              value={subscriptionStatus ?? "Non configuré"}
+            />
+            <InfoRow
+              label="Taux de commission"
+              value={`${commerce.commission_rate} %`}
+            />
+            <InfoRow label="Statut compte" value={commerce.status} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Sécurité</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChangePasswordForm />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
