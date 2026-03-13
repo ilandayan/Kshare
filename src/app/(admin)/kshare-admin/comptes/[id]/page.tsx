@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +26,40 @@ const STATUS_COLORS: Record<string, string> = {
   complement_required: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
+async function getSignedUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  path: string | null
+): Promise<string | null> {
+  if (!path) return null;
+  const { data } = await supabase.storage
+    .from("registration-documents")
+    .createSignedUrl(path, 3600); // 1h expiry
+  return data?.signedUrl ?? null;
+}
+
+function DocumentLink({ url, label }: { url: string | null; label: string }) {
+  if (!url) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-muted bg-muted/30">
+        <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+        <span className="text-sm text-muted-foreground">{label} — non fourni</span>
+      </div>
+    );
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-background hover:bg-muted/50 transition-colors group"
+    >
+      <FileText className="h-5 w-5 text-primary shrink-0" />
+      <span className="text-sm font-medium text-foreground flex-1">{label}</span>
+      <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    </a>
+  );
+}
+
 export default async function CompteDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const { type } = await searchParams;
@@ -35,11 +69,17 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   if (accountType === "commerce") {
     const { data: commerce } = await supabase
       .from("commerces")
-      .select("id, name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at")
+      .select("id, name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url")
       .eq("id", id)
       .single();
 
     if (!commerce) notFound();
+
+    // Generate signed URLs for documents
+    const [kbisSignedUrl, idDocSignedUrl] = await Promise.all([
+      getSignedUrl(supabase, commerce.kbis_url),
+      getSignedUrl(supabase, commerce.id_document_url),
+    ]);
 
     return (
       <div className="p-8 max-w-3xl mx-auto">
@@ -105,6 +145,17 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
             </CardContent>
           </Card>
 
+          {/* Documents justificatifs */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Documents justificatifs</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <DocumentLink url={kbisSignedUrl} label="Extrait KBIS" />
+              <DocumentLink url={idDocSignedUrl} label="Pièce d'identité du dirigeant" />
+            </CardContent>
+          </Card>
+
           <AccountActions id={id} type="commerce" currentStatus={commerce.status} />
         </div>
       </div>
@@ -114,11 +165,17 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   // Association
   const { data: asso } = await supabase
     .from("associations")
-    .select("id, name, contact, address, city, zone_region, status, created_at, validated_at, availability")
+    .select("id, name, contact, address, city, zone_region, status, created_at, validated_at, availability, rna_document_url, id_document_url")
     .eq("id", id)
     .single();
 
   if (!asso) notFound();
+
+  // Generate signed URLs for documents
+  const [rnaSignedUrl, idDocSignedUrl] = await Promise.all([
+    getSignedUrl(supabase, asso.rna_document_url),
+    getSignedUrl(supabase, asso.id_document_url),
+  ]);
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -171,6 +228,17 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
                 <InfoRow label="Disponibilités" value={asso.availability} />
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Documents justificatifs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Documents justificatifs</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <DocumentLink url={rnaSignedUrl} label="Récépissé RNA" />
+            <DocumentLink url={idDocSignedUrl} label="Pièce d'identité du président" />
           </CardContent>
         </Card>
 

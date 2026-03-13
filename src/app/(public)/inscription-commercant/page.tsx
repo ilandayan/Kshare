@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Upload, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KshareLogo } from "@/components/shared/kshare-logo";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,11 @@ export default function InscriptionCommercantPage() {
   const [hashgakhaAutre, setHashgakhaAutre] = useState(false);
   const [selectedBaseType, setSelectedBaseType] = useState("");
   const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
+  const [kbisFile, setKbisFile] = useState<File | null>(null);
+  const [idDocFile, setIdDocFile] = useState<File | null>(null);
+  const [fileErrors, setFileErrors] = useState<{ kbis?: string; idDoc?: string }>({});
+  const kbisRef = useRef<HTMLInputElement>(null);
+  const idDocRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -55,20 +60,33 @@ export default function InscriptionCommercantPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   async function onSubmit(data: FormValues) {
+    // Validate files client-side
+    const fErrors: { kbis?: string; idDoc?: string } = {};
+    if (!kbisFile) fErrors.kbis = "L'extrait KBIS est requis.";
+    if (!idDocFile) fErrors.idDoc = "La pièce d'identité est requise.";
+    if (Object.keys(fErrors).length > 0) {
+      setFileErrors(fErrors);
+      return;
+    }
+    setFileErrors({});
+
     setLoading(true);
     try {
-      const result = await inscriptionCommercant({
-        email: data.email,
-        password: data.password,
-        nom: data.nom,
-        commerceType: data.commerceType,
-        adresse: data.adresse,
-        ville: data.ville,
-        codePostal: data.codePostal,
-        hashgakha: data.hashgakha,
-        telephone: data.telephone,
-        siret: data.siret,
-      });
+      const fd = new FormData();
+      fd.append("email", data.email);
+      fd.append("password", data.password);
+      fd.append("nom", data.nom);
+      fd.append("commerceType", data.commerceType);
+      fd.append("adresse", data.adresse);
+      fd.append("ville", data.ville);
+      fd.append("codePostal", data.codePostal);
+      fd.append("hashgakha", data.hashgakha);
+      fd.append("telephone", data.telephone);
+      fd.append("siret", data.siret);
+      fd.append("kbis", kbisFile!);
+      fd.append("idDocument", idDocFile!);
+
+      const result = await inscriptionCommercant(fd);
 
       if (result.success) {
         setSuccess(true);
@@ -342,6 +360,80 @@ export default function InscriptionCommercantPage() {
                     {...register("siret")}
                   />
                   {errors.siret && <p className="text-xs text-destructive">{errors.siret.message}</p>}
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Documents justificatifs */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Documents justificatifs</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* KBIS */}
+                <div className="space-y-2">
+                  <Label>Extrait KBIS <span className="text-destructive">*</span></Label>
+                  <div
+                    onClick={() => kbisRef.current?.click()}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-input bg-muted/30 cursor-pointer hover:border-primary/40 transition-colors"
+                  >
+                    {kbisFile ? (
+                      <>
+                        <FileText className="h-5 w-5 text-primary shrink-0" />
+                        <span className="text-sm text-foreground truncate">{kbisFile.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-muted-foreground">Choisir un fichier...</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={kbisRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      setKbisFile(e.target.files?.[0] ?? null);
+                      setFileErrors((prev) => ({ ...prev, kbis: undefined }));
+                    }}
+                  />
+                  <p className="text-[11px] text-muted-foreground">PDF, JPEG ou PNG — max 5 Mo</p>
+                  {fileErrors.kbis && <p className="text-xs text-destructive">{fileErrors.kbis}</p>}
+                </div>
+
+                {/* Pièce d'identité */}
+                <div className="space-y-2">
+                  <Label>Pièce d&apos;identité du dirigeant <span className="text-destructive">*</span></Label>
+                  <div
+                    onClick={() => idDocRef.current?.click()}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-input bg-muted/30 cursor-pointer hover:border-primary/40 transition-colors"
+                  >
+                    {idDocFile ? (
+                      <>
+                        <FileText className="h-5 w-5 text-primary shrink-0" />
+                        <span className="text-sm text-foreground truncate">{idDocFile.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-muted-foreground">Choisir un fichier...</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={idDocRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      setIdDocFile(e.target.files?.[0] ?? null);
+                      setFileErrors((prev) => ({ ...prev, idDoc: undefined }));
+                    }}
+                  />
+                  <p className="text-[11px] text-muted-foreground">PDF, JPEG ou PNG — max 5 Mo</p>
+                  {fileErrors.idDoc && <p className="text-xs text-destructive">{fileErrors.idDoc}</p>}
                 </div>
               </div>
             </div>

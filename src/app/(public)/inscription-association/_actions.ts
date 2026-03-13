@@ -6,27 +6,57 @@ export type InscriptionAssoResult =
   | { success: true }
   | { success: false; error: string };
 
-export async function inscriptionAssociation(formData: {
-  email: string;
-  password: string;
-  nomAsso: string;
-  rna: string;
-  adresse: string;
-  ville: string;
-  codePostal: string;
-  nomResponsable: string;
-  telephone: string;
-}): Promise<InscriptionAssoResult> {
+const ALLOWED_DOC_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+const MAX_DOC_SIZE = 5 * 1024 * 1024; // 5 Mo
+
+function validateFile(file: File | null, label: string): string | null {
+  if (!file || file.size === 0) return `${label} est requis.`;
+  if (!ALLOWED_DOC_TYPES.includes(file.type))
+    return `${label} : format accepté PDF, JPEG ou PNG.`;
+  if (file.size > MAX_DOC_SIZE) return `${label} ne doit pas dépasser 5 Mo.`;
+  return null;
+}
+
+export async function inscriptionAssociation(
+  fd: FormData
+): Promise<InscriptionAssoResult> {
+  // ── Extract text fields ──
+  const email = (fd.get("email") as string)?.trim();
+  const password = fd.get("password") as string;
+  const nomAsso = (fd.get("nomAsso") as string)?.trim();
+  const rna = (fd.get("rna") as string)?.trim();
+  const adresse = (fd.get("adresse") as string)?.trim();
+  const ville = (fd.get("ville") as string)?.trim();
+  const codePostal = (fd.get("codePostal") as string)?.trim();
+  const nomResponsable = (fd.get("nomResponsable") as string)?.trim();
+  const telephone = (fd.get("telephone") as string)?.trim();
+
+  // ── Extract files ──
+  const rnaFile = fd.get("rnaDocument") as File | null;
+  const idFile = fd.get("idDocument") as File | null;
+
+  // ── Validate files ──
+  const rnaError = validateFile(rnaFile, "Le récépissé RNA");
+  if (rnaError) return { success: false, error: rnaError };
+
+  const idError = validateFile(idFile, "La pièce d'identité");
+  if (idError) return { success: false, error: idError };
+
   const supabase = await createClient();
 
   // Créer le compte Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: formData.email,
-    password: formData.password,
+    email,
+    password,
     options: {
       data: {
         role: "association",
-        full_name: formData.nomResponsable,
+        full_name: nomResponsable,
       },
     },
   });
@@ -35,15 +65,18 @@ export async function inscriptionAssociation(formData: {
     if (authError?.message?.includes("already registered")) {
       return { success: false, error: "Cette adresse email est déjà utilisée." };
     }
-    return { success: false, error: authError?.message ?? "Erreur lors de la création du compte." };
+    return {
+      success: false,
+      error: authError?.message ?? "Erreur lors de la création du compte.",
+    };
   }
 
   // Créer le profil
   const { error: profileError } = await supabase.from("profiles").upsert({
     id: authData.user.id,
-    email: formData.email,
-    full_name: formData.nomResponsable,
-    phone: formData.telephone,
+    email,
+    full_name: nomResponsable,
+    phone: telephone,
     role: "association",
   });
 
@@ -52,23 +85,59 @@ export async function inscriptionAssociation(formData: {
   }
 
   // Déduire le département à partir du code postal (2 premiers chiffres)
-  const department = formData.codePostal.slice(0, 2);
+  const department = codePostal.slice(0, 2);
 
   // Créer l'association
-  const { error: assoError } = await supabase.from("associations").insert({
-    profile_id: authData.user.id,
-    name: formData.nomAsso,
-    contact: `${formData.nomResponsable} · ${formData.telephone}`,
-    address: formData.adresse,
-    city: formData.ville,
-    department,
-    zone_region: `RNA: ${formData.rna} | CP: ${formData.codePostal}`,
-    status: "pending",
-  });
+  const { data: asso, error: assoError } = await supabase
+    .from("associations")
+    .insert({
+      profile_id: authData.user.id,
+      name: nomAsso,
+      contact: `${nomResponsable} · ${telephone}`,
+      address: adresse,
+      city: ville,
+      department,
+      zone_region: `RNA: ${rna} | CP: ${codePostal}`,
+      status: "pending",
+    })
+    .select("id")
+    .single();
 
-  if (assoError) {
+  if (assoError || !asso) {
     return { success: false, error: "Erreur lors de la création de l'association." };
   }
+
+  // ── Upload documents ──
+  const rnaExt = rnaFile!.name.split(".").pop() ?? "pdf";
+  const idExt = idFile!.name.split(".").pop() ?? "pdf";
+
+  const [rnaUpload, idUpload] = await Promise.all([
+    supabase.storage
+      .from("registration-documents")
+      .upload(`associations/${asso.id}/rna.${rnaExt}`, rnaFile!, {
+        upsert: true,
+        contentType: rnaFile!.type,
+      }),
+    supabase.storage
+      .from("registration-documents")
+      .upload(`associations/${asso.id}/id.${idExt}`, idFile!, {
+        upsert: true,
+        contentType: idFile!.type,
+      }),
+  ]);
+
+  if (rnaUpload.error || idUpload.error) {
+    return { success: false, error: "Erreur lors de l'upload des documents." };
+  }
+
+  // Update association with document paths
+  await supabase
+    .from("associations")
+    .update({
+      rna_document_url: `associations/${asso.id}/rna.${rnaExt}`,
+      id_document_url: `associations/${asso.id}/id.${idExt}`,
+    })
+    .eq("id", asso.id);
 
   return { success: true };
 }

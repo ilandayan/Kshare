@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Upload, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KshareLogo } from "@/components/shared/kshare-logo";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,11 @@ type FormValues = z.infer<typeof schema>;
 export default function InscriptionAssociationPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [rnaFile, setRnaFile] = useState<File | null>(null);
+  const [idDocFile, setIdDocFile] = useState<File | null>(null);
+  const [fileErrors, setFileErrors] = useState<{ rna?: string; idDoc?: string }>({});
+  const rnaFileRef = useRef<HTMLInputElement>(null);
+  const idDocRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -49,19 +54,32 @@ export default function InscriptionAssociationPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   async function onSubmit(data: FormValues) {
+    // Validate files client-side
+    const fErrors: { rna?: string; idDoc?: string } = {};
+    if (!rnaFile) fErrors.rna = "Le récépissé RNA est requis.";
+    if (!idDocFile) fErrors.idDoc = "La pièce d'identité est requise.";
+    if (Object.keys(fErrors).length > 0) {
+      setFileErrors(fErrors);
+      return;
+    }
+    setFileErrors({});
+
     setLoading(true);
     try {
-      const result = await inscriptionAssociation({
-        email: data.email,
-        password: data.password,
-        nomAsso: data.nomAsso,
-        rna: data.rna,
-        adresse: data.adresse,
-        ville: data.ville,
-        codePostal: data.codePostal,
-        nomResponsable: data.nomResponsable,
-        telephone: data.telephone,
-      });
+      const fd = new FormData();
+      fd.append("email", data.email);
+      fd.append("password", data.password);
+      fd.append("nomAsso", data.nomAsso);
+      fd.append("rna", data.rna);
+      fd.append("adresse", data.adresse);
+      fd.append("ville", data.ville);
+      fd.append("codePostal", data.codePostal);
+      fd.append("nomResponsable", data.nomResponsable);
+      fd.append("telephone", data.telephone);
+      fd.append("rnaDocument", rnaFile!);
+      fd.append("idDocument", idDocFile!);
+
+      const result = await inscriptionAssociation(fd);
 
       if (result.success) {
         setSuccess(true);
@@ -225,6 +243,80 @@ export default function InscriptionAssociationPage() {
                   {errors.telephone && (
                     <p className="text-xs text-destructive">{errors.telephone.message}</p>
                   )}
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Documents justificatifs */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Documents justificatifs</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Récépissé RNA */}
+                <div className="space-y-2">
+                  <Label>Récépissé RNA <span className="text-destructive">*</span></Label>
+                  <div
+                    onClick={() => rnaFileRef.current?.click()}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-input bg-muted/30 cursor-pointer hover:border-primary/40 transition-colors"
+                  >
+                    {rnaFile ? (
+                      <>
+                        <FileText className="h-5 w-5 text-primary shrink-0" />
+                        <span className="text-sm text-foreground truncate">{rnaFile.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-muted-foreground">Choisir un fichier...</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={rnaFileRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      setRnaFile(e.target.files?.[0] ?? null);
+                      setFileErrors((prev) => ({ ...prev, rna: undefined }));
+                    }}
+                  />
+                  <p className="text-[11px] text-muted-foreground">PDF, JPEG ou PNG — max 5 Mo</p>
+                  {fileErrors.rna && <p className="text-xs text-destructive">{fileErrors.rna}</p>}
+                </div>
+
+                {/* Pièce d'identité */}
+                <div className="space-y-2">
+                  <Label>Pièce d&apos;identité du président <span className="text-destructive">*</span></Label>
+                  <div
+                    onClick={() => idDocRef.current?.click()}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-input bg-muted/30 cursor-pointer hover:border-primary/40 transition-colors"
+                  >
+                    {idDocFile ? (
+                      <>
+                        <FileText className="h-5 w-5 text-primary shrink-0" />
+                        <span className="text-sm text-foreground truncate">{idDocFile.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-muted-foreground">Choisir un fichier...</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={idDocRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      setIdDocFile(e.target.files?.[0] ?? null);
+                      setFileErrors((prev) => ({ ...prev, idDoc: undefined }));
+                    }}
+                  />
+                  <p className="text-[11px] text-muted-foreground">PDF, JPEG ou PNG — max 5 Mo</p>
+                  {fileErrors.idDoc && <p className="text-xs text-destructive">{fileErrors.idDoc}</p>}
                 </div>
               </div>
             </div>
