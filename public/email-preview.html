@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Preview Emails Kshare</title>
+<style>
+  body { margin: 0; padding: 40px; background: #e5e7eb; font-family: system-ui, sans-serif; }
+  .preview-title { text-align: center; font-size: 28px; font-weight: 800; color: #1f2937; margin-bottom: 8px; }
+  .preview-sub { text-align: center; font-size: 14px; color: #6b7280; margin-bottom: 40px; }
+  .section-title { font-size: 18px; font-weight: 700; color: #3744C8; margin: 48px auto 16px; max-width: 620px; padding-left: 8px; border-left: 4px solid #3744C8; }
+  .email-frame { max-width: 620px; margin: 0 auto 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+  .email-label { background: #1f2937; color: #fff; padding: 10px 20px; font-size: 13px; font-weight: 600; }
+  .email-label span { color: #9ca3af; font-weight: 400; }
+  /* Shared email header */
+  .kshare-header { background: linear-gradient(135deg,#3744C8,#5B6EF5); padding: 28px 32px; }
+  .kshare-header h1 { margin:0;color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.3px; }
+  .kshare-header img { display:inline-block; }
+  /* Shared email footer */
+  .kshare-footer { padding:20px 32px;background:#f8f9fc;border-top:1px solid #e2e5f0; }
+  .kshare-footer .footer-brand { margin:0 0 8px;text-align:center; }
+  .kshare-footer .footer-brand img { display:inline-block;vertical-align:middle; }
+  .kshare-footer .footer-brand span { font-size:13px;font-weight:600;color:#3744C8;vertical-align:middle;margin-left:2px;position:relative;top:2px; }
+  .kshare-footer .footer-links { margin:0;font-size:12px;color:#888;text-align:center; }
+  .kshare-footer .footer-links a { color:#3744C8;text-decoration:none; }
+</style>
+</head>
+<body>
+
+<div class="preview-title">📧 Preview Emails Kshare</div>
+<div class="preview-sub">Tous les modèles d'emails automatiques — avec logo officiel</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">1. Confirmation d'inscription (Supabase Auth)</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Confirmez votre inscription Kshare</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bienvenue sur Kshare !</h2>
+        <p style="color:#333;line-height:1.7;">Bonjour,</p>
+        <p style="color:#333;line-height:1.7;">Merci de vous être inscrit(e) sur Kshare, la marketplace des paniers casher anti-gaspi.</p>
+        <p style="color:#333;line-height:1.7;">Cliquez sur le bouton ci-dessous pour confirmer votre adresse email :</p>
+        <p style="margin:24px 0;">
+          <a href="#" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Confirmer mon compte</a>
+        </p>
+        <p style="color:#888;font-size:13px;">Si vous n'avez pas créé de compte sur Kshare, ignorez cet email.</p>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">2. Compte commerce validé</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Kshare — Votre compte commerce a été validé !</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bienvenue sur Kshare, Boulangerie David !</h2>
+        <p style="color:#333;line-height:1.7;">Votre compte <strong>commerce</strong> a été validé par notre équipe.</p>
+        <p style="color:#333;line-height:1.7;">Vous pouvez désormais accéder à votre espace :</p>
+        <a href="#" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">Accéder à mon espace</a>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">3. Problème de commande (support)</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Kshare — Votre signalement de commande a été pris en compte</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour Sarah,</h2>
+        <p style="color:#333;line-height:1.7;">
+          Nous avons bien reçu votre signalement concernant une commande.
+          Référence de suivi : <strong style="color:#3744C8;">KSH-A7X9K2</strong>.
+        </p>
+        <div style="background:#fff8f0;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0;color:#92400e;font-size:14px;">
+            ⚡ Notre équipe vérifie votre dossier et revient vers vous sous <strong>12 heures ouvrées</strong>.
+            Si un remboursement est nécessaire, il sera traité automatiquement.
+          </p>
+        </div>
+        <p style="color:#333;line-height:1.7;">
+          Vous pouvez répondre directement à cet email pour ajouter des informations à votre dossier.
+        </p>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">4. Inscription commerce (support)</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Kshare — Votre demande d'inscription commerçant est en cours</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour Marc,</h2>
+        <p style="color:#333;line-height:1.7;">
+          Merci pour votre intérêt à rejoindre Kshare en tant que commerçant !
+          Votre demande (réf. <strong style="color:#3744C8;">KSH-B3M7P1</strong>) est en cours de traitement.
+        </p>
+        <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0;color:#166534;font-size:14px;">
+            🕐 Délai de traitement : <strong>48 heures ouvrées</strong>.<br/>
+            Vous recevrez un email de confirmation dès que votre compte sera validé.
+          </p>
+        </div>
+        <p style="color:#333;line-height:1.7;">
+          Pour rappel, les <strong>50 premiers commerçants</strong> bénéficient de
+          <strong>3 mois d'abonnement offerts</strong> et d'un taux de commission réduit à 10%.
+        </p>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">5. Inscription association (support)</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Kshare — Votre demande d'inscription association est en cours</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour Rachel,</h2>
+        <p style="color:#333;line-height:1.7;">
+          Merci pour votre engagement solidaire ! Votre demande d'inscription en tant qu'association
+          a bien été enregistrée (réf. <strong style="color:#3744C8;">KSH-C1N4Q8</strong>).
+        </p>
+        <div style="background:#faf5ff;border-left:4px solid #a855f7;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0;color:#6b21a8;font-size:14px;">
+            💜 Notre équipe valide votre association sous <strong>48 heures ouvrées</strong>.
+            Vous pourrez ensuite réserver des paniers dons directement depuis votre espace.
+          </p>
+        </div>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">6. Bug technique (support)</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Kshare — Votre signalement technique a été enregistré</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour David,</h2>
+        <p style="color:#333;line-height:1.7;">
+          Merci de nous avoir signalé ce problème technique.
+          Votre signalement (réf. <strong style="color:#3744C8;">KSH-D5R2W6</strong>) a été transmis à notre équipe technique.
+        </p>
+        <div style="background:#fef2f2;border-left:4px solid #ef4444;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0;color:#991b1b;font-size:14px;">
+            🔧 Notre équipe technique a été notifiée et traite votre signalement <strong>en priorité</strong>.
+            Nous reviendrons vers vous dès que le problème sera résolu.
+          </p>
+        </div>
+        <p style="color:#333;line-height:1.7;">
+          Si possible, n'hésitez pas à répondre à cet email avec des captures d'écran
+          ou des détails supplémentaires pour nous aider à résoudre le problème plus rapidement.
+        </p>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">7. Compte refusé</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>Kshare — Votre inscription commerce n'a pas été retenue</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour Traiteur Cohen,</h2>
+        <p style="color:#333;line-height:1.7;">
+          Nous avons examiné votre demande d'inscription en tant que <strong>commerce</strong> et
+          nous ne pouvons pas la valider pour le moment.
+        </p>
+        <p style="color:#333;line-height:1.7;">
+          Si vous pensez qu'il s'agit d'une erreur, n'hésitez pas à nous contacter à
+          <a href="#" style="color:#3744C8;">contact@k-share.fr</a>.
+        </p>
+        <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section-title">8. Notification Admin (interne)</div>
+<div class="email-frame">
+  <div class="email-label">Sujet : <span>[Support Kshare] KSH-A7X9K2 — 👤 CLIENT — Problème commande</span></div>
+  <div style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f6fa;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:0;border:1px solid #e2e5f0;overflow:hidden;">
+      <div class="kshare-header">
+        <h1><img src="public/logo-k-blanc.png" alt="K" width="40" height="40" /><span style="position:relative;left:-5px;top:3px;">share</span></h1>
+      </div>
+      <div style="padding:32px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;"></span>
+          <span style="font-size:13px;font-weight:600;color:#ef4444;text-transform:uppercase;letter-spacing:0.5px;">
+            Problème commande
+          </span>
+          <span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;color:#fff;background:#10b981;margin-left:8px;">
+            👤 CLIENT
+          </span>
+          <span style="font-size:13px;color:#888;margin-left:auto;">KSH-A7X9K2</span>
+        </div>
+
+        <table style="width:100%;font-size:14px;border-collapse:collapse;">
+          <tr>
+            <td style="padding:8px 0;color:#888;width:120px;vertical-align:top;">De</td>
+            <td style="padding:8px 0;color:#333;font-weight:500;">Sarah Levy &lt;sarah.levy@gmail.com&gt;</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#888;width:120px;vertical-align:top;">Téléphone</td>
+            <td style="padding:8px 0;color:#333;font-weight:500;">06 12 34 56 78</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#888;vertical-align:top;">Sujet</td>
+            <td style="padding:8px 0;color:#333;font-weight:500;">Commerce fermé lors du retrait</td>
+          </tr>
+        </table>
+
+        <div style="background:#f8f9fc;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #e2e5f0;">
+          <p style="margin:0;font-size:14px;color:#333;line-height:1.7;white-space:pre-wrap;">Bonjour, je me suis rendue à la Boulangerie David pour retirer mon panier (commande #KSH-1234) mais le commerce était fermé. J'ai attendu 15 minutes devant. Pouvez-vous m'aider ?</p>
+        </div>
+
+        <div style="background:#f0f4ff;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #c8cef5;">
+          <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#3744C8;text-transform:uppercase;letter-spacing:0.5px;">
+            🤖 Analyse IA
+          </p>
+          <p style="margin:0;font-size:14px;color:#333;white-space:pre-wrap;">La cliente signale un commerce fermé lors du créneau de retrait. Commande #KSH-1234, Boulangerie David. Urgence moyenne — remboursement probable nécessaire.</p>
+          <p style="margin:8px 0 0;font-size:12px;color:#f59e0b;font-weight:600;">⚠️ Escalade nécessaire — réponse manuelle requise</p>
+        </div>
+
+        <a href="#" style="display:inline-block;padding:10px 20px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
+          Répondre au client
+        </a>
+      </div>
+      <div class="kshare-footer">
+        <p class="footer-brand"><img src="public/logo.png" alt="Kshare" width="20" height="20" /><span style="margin-left:2px;">share</span></p>
+        <p class="footer-links">
+          Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+          <a href="#">k-share.fr</a> &nbsp;·&nbsp; <a href="#">contact@k-share.fr</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:13px;">
+  — Fin de la preview — 9 modèles d'emails Kshare —
+</div>
+
+</body>
+</html>
