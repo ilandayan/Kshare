@@ -83,13 +83,32 @@ export const COMMERCE_TYPES = [
   "Boulangerie",
   "Épicerie",
   "Supermarché",
-  "Restaurant Bassari",
-  "Restaurant Halavi",
-  "Traiteur Bassari",
-  "Traiteur Halavi",
+  "Restaurant",
+  "Traiteur",
 ] as const;
 
-/** Basket types available per commerce type */
+/** Commerce types that require a Bassari/Halavi sub-selection */
+export const COMMERCE_SUBTYPES: Record<
+  string,
+  { options: { value: string; label: string }[]; multi: boolean }
+> = {
+  Restaurant: {
+    options: [
+      { value: "Bassari", label: "Bassari" },
+      { value: "Halavi", label: "Halavi" },
+    ],
+    multi: false, // exclusive: Bassari OR Halavi
+  },
+  Traiteur: {
+    options: [
+      { value: "Bassari", label: "Bassari" },
+      { value: "Halavi", label: "Halavi" },
+    ],
+    multi: true, // can be both → stored as "Traiteur" when both selected
+  },
+};
+
+/** Basket types available per commerce type (composite key) */
 export const BASKET_TYPES_BY_COMMERCE: Record<string, string[]> = {
   "Boucherie":          ["bassari", "parve", "shabbat"],
   "Boulangerie":        ["halavi", "parve", "shabbat"],
@@ -97,8 +116,9 @@ export const BASKET_TYPES_BY_COMMERCE: Record<string, string[]> = {
   "Supermarché":        ["bassari", "halavi", "parve", "mix", "shabbat"],
   "Restaurant Bassari": ["bassari", "parve", "shabbat"],
   "Restaurant Halavi":  ["halavi", "parve", "shabbat"],
-  "Traiteur Bassari":   ["bassari", "parve", "mix", "shabbat"],
-  "Traiteur Halavi":    ["halavi", "parve", "mix", "shabbat"],
+  "Traiteur Bassari":   ["bassari", "parve", "shabbat"],
+  "Traiteur Halavi":    ["halavi", "parve", "shabbat"],
+  "Traiteur":           ["bassari", "halavi", "parve", "mix", "shabbat"],
 };
 
 /** Subscription status labels in French */

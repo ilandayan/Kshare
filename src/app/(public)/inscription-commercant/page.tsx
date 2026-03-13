@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { COMMERCE_TYPES, HASHGAKHA_LIST } from "@/lib/constants";
+import { COMMERCE_TYPES, COMMERCE_SUBTYPES, HASHGAKHA_LIST } from "@/lib/constants";
 import { inscriptionCommercant } from "./_actions";
 
 const schema = z
@@ -44,6 +44,8 @@ export default function InscriptionCommercantPage() {
   const [success, setSuccess] = useState(false);
 
   const [hashgakhaAutre, setHashgakhaAutre] = useState(false);
+  const [selectedBaseType, setSelectedBaseType] = useState("");
+  const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
 
   const {
     register,
@@ -171,7 +173,17 @@ export default function InscriptionCommercantPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="commerceType">Type de commerce</Label>
-                  <Select onValueChange={(v) => setValue("commerceType", v, { shouldValidate: true })}>
+                  <Select onValueChange={(v) => {
+                    setSelectedBaseType(v);
+                    setSelectedSubtypes([]);
+                    const subtypeConfig = COMMERCE_SUBTYPES[v];
+                    if (subtypeConfig) {
+                      // Has subtypes → don't set commerceType yet, wait for sub-selection
+                      setValue("commerceType", "", { shouldValidate: false });
+                    } else {
+                      setValue("commerceType", v, { shouldValidate: true });
+                    }
+                  }}>
                     <SelectTrigger id="commerceType">
                       <SelectValue placeholder="Sélectionner..." />
                     </SelectTrigger>
@@ -183,6 +195,68 @@ export default function InscriptionCommercantPage() {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* Sub-type selector for Restaurant / Traiteur */}
+                  {selectedBaseType && COMMERCE_SUBTYPES[selectedBaseType] && (() => {
+                    const config = COMMERCE_SUBTYPES[selectedBaseType];
+                    return (
+                      <div className="mt-3 p-3 bg-muted/50 rounded-lg border space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Précisez le type de {selectedBaseType.toLowerCase()} :
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {config.options.map((opt) => {
+                            const isChecked = selectedSubtypes.includes(opt.value);
+                            return (
+                              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-sm">
+                                <input
+                                  type={config.multi ? "checkbox" : "radio"}
+                                  name="commerceSubtype"
+                                  value={opt.value}
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    let next: string[];
+                                    if (config.multi) {
+                                      // Checkbox: toggle
+                                      next = isChecked
+                                        ? selectedSubtypes.filter((s) => s !== opt.value)
+                                        : [...selectedSubtypes, opt.value];
+                                    } else {
+                                      // Radio: exclusive
+                                      next = [opt.value];
+                                    }
+                                    setSelectedSubtypes(next);
+
+                                    // Compute composite commerce type
+                                    let compositeType = "";
+                                    if (next.length === 0) {
+                                      compositeType = "";
+                                    } else if (config.multi && next.length === config.options.length) {
+                                      // All selected → use base type (e.g. "Traiteur")
+                                      compositeType = selectedBaseType;
+                                    } else if (next.length === 1) {
+                                      compositeType = `${selectedBaseType} ${next[0]}`;
+                                    } else {
+                                      compositeType = selectedBaseType;
+                                    }
+                                    setValue("commerceType", compositeType, { shouldValidate: true });
+                                  }}
+                                  className="h-4 w-4 accent-primary"
+                                />
+                                {opt.label}
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {config.multi && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Vous pouvez sélectionner les deux options
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {errors.commerceType && (
                     <p className="text-xs text-destructive">{errors.commerceType.message}</p>
                   )}

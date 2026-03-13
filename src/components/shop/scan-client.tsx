@@ -23,7 +23,7 @@ type OrderData = Extract<ScanResult, { success: true }>["order"];
 
 type InputMode = "code" | "qr";
 
-function QrScanner({ onScan, onError }: { onScan: (code: string) => void; onError: (msg: string) => void }) {
+function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void; onSwitchToCode: () => void }) {
   const scannerRef = useRef<HTMLDivElement>(null);
   const html5QrRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
   const [started, setStarted] = useState(false);
@@ -58,7 +58,6 @@ function QrScanner({ onScan, onError }: { onScan: (code: string) => void; onErro
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : "Impossible d'accéder à la caméra";
           setCameraError(msg);
-          onError(msg);
         }
       }
     }
@@ -78,9 +77,23 @@ function QrScanner({ onScan, onError }: { onScan: (code: string) => void; onErro
 
   if (cameraError) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-        <XCircle className="w-5 h-5 text-red-500 shrink-0" />
-        <p className="text-sm text-red-700">{cameraError}</p>
+      <div className="space-y-3">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+          <Camera className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-800">Caméra non disponible</p>
+            <p className="text-xs text-amber-600 mt-1">
+              Vérifiez que votre navigateur a accès à la caméra ou utilisez la saisie manuelle du code.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onSwitchToCode}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+        >
+          <Keyboard className="w-4 h-4" />
+          Saisir le code manuellement
+        </button>
       </div>
     );
   }
@@ -211,7 +224,7 @@ export function ScanClient() {
           {mode === "qr" && !isPending && (
             <QrScanner
               onScan={handleQrScan}
-              onError={(msg) => setError(msg)}
+              onSwitchToCode={() => { setMode("code"); setError(""); }}
             />
           )}
 
