@@ -81,20 +81,24 @@ export const BASKET_TYPES = [
 export const COMMERCE_TYPES = [
   "Boucherie",
   "Boulangerie",
-  "Supermarché",
-  "Traiteur",
   "Épicerie",
-  "Restaurant",
+  "Supermarché",
+  "Restaurant Bassari",
+  "Restaurant Halavi",
+  "Traiteur Bassari",
+  "Traiteur Halavi",
 ] as const;
 
 /** Basket types available per commerce type */
 export const BASKET_TYPES_BY_COMMERCE: Record<string, string[]> = {
-  Boucherie:    ["bassari", "shabbat"],
-  Boulangerie:  ["parve", "halavi"],
-  Supermarché:  ["bassari", "halavi", "parve", "shabbat", "mix"],
-  Traiteur:     ["bassari", "halavi", "parve", "shabbat", "mix"],
-  Épicerie:     ["parve", "halavi", "mix"],
-  Restaurant:   ["bassari", "halavi", "parve", "mix"],
+  "Boucherie":          ["bassari", "parve", "shabbat"],
+  "Boulangerie":        ["halavi", "parve", "shabbat"],
+  "Épicerie":           ["bassari", "halavi", "parve", "mix", "shabbat"],
+  "Supermarché":        ["bassari", "halavi", "parve", "mix", "shabbat"],
+  "Restaurant Bassari": ["bassari", "parve", "shabbat"],
+  "Restaurant Halavi":  ["halavi", "parve", "shabbat"],
+  "Traiteur Bassari":   ["bassari", "parve", "mix", "shabbat"],
+  "Traiteur Halavi":    ["halavi", "parve", "mix", "shabbat"],
 };
 
 /** Subscription status labels in French */
