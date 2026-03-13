@@ -196,10 +196,10 @@ export function ShopProfileClient({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
-      {/* ── Left column: Info + Subscription ── */}
-      <div className="space-y-6">
-        {/* General info card — inline edit */}
+    <div className="space-y-6">
+      {/* ── Row 1: Info + Image + Logo ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-4 items-stretch">
+        {/* Info card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Informations générales</CardTitle>
@@ -400,31 +400,8 @@ export function ShopProfileClient({
           </CardContent>
         </Card>
 
-        {/* Subscription & Commission */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Abonnement & Commission
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <InfoRow
-              label="Statut abonnement"
-              value={subscriptionStatus ?? "Non configuré"}
-            />
-            <InfoRow
-              label="Taux de commission"
-              value={`${commerce.commission_rate} %`}
-            />
-            <InfoRow label="Statut compte" value={commerce.status} />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Right column: Image + Logo side by side ── */}
-      <div className="flex gap-4">
         {/* Cover image */}
-        <Card className="flex-1 min-w-0">
+        <Card className="flex flex-col">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Image de couverture</CardTitle>
           </CardHeader>
@@ -479,7 +456,7 @@ export function ShopProfileClient({
         </Card>
 
         {/* Logo */}
-        <Card className="w-40 shrink-0">
+        <Card className="flex flex-col w-48">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Logo</CardTitle>
           </CardHeader>
@@ -529,6 +506,26 @@ export function ShopProfileClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Row 2: Subscription & Commission ── */}
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle className="text-base">
+            Abonnement & Commission
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <InfoRow
+            label="Statut abonnement"
+            value={subscriptionStatus ?? "Non configuré"}
+          />
+          <InfoRow
+            label="Taux de commission"
+            value={`${commerce.commission_rate} %`}
+          />
+          <InfoRow label="Statut compte" value={commerce.status} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
