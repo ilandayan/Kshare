@@ -5,7 +5,6 @@
 
 interface ContractContentProps {
   commerceName: string;
-  commissionRate: number;
 }
 
 const ARTICLES = [
@@ -30,13 +29,14 @@ const ARTICLES = [
       "Kshare s'engage à :\n• Mettre à disposition une plateforme fonctionnelle et sécurisée.\n• Assurer le traitement des paiements via un prestataire certifié (Stripe).\n• Reverser au Commerce les sommes dues selon les modalités prévues.\n• Fournir un espace de gestion (tableau de bord) permettant le suivi des ventes et des paniers.\n• Assurer un support technique et commercial dans un délai raisonnable.",
   },
   {
-    title: "Article 5 — Commission",
-    content: null, // Dynamic — set per-commerce
+    title: "Article 5 — Plans tarifaires et commission",
+    content:
+      "La plateforme Kshare propose deux formules d'abonnement au Commerce partenaire :\n\n• Plan Starter (gratuit) : aucun abonnement mensuel. Une commission de 18% (hors taxes) est prélevée sur le prix de vente de chaque panier vendu via la plateforme.\n\n• Plan Pro (29 € HT/mois) : abonnement mensuel de 29 € (vingt-neuf euros) hors taxes, prélevé par prélèvement SEPA. Une commission réduite de 12% (hors taxes) est prélevée sur le prix de vente de chaque panier vendu.\n\nLe Commerce choisit son plan lors de son inscription. Un changement de plan est possible une fois par an, depuis l'espace commerçant. Le nouveau plan prend effet au début de la période de facturation suivante.\n\nLa commission est automatiquement calculée et prélevée lors de chaque transaction. Le montant net (prix de vente moins commission) est reversé au Commerce selon les modalités de l'article 7.",
   },
   {
-    title: "Article 6 — Abonnement",
+    title: "Article 6 — Abonnement et paiement",
     content:
-      "L'utilisation de la plateforme Kshare est soumise à un abonnement mensuel de 30 € (trente euros) hors taxes, prélevé par prélèvement SEPA.\n\nOffre de lancement :\n• Les 50 premiers commerces inscrits bénéficient de 3 mois d'abonnement offerts.\n• Les commerces suivants bénéficient de 1 mois offert.\n\nEn cas de non-paiement de l'abonnement, Kshare se réserve le droit de suspendre l'accès à la plateforme après mise en demeure restée sans effet pendant 15 jours.",
+      "Le plan Starter est gratuit et ne nécessite aucun moyen de paiement pour l'abonnement.\n\nLe plan Pro est soumis à un abonnement mensuel de 29 € HT, prélevé par prélèvement SEPA. Le Commerce autorise Kshare à effectuer ce prélèvement de manière récurrente.\n\nEn cas de non-paiement de l'abonnement Pro, Kshare se réserve le droit de suspendre l'accès à la plateforme après mise en demeure restée sans effet pendant 15 jours. Le Commerce sera alors automatiquement basculé sur le plan Starter.",
   },
   {
     title: "Article 7 — Reversements",
@@ -70,7 +70,7 @@ const ARTICLES = [
   },
 ];
 
-export default function ContractContent({ commerceName, commissionRate }: ContractContentProps) {
+export default function ContractContent({ commerceName }: ContractContentProps) {
   return (
     <div className="space-y-8">
       {/* ── En-tête ── */}
@@ -86,10 +86,7 @@ export default function ContractContent({ commerceName, commissionRate }: Contra
         <section key={index}>
           <h2 className="text-base font-bold text-primary mb-3">{article.title}</h2>
           <div className="text-sm text-foreground leading-relaxed whitespace-pre-line">
-            {index === 4
-              ? // Article 5 — Commission (dynamic)
-                `Kshare prélève une commission de ${commissionRate}% (hors taxes) sur le prix de vente de chaque panier vendu via la plateforme.\n\nOffre de lancement : les 50 premiers commerces inscrits bénéficient d'une commission réduite à 10% pendant les 3 premiers mois suivant la validation de leur compte.\n\nLa commission est automatiquement calculée et prélevée lors de chaque transaction. Le montant net (prix de vente moins commission) est reversé au Commerce selon les modalités de l'article 7.`
-              : article.content}
+            {article.content}
           </div>
         </section>
       ))}

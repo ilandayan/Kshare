@@ -14,14 +14,13 @@ export interface ContractPdfParams {
   commercePostalCode: string;
   signerName: string;
   signerEmail: string;
-  commissionRate: number; // ex: 15
   signedAt: string; // ISO date
   signerIp: string;
 }
 
 // ── Contenu des articles ─────────────────────────────────────────
 
-function getContractArticles(params: ContractPdfParams): { title: string; content: string }[] {
+function getContractArticles(): { title: string; content: string }[] {
   return [
     {
       title: "Article 1 — Objet du contrat",
@@ -44,14 +43,14 @@ function getContractArticles(params: ContractPdfParams): { title: string; conten
         "Kshare s'engage a :\n- Mettre a disposition une plateforme fonctionnelle et securisee.\n- Assurer le traitement des paiements via un prestataire certifie (Stripe).\n- Reverser au Commerce les sommes dues selon les modalites prevues.\n- Fournir un espace de gestion (tableau de bord) permettant le suivi des ventes et des paniers.\n- Assurer un support technique et commercial dans un delai raisonnable.",
     },
     {
-      title: "Article 5 — Commission",
+      title: "Article 5 — Plans tarifaires et commission",
       content:
-        `Kshare preleve une commission de ${params.commissionRate}% (hors taxes) sur le prix de vente de chaque panier vendu via la plateforme.\n\nOffre de lancement : les 50 premiers commerces inscrits beneficient d'une commission reduite a 10% pendant les 3 premiers mois suivant la validation de leur compte.\n\nLa commission est automatiquement calculee et prelevee lors de chaque transaction. Le montant net (prix de vente moins commission) est reverse au Commerce selon les modalites de l'article 7.`,
+        "La plateforme Kshare propose deux formules d'abonnement au Commerce partenaire :\n\n- Plan Starter (gratuit) : aucun abonnement mensuel. Une commission de 18% (hors taxes) est prelevee sur le prix de vente de chaque panier vendu via la plateforme.\n\n- Plan Pro (29 EUR HT/mois) : abonnement mensuel de 29 EUR (vingt-neuf euros) hors taxes, preleve par prelevement SEPA. Une commission reduite de 12% (hors taxes) est prelevee sur le prix de vente de chaque panier vendu.\n\nLe Commerce choisit son plan lors de son inscription. Un changement de plan est possible une fois par an, depuis l'espace commercant. Le nouveau plan prend effet au debut de la periode de facturation suivante.\n\nLa commission est automatiquement calculee et prelevee lors de chaque transaction. Le montant net (prix de vente moins commission) est reverse au Commerce selon les modalites de l'article 7.",
     },
     {
-      title: "Article 6 — Abonnement",
+      title: "Article 6 — Abonnement et paiement",
       content:
-        "L'utilisation de la plateforme Kshare est soumise a un abonnement mensuel de 30 EUR (trente euros) hors taxes, preleve par prelevement SEPA.\n\nOffre de lancement :\n- Les 50 premiers commerces inscrits beneficient de 3 mois d'abonnement offerts.\n- Les commerces suivants beneficient de 1 mois offert.\n\nEn cas de non-paiement de l'abonnement, Kshare se reserve le droit de suspendre l'acces a la plateforme apres mise en demeure restee sans effet pendant 15 jours.",
+        "Le plan Starter est gratuit et ne necessite aucun moyen de paiement pour l'abonnement.\n\nLe plan Pro est soumis a un abonnement mensuel de 29 EUR HT, preleve par prelevement SEPA. Le Commerce autorise Kshare a effectuer ce prelevement de maniere recurrente.\n\nEn cas de non-paiement de l'abonnement Pro, Kshare se reserve le droit de suspendre l'acces a la plateforme apres mise en demeure restee sans effet pendant 15 jours. Le Commerce sera alors automatiquement bascule sur le plan Starter.",
     },
     {
       title: "Article 7 — Reversements",
@@ -168,7 +167,7 @@ export function generateContractPdf(params: ContractPdfParams): Buffer {
   y += 8;
 
   // ── Articles ──
-  const articles = getContractArticles(params);
+  const articles = getContractArticles();
   for (const article of articles) {
     checkPageBreak(30);
 

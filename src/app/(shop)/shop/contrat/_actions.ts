@@ -21,7 +21,7 @@ export async function signerContrat(): Promise<{ success: boolean; error?: strin
     // ── 2. Récupérer le commerce ──
     const { data: commerce } = await supabase
       .from("commerces")
-      .select("id, name, email, address, city, postal_code, commission_rate, contract_signed_at")
+      .select("id, name, email, address, city, postal_code, contract_signed_at")
       .eq("profile_id", user.id)
       .single();
 
@@ -59,7 +59,6 @@ export async function signerContrat(): Promise<{ success: boolean; error?: strin
       commercePostalCode: commerce.postal_code ?? "",
       signerName,
       signerEmail,
-      commissionRate: commerce.commission_rate ?? 15,
       signedAt,
       signerIp,
     });

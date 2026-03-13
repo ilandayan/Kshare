@@ -15,7 +15,7 @@ export default async function ContratPage() {
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("name, commission_rate, contract_signed_at")
+    .select("name, contract_signed_at")
     .eq("profile_id", user.id)
     .single();
 
@@ -25,8 +25,6 @@ export default async function ContratPage() {
   if (commerce.contract_signed_at) {
     redirect("/shop/dashboard");
   }
-
-  const commissionRate = commerce.commission_rate ?? 15;
 
   return (
     <div className="min-h-screen bg-[#F4F5F9] py-8 px-4">
@@ -48,10 +46,7 @@ export default async function ContratPage() {
         {/* ── Contract card ── */}
         <Card className="shadow-lg border-0">
           <CardContent className="p-8">
-            <ContractContent
-              commerceName={commerce.name}
-              commissionRate={commissionRate}
-            />
+            <ContractContent commerceName={commerce.name} />
             <ContractForm />
           </CardContent>
         </Card>
