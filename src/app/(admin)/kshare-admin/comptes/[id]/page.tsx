@@ -203,16 +203,17 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   // Association
   const { data: asso } = await supabase
     .from("associations")
-    .select("id, name, contact, address, city, zone_region, status, created_at, validated_at, availability, rna_document_url, id_document_url")
+    .select("id, name, contact, address, city, zone_region, status, created_at, validated_at, availability, rna_document_url, id_document_url, charter_signed_at, charter_pdf_url")
     .eq("id", id)
     .single();
 
   if (!asso) notFound();
 
   // Generate signed URLs for documents
-  const [rnaSignedUrl, idDocSignedUrl] = await Promise.all([
+  const [rnaSignedUrl, idDocSignedUrl, charterSignedUrl] = await Promise.all([
     getSignedUrl(supabase, asso.rna_document_url),
     getSignedUrl(supabase, asso.id_document_url),
+    getSignedUrl(supabase, asso.charter_pdf_url),
   ]);
 
   return (
@@ -277,6 +278,43 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
           <CardContent className="space-y-3">
             <DocumentLink url={rnaSignedUrl} label="Récépissé RNA" />
             <DocumentLink url={idDocSignedUrl} label="Pièce d'identité du président" />
+          </CardContent>
+        </Card>
+
+        {/* Charte d'engagement */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Charte d&apos;engagement</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              {asso.charter_signed_at ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-green-700">Signée</p>
+                    <p className="text-xs text-muted-foreground">
+                      le{" "}
+                      {new Date(asso.charter_signed_at).toLocaleDateString("fr-FR", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+                  <p className="text-sm font-medium text-amber-600">Non signée</p>
+                </>
+              )}
+            </div>
+            {asso.charter_signed_at && charterSignedUrl && (
+              <DocumentLink url={charterSignedUrl} label="Télécharger la charte signée (PDF)" />
+            )}
           </CardContent>
         </Card>
 

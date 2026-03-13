@@ -42,6 +42,10 @@ export type Database = {
         Row: {
           address: string
           availability: string | null
+          charter_ip: string | null
+          charter_pdf_url: string | null
+          charter_signed_at: string | null
+          charter_user_agent: string | null
           city: string
           contact: string
           created_at: string
@@ -61,6 +65,10 @@ export type Database = {
         Insert: {
           address: string
           availability?: string | null
+          charter_ip?: string | null
+          charter_pdf_url?: string | null
+          charter_signed_at?: string | null
+          charter_user_agent?: string | null
           city: string
           contact: string
           created_at?: string
@@ -80,6 +88,10 @@ export type Database = {
         Update: {
           address?: string
           availability?: string | null
+          charter_ip?: string | null
+          charter_pdf_url?: string | null
+          charter_signed_at?: string | null
+          charter_user_agent?: string | null
           city?: string
           contact?: string
           created_at?: string

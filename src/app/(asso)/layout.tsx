@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link          from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
@@ -20,9 +21,16 @@ export default async function AssoLayout({ children }: { children: React.ReactNo
 
   const { data: asso } = await supabase
     .from("associations")
-    .select("name, status")
+    .select("name, status, charter_signed_at")
     .eq("profile_id", user.id)
     .single();
+
+  // ── Blocage charte : rediriger vers /asso/charte si non signée ──
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? "";
+  if (!asso?.charter_signed_at && !pathname.endsWith("/asso/charte")) {
+    redirect("/asso/charte");
+  }
 
   const assoName    = asso?.name ?? "Mon association";
   const userInitial = (profile?.full_name ?? assoName).charAt(0).toUpperCase();

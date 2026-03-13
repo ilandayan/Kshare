@@ -506,6 +506,35 @@ export function emailCompteValide(
   };
 }
 
+export function emailCharteSigne(assoName: string): {
+  subject: string;
+  html: string;
+} {
+  const safeName = escapeHtml(assoName);
+  return {
+    subject: "Kshare — Votre charte d'engagement signée",
+    html: wrapHtml(`
+      <h2 style="color:#9333ea;margin:0 0 16px;">Charte signée avec succès !</h2>
+      <p style="color:#333;line-height:1.7;">
+        Bonjour ${safeName},
+      </p>
+      <p style="color:#333;line-height:1.7;">
+        Votre charte d'engagement Kshare a bien été signée électroniquement. Vous trouverez en pièce jointe
+        une copie de la charte au format PDF pour vos archives.
+      </p>
+      <div style="background:#faf5ff;border-left:4px solid #a855f7;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#6b21a8;font-size:14px;">
+          💜 Votre espace association est maintenant pleinement actif. Vous pouvez commencer à réserver des paniers dons !
+        </p>
+      </div>
+      <a href="https://k-share.fr/asso/paniers-dons" style="display:inline-block;padding:12px 24px;background:#9333ea;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Accéder à mon espace
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
 export function emailCompteRefuse(name: string, type: "commerce" | "association"): {
   subject: string;
   html: string;
