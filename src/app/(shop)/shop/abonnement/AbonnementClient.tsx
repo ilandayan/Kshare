@@ -295,7 +295,7 @@ export default function AbonnementClient({
 
       {isActive && currentPlan === "pro" && nextBillingDate && (
         <div className="text-center text-sm text-muted-foreground">
-          Prochaine échéance : {nextBillingDate} — SEPA ou carte bancaire
+          Prochaine échéance : {nextBillingDate} — Prélèvement SEPA
         </div>
       )}
 
