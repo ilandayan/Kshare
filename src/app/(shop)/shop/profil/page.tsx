@@ -17,7 +17,7 @@ export default async function ProfilPage() {
 
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("status")
+    .select("status, plan")
     .eq("commerce_id", commerce.id)
     .single();
 
@@ -25,7 +25,6 @@ export default async function ProfilPage() {
     <div className="p-6 max-w-6xl">
       <h1 className="text-2xl font-bold text-foreground mb-6">Profil commerçant</h1>
 
-      {/* Main profile content — info left, images right */}
       <ShopProfileClient
         commerce={{
           name: commerce.name,
@@ -43,9 +42,8 @@ export default async function ProfilPage() {
           logo_url: commerce.logo_url,
         }}
         subscriptionStatus={subscription?.status ?? null}
+        subscriptionPlan={(subscription?.plan as string) ?? null}
       />
-
-      {/* Security — included in row 2 via ShopProfileClient */}
     </div>
   );
 }
