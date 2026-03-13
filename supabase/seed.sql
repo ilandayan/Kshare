@@ -140,7 +140,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000001',
     '10000000-0000-0000-0000-000000000001',
     'bassari', 'today',
-    'Assortiment de viandes: poulet, boeuf hache, merguez. Environ 1.5kg.',
+    'Panier surprise de produits carnés casher.',
     22.00, 8.99, 5, 1,
     '16:00', '19:00',
     false, 'published', now()
@@ -150,7 +150,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000002',
     '10000000-0000-0000-0000-000000000002',
     'halavi', 'today',
-    'Selection de fromages: cream cheese, feta, gouda casher. 4-5 pieces.',
+    'Panier surprise de produits laitiers casher.',
     28.00, 12.50, 4, 0,
     '14:00', '17:00',
     false, 'published', now()
@@ -160,7 +160,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000003',
     '10000000-0000-0000-0000-000000000003',
     'shabbat', 'today',
-    'Panier Shabbat complet: challot, houmous, salade, plat principal bassari.',
+    'Panier surprise spécial Shabbat composé d''un assortiment de produits casher pour le repas du Shabbat.',
     45.00, 19.99, 8, 3,
     '12:00', '15:00',
     false, 'published', now()
@@ -170,7 +170,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000004',
     '10000000-0000-0000-0000-000000000004',
     'parve', 'today',
-    'Pains, viennoiseries et gateaux du jour. 6-8 pieces.',
+    'Panier surprise de produits parvé casher.',
     18.00, 6.99, 6, 2,
     '17:00', '19:30',
     false, 'published', now()
@@ -180,7 +180,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000005',
     '10000000-0000-0000-0000-000000000003',
     'mix', 'today',
-    'Panier solidaire: plats du jour et accompagnements. Pour 2-3 personnes.',
+    'Panier surprise mixte composé d''un assortiment varié de produits casher.',
     30.00, 0.00, 3, 0,
     '13:00', '16:00',
     true, 'published', now()
@@ -190,7 +190,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000006',
     '10000000-0000-0000-0000-000000000001',
     'bassari', 'tomorrow',
-    'Panier BBQ: brochettes, steaks, saucisses. Ideal pour un repas en famille.',
+    'Panier surprise de produits carnés casher.',
     35.00, 14.99, 4, 0,
     '15:00', '18:00',
     false, 'published', now()
@@ -199,7 +199,7 @@ INSERT INTO public.baskets (id, commerce_id, type, day, description, original_pr
     '30000000-0000-0000-0000-000000000007',
     '10000000-0000-0000-0000-000000000004',
     'halavi', 'tomorrow',
-    'Panier patisserie: cheesecake, rugelach, bourekas fromage.',
+    'Panier surprise de produits laitiers casher.',
     24.00, 9.99, 5, 0,
     '10:00', '13:00',
     false, 'published', now()

@@ -5,11 +5,11 @@ import { BasketBuyButton } from "@/components/client/basket-buy-button";
 import { ArrowLeft, Clock, MapPin, Store, Info, ShieldCheck } from "lucide-react";
 
 const TYPE_CONFIG: Record<string, { emoji: string; label: string; description: string }> = {
-  bassari:  { emoji: "\ud83e\udd69", label: "Panier Bassari",  description: "Panier surprise de produits carnes casher" },
-  halavi:   { emoji: "\ud83e\uddc0", label: "Panier Halavi",   description: "Panier surprise de produits laitiers casher" },
-  parve:    { emoji: "\ud83c\udf3f", label: "Panier Parve",    description: "Panier surprise de produits parve casher" },
-  shabbat:  { emoji: "\ud83c\udf77", label: "Panier Shabbat",  description: "Panier surprise special Shabbat" },
-  mix:      { emoji: "\u2795",       label: "Panier Mix",      description: "Panier surprise mixte casher" },
+  bassari:  { emoji: "🥩", label: "Panier Bassari",  description: "Panier surprise de produits carnés casher." },
+  halavi:   { emoji: "🧀", label: "Panier Halavi",   description: "Panier surprise de produits laitiers casher." },
+  parve:    { emoji: "🌿", label: "Panier Parvé",    description: "Panier surprise de produits parvé casher." },
+  shabbat:  { emoji: "🍷", label: "Panier Shabbat",  description: "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat." },
+  mix:      { emoji: "➕", label: "Panier Mix",      description: "Panier surprise mixte composé d'un assortiment varié de produits casher." },
 };
 
 const DAY_LABELS: Record<string, string> = {
