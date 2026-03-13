@@ -196,9 +196,9 @@ export function ShopProfileClient({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* ── Left column: Info + Subscription + Security ── */}
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+      {/* ── Left column: Info + Subscription ── */}
+      <div className="space-y-6">
         {/* General info card — inline edit */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -421,16 +421,16 @@ export function ShopProfileClient({
         </Card>
       </div>
 
-      {/* ── Right column: Image + Logo upload ── */}
+      {/* ── Right column: Image + Logo ── */}
       <div className="space-y-6">
         {/* Cover image */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Image de couverture</CardTitle>
           </CardHeader>
           <CardContent>
             <div
-              className="relative w-full h-44 rounded-xl border-2 border-dashed border-[#e2e5f0] bg-[#f8f9fc] overflow-hidden cursor-pointer hover:border-[#3744C8]/40 transition-colors"
+              className="relative w-full h-36 rounded-xl border-2 border-dashed border-[#e2e5f0] bg-[#f8f9fc] overflow-hidden cursor-pointer hover:border-[#3744C8]/40 transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
               {coverPreview ? (
@@ -445,7 +445,7 @@ export function ShopProfileClient({
                       <Loader2 className="h-6 w-6 animate-spin text-white" />
                     </div>
                   )}
-                  <div className="absolute bottom-2 right-2 bg-white/90 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 flex items-center gap-1.5 shadow-sm">
+                  <div className="absolute bottom-2 right-2 bg-white/90 rounded-lg px-2.5 py-1 text-xs font-medium text-gray-700 flex items-center gap-1.5 shadow-sm">
                     <Upload className="h-3.5 w-3.5" />
                     Changer
                   </div>
@@ -456,11 +456,11 @@ export function ShopProfileClient({
                     <Loader2 className="h-8 w-8 animate-spin" />
                   ) : (
                     <>
-                      <ImageIcon className="h-8 w-8" />
-                      <span className="text-sm font-medium">
+                      <ImageIcon className="h-7 w-7" />
+                      <span className="text-xs font-medium">
                         Cliquez pour ajouter
                       </span>
-                      <span className="text-xs">
+                      <span className="text-[11px]">
                         JPEG, PNG ou WebP (max 5 Mo)
                       </span>
                     </>
@@ -480,13 +480,13 @@ export function ShopProfileClient({
 
         {/* Logo */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Logo du commerce</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Logo</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-3">
               <div
-                className="relative w-24 h-24 rounded-full border-2 border-dashed border-[#e2e5f0] bg-[#f8f9fc] overflow-hidden cursor-pointer hover:border-[#3744C8]/40 transition-colors flex items-center justify-center shrink-0"
+                className="relative w-20 h-20 rounded-full border-2 border-dashed border-[#e2e5f0] bg-[#f8f9fc] overflow-hidden cursor-pointer hover:border-[#3744C8]/40 transition-colors flex items-center justify-center shrink-0"
                 onClick={() => logoInputRef.current?.click()}
               >
                 {logoPreview ? (
@@ -512,12 +512,11 @@ export function ShopProfileClient({
                   </>
                 )}
               </div>
-              <div className="text-xs text-gray-400 text-center space-y-1">
-                <p className="font-medium text-gray-500">
+              <div className="text-[11px] text-gray-400 text-center space-y-0.5">
+                <p className="font-medium text-gray-500 text-xs">
                   Cliquez pour ajouter
                 </p>
                 <p>JPEG, PNG ou WebP (max 2 Mo)</p>
-                <p>Format carré recommandé</p>
               </div>
             </div>
             <input

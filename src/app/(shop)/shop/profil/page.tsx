@@ -48,7 +48,7 @@ export default async function ProfilPage() {
       />
 
       {/* Security — below the grid */}
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-4 max-w-2xl">
         <Card>
           <CardHeader><CardTitle className="text-base">Sécurité</CardTitle></CardHeader>
           <CardContent>
