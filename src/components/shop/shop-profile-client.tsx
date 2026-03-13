@@ -196,7 +196,7 @@ export function ShopProfileClient({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
       {/* ── Left column: Info + Subscription ── */}
       <div className="space-y-6">
         {/* General info card — inline edit */}

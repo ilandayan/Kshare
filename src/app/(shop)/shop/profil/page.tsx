@@ -24,7 +24,7 @@ export default async function ProfilPage() {
     .single();
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8 max-w-6xl">
       <h1 className="text-2xl font-bold text-foreground mb-8">Profil commerçant</h1>
 
       {/* Main profile content — info left, images right */}
