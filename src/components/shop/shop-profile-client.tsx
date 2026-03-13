@@ -25,7 +25,13 @@ import {
   uploadLogo,
 } from "@/app/(shop)/shop/profil/_actions";
 import { toast } from "sonner";
-import { COMMERCE_TYPES, HASHGAKHA_LIST, BASKET_TYPES } from "@/lib/constants";
+import {
+  BASKET_TYPES,
+  BASKET_TYPES_BY_COMMERCE,
+  SUBSCRIPTION_PLANS,
+  SUBSCRIPTION_STATUS_LABELS,
+  COMMERCE_STATUS_LABELS,
+} from "@/lib/constants";
 import { ChangePasswordForm } from "@/components/shared/change-password-form";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -55,11 +61,13 @@ interface CommerceData {
 interface ShopProfileClientProps {
   commerce: CommerceData;
   subscriptionStatus: string | null;
+  subscriptionPlan: string | null;
 }
 
 export function ShopProfileClient({
   commerce,
   subscriptionStatus,
+  subscriptionPlan,
 }: ShopProfileClientProps) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -75,26 +83,12 @@ export function ShopProfileClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const initialHashgakha = commerce.hashgakha ?? "";
-  const isCustomHashgakha =
-    initialHashgakha !== "" &&
-    !(HASHGAKHA_LIST as readonly string[]).includes(initialHashgakha);
-
-  const [hashgakhaAutre, setHashgakhaAutre] = useState(isCustomHashgakha);
   const [form, setForm] = useState({
-    name: commerce.name ?? "",
-    address: commerce.address ?? "",
-    city: commerce.city ?? "",
-    postalCode: commerce.postal_code ?? "",
     phone: commerce.phone ?? "",
     email: commerce.email ?? "",
-    commerceType: commerce.commerce_type ?? "",
-    hashgakha: initialHashgakha,
   });
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
@@ -165,19 +159,17 @@ export function ShopProfileClient({
     );
   }
 
-  // Edit field row
+  // Editable field row
   function EditRow({
     label,
     name,
     value,
     type = "text",
-    required = false,
   }: {
     label: string;
     name: string;
     value: string;
     type?: string;
-    required?: boolean;
   }) {
     return (
       <div className="flex gap-4 items-center">
@@ -189,9 +181,48 @@ export function ShopProfileClient({
           type={type}
           value={value}
           onChange={handleChange}
-          required={required}
           className={`${inputCls} flex-1`}
         />
+      </div>
+    );
+  }
+
+  // Auto-derive basket types from commerce_type
+  const derivedBasketTypes =
+    commerce.commerce_type
+      ? BASKET_TYPES_BY_COMMERCE[commerce.commerce_type] ?? []
+      : commerce.basket_types ?? [];
+
+  // Subscription plan label
+  const planKey = subscriptionPlan as keyof typeof SUBSCRIPTION_PLANS | null;
+  const planInfo = planKey ? SUBSCRIPTION_PLANS[planKey] : null;
+  const planLabel = planInfo ? planInfo.name : subscriptionPlan ?? "—";
+
+  // Subscription status in French
+  const subStatusLabel = subscriptionStatus
+    ? SUBSCRIPTION_STATUS_LABELS[subscriptionStatus] ?? subscriptionStatus
+    : "Non configuré";
+
+  // Commerce status in French
+  const commerceStatusLabel =
+    COMMERCE_STATUS_LABELS[commerce.status] ?? commerce.status;
+
+  function BasketTypeBadges({ types }: { types: string[] }) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {types.map((t) => {
+          const type = BASKET_TYPES.find((bt) => bt.value === t);
+          const Icon = type ? ICON_MAP[type.icon] : null;
+          return (
+            <Badge
+              key={t}
+              variant="secondary"
+              className="inline-flex items-center gap-1.5"
+            >
+              {Icon && <Icon className="h-3.5 w-3.5" />} {type?.label ?? t}
+            </Badge>
+          );
+        })}
       </div>
     );
   }
@@ -219,12 +250,19 @@ export function ShopProfileClient({
           <CardContent>
             {editing ? (
               <form onSubmit={handleSubmit} className="space-y-3">
-                <EditRow
-                  label="Nom"
-                  name="name"
-                  value={form.name}
-                  required
+                {/* Read-only fields */}
+                <InfoRow label="Nom" value={commerce.name} />
+                <InfoRow
+                  label="Adresse"
+                  value={`${commerce.address}, ${commerce.postal_code ?? ""} ${commerce.city}`}
                 />
+                <InfoRow
+                  label="Type de commerce"
+                  value={commerce.commerce_type ?? "—"}
+                />
+                <InfoRow label="Cacherout" value={commerce.hashgakha ?? "—"} />
+
+                {/* Editable fields */}
                 <EditRow
                   label="Email"
                   name="email"
@@ -233,107 +271,12 @@ export function ShopProfileClient({
                 />
                 <EditRow label="Téléphone" name="phone" value={form.phone} />
 
-                {/* Commerce type — select */}
-                <div className="flex gap-4 items-center">
-                  <span className="text-muted-foreground w-36 shrink-0 text-sm">
-                    Type de commerce
-                  </span>
-                  <select
-                    name="commerceType"
-                    value={form.commerceType}
-                    onChange={handleChange}
-                    className={`${inputCls} flex-1`}
-                  >
-                    <option value="">Sélectionner</option>
-                    {COMMERCE_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Cacherout — select + custom */}
-                <div className="flex gap-4 items-start">
-                  <span className="text-muted-foreground w-36 shrink-0 text-sm pt-2.5">
-                    Cacherout
-                  </span>
-                  <div className="flex-1 space-y-2">
-                    <select
-                      name="hashgakha"
-                      value={hashgakhaAutre ? "Autre" : form.hashgakha}
-                      onChange={(e) => {
-                        if (e.target.value === "Autre") {
-                          setHashgakhaAutre(true);
-                          setForm((prev) => ({ ...prev, hashgakha: "" }));
-                        } else {
-                          setHashgakhaAutre(false);
-                          setForm((prev) => ({
-                            ...prev,
-                            hashgakha: e.target.value,
-                          }));
-                        }
-                      }}
-                      className={inputCls}
-                    >
-                      <option value="">Sélectionner</option>
-                      {HASHGAKHA_LIST.map((h) => (
-                        <option key={h} value={h}>
-                          {h}
-                        </option>
-                      ))}
-                    </select>
-                    {hashgakhaAutre && (
-                      <input
-                        name="hashgakha"
-                        value={form.hashgakha}
-                        onChange={handleChange}
-                        placeholder="Précisez la cacherout..."
-                        className={inputCls}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <EditRow
-                  label="Adresse"
-                  name="address"
-                  value={form.address}
-                  required
-                />
-                <EditRow
-                  label="Code postal"
-                  name="postalCode"
-                  value={form.postalCode}
-                />
-                <EditRow
-                  label="Ville"
-                  name="city"
-                  value={form.city}
-                  required
-                />
-
-                {/* Basket types — read only */}
+                {/* Basket types — auto derived, read-only */}
                 <div className="flex gap-4">
                   <span className="text-muted-foreground w-36 shrink-0 text-sm">
                     Types de paniers
                   </span>
-                  <div className="flex flex-wrap gap-2">
-                    {commerce.basket_types?.map((t: string) => {
-                      const type = BASKET_TYPES.find((bt) => bt.value === t);
-                      const Icon = type ? ICON_MAP[type.icon] : null;
-                      return (
-                        <Badge
-                          key={t}
-                          variant="secondary"
-                          className="inline-flex items-center gap-1.5"
-                        >
-                          {Icon && <Icon className="h-3.5 w-3.5" />}{" "}
-                          {type?.label}
-                        </Badge>
-                      );
-                    })}
-                  </div>
+                  <BasketTypeBadges types={derivedBasketTypes} />
                 </div>
 
                 <div className="flex items-center gap-3 pt-3">
@@ -366,7 +309,7 @@ export function ShopProfileClient({
                 <InfoRow label="Nom" value={commerce.name} />
                 <InfoRow
                   label="Adresse"
-                  value={`${commerce.address}, ${commerce.postal_code} ${commerce.city}`}
+                  value={`${commerce.address}, ${commerce.postal_code ?? ""} ${commerce.city}`}
                 />
                 <InfoRow label="Email" value={commerce.email ?? "—"} />
                 <InfoRow label="Téléphone" value={commerce.phone ?? "—"} />
@@ -379,22 +322,7 @@ export function ShopProfileClient({
                   <span className="text-muted-foreground w-36 shrink-0 text-sm">
                     Types de paniers
                   </span>
-                  <div className="flex flex-wrap gap-2">
-                    {commerce.basket_types?.map((t: string) => {
-                      const type = BASKET_TYPES.find((bt) => bt.value === t);
-                      const Icon = type ? ICON_MAP[type.icon] : null;
-                      return (
-                        <Badge
-                          key={t}
-                          variant="secondary"
-                          className="inline-flex items-center gap-1.5"
-                        >
-                          {Icon && <Icon className="h-3.5 w-3.5" />}{" "}
-                          {type?.label}
-                        </Badge>
-                      );
-                    })}
-                  </div>
+                  <BasketTypeBadges types={derivedBasketTypes} />
                 </div>
               </div>
             )}
@@ -508,8 +436,8 @@ export function ShopProfileClient({
         </Card>
       </div>
 
-      {/* ── Row 2: Subscription + Security side by side ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* ── Row 2: Subscription + Security — aligned with Row 1 ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
@@ -517,15 +445,13 @@ export function ShopProfileClient({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <InfoRow
-              label="Statut abonnement"
-              value={subscriptionStatus ?? "Non configuré"}
-            />
+            <InfoRow label="Plan" value={planLabel} />
+            <InfoRow label="Statut abonnement" value={subStatusLabel} />
             <InfoRow
               label="Taux de commission"
               value={`${commerce.commission_rate} %`}
             />
-            <InfoRow label="Statut compte" value={commerce.status} />
+            <InfoRow label="Statut compte" value={commerceStatusLabel} />
           </CardContent>
         </Card>
 
@@ -537,6 +463,9 @@ export function ShopProfileClient({
             <ChangePasswordForm />
           </CardContent>
         </Card>
+
+        {/* Invisible spacer to match Row 1 logo column */}
+        <div className="hidden lg:block w-56" />
       </div>
     </div>
   );
