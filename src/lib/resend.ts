@@ -414,21 +414,43 @@ export function buildAdminNotification(params: {
 
 // ── Templates métier (réexportées depuis l'ancien email.ts) ──────
 
-export function emailCompteValide(name: string, type: "commerce" | "association"): {
+export function emailCompteValide(
+  name: string,
+  type: "commerce" | "association",
+  passwordLink?: string
+): {
   subject: string;
   html: string;
 } {
   const espace = type === "commerce" ? "/shop/dashboard" : "/asso/paniers-dons";
   const safeName = escapeHtml(name);
-  return {
-    subject: `Kshare — Votre compte ${type} a été validé !`,
-    html: wrapHtml(`
-      <h2 style="color:#3744C8;margin:0 0 16px;">Bienvenue sur Kshare, ${safeName} !</h2>
-      <p style="color:#333;line-height:1.7;">Votre compte <strong>${type}</strong> a été validé par notre équipe.</p>
+
+  const ctaBlock = passwordLink
+    ? `
+      <p style="color:#333;line-height:1.7;">
+        Pour commencer, créez votre mot de passe en cliquant sur le bouton ci-dessous :
+      </p>
+      <a href="${passwordLink}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;margin:8px 0 16px;">
+        🔐 Créer mon mot de passe
+      </a>
+      <p style="color:#888;font-size:12px;line-height:1.6;">
+        Ce lien est valable 24 heures. Si vous ne l'avez pas utilisé à temps, contactez-nous à
+        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+      </p>
+    `
+    : `
       <p style="color:#333;line-height:1.7;">Vous pouvez désormais accéder à votre espace :</p>
       <a href="https://k-share.fr${espace}" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
         Accéder à mon espace
       </a>
+    `;
+
+  return {
+    subject: `Kshare — Votre compte ${type} a été validé !`,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bienvenue sur Kshare, ${safeName} !</h2>
+      <p style="color:#333;line-height:1.7;">Votre compte <strong>${type}</strong> a été validé par notre équipe. 🎉</p>
+      ${ctaBlock}
       <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
     `),
   };

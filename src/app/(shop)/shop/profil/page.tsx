@@ -36,7 +36,7 @@ export default async function ProfilPage() {
           commerce_type: commerce.commerce_type,
           hashgakha: commerce.hashgakha,
           basket_types: commerce.basket_types,
-          commission_rate: commerce.commission_rate,
+          commission_rate: commerce.commission_rate ?? 0,
           status: commerce.status,
           photos: commerce.photos,
           logo_url: commerce.logo_url,

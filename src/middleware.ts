@@ -45,6 +45,7 @@ export async function middleware(request: NextRequest) {
     "/inscription-association",
     "/mot-de-passe-oublie",
     "/reinitialiser-mot-de-passe",
+    "/definir-mot-de-passe",
   ];
 
   const publicPrefixes = [

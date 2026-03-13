@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type InscriptionAssoResult =
   | { success: true }
@@ -27,7 +27,6 @@ export async function inscriptionAssociation(
 ): Promise<InscriptionAssoResult> {
   // ── Extract text fields ──
   const email = (fd.get("email") as string)?.trim();
-  const password = fd.get("password") as string;
   const nomAsso = (fd.get("nomAsso") as string)?.trim();
   const rna = (fd.get("rna") as string)?.trim();
   const adresse = (fd.get("adresse") as string)?.trim();
@@ -35,6 +34,11 @@ export async function inscriptionAssociation(
   const codePostal = (fd.get("codePostal") as string)?.trim();
   const nomResponsable = (fd.get("nomResponsable") as string)?.trim();
   const telephone = (fd.get("telephone") as string)?.trim();
+
+  // ── Basic validation ──
+  if (!email || !nomAsso || !rna || !adresse || !ville || !codePostal || !nomResponsable || !telephone) {
+    return { success: false, error: "Tous les champs sont obligatoires." };
+  }
 
   // ── Extract files ──
   const rnaFile = fd.get("rnaDocument") as File | null;
@@ -47,52 +51,29 @@ export async function inscriptionAssociation(
   const idError = validateFile(idFile, "La pièce d'identité");
   if (idError) return { success: false, error: idError };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  // Créer le compte Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        role: "association",
-        full_name: nomResponsable,
-      },
-    },
-  });
+  // Vérifier que l'email n'est pas déjà utilisé
+  const { data: existingAsso } = await supabase
+    .from("associations")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
 
-  if (authError || !authData.user) {
-    if (authError?.message?.includes("already registered")) {
-      return { success: false, error: "Cette adresse email est déjà utilisée." };
-    }
-    return {
-      success: false,
-      error: authError?.message ?? "Erreur lors de la création du compte.",
-    };
-  }
-
-  // Créer le profil
-  const { error: profileError } = await supabase.from("profiles").upsert({
-    id: authData.user.id,
-    email,
-    full_name: nomResponsable,
-    phone: telephone,
-    role: "association",
-  });
-
-  if (profileError) {
-    return { success: false, error: "Erreur lors de la création du profil." };
+  if (existingAsso) {
+    return { success: false, error: "Cette adresse email est déjà utilisée pour une association." };
   }
 
   // Déduire le département à partir du code postal (2 premiers chiffres)
   const department = codePostal.slice(0, 2);
 
-  // Créer l'association
+  // Créer l'association SANS compte Auth (sera créé à la validation admin)
   const { data: asso, error: assoError } = await supabase
     .from("associations")
     .insert({
-      profile_id: authData.user.id,
+      profile_id: null,
       name: nomAsso,
+      email,
       contact: `${nomResponsable} · ${telephone}`,
       address: adresse,
       city: ville,

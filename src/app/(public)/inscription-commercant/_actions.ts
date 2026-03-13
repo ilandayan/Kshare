@@ -1,7 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { SUBSCRIPTION_PLANS } from "@/lib/constants";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type InscriptionCommercantResult =
   | { success: true }
@@ -32,7 +31,6 @@ export async function inscriptionCommercant(
 ): Promise<InscriptionCommercantResult> {
   // ── Extract text fields ──
   const email = (fd.get("email") as string)?.trim();
-  const password = fd.get("password") as string;
   const nom = (fd.get("nom") as string)?.trim();
   const commerceType = (fd.get("commerceType") as string)?.trim();
   const adresse = (fd.get("adresse") as string)?.trim();
@@ -41,6 +39,11 @@ export async function inscriptionCommercant(
   const hashgakha = (fd.get("hashgakha") as string)?.trim();
   const telephone = (fd.get("telephone") as string)?.trim();
   const siret = (fd.get("siret") as string)?.trim();
+
+  // ── Basic validation ──
+  if (!email || !nom || !commerceType || !adresse || !ville || !codePostal || !hashgakha || !telephone || !siret) {
+    return { success: false, error: "Tous les champs sont obligatoires." };
+  }
 
   // ── Extract files ──
   const kbisFile = fd.get("kbis") as File | null;
@@ -53,45 +56,24 @@ export async function inscriptionCommercant(
   const idError = validateFile(idFile, "La pièce d'identité");
   if (idError) return { success: false, error: idError };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  // Créer le compte Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        role: "commerce",
-        full_name: nom,
-      },
-    },
-  });
+  // Vérifier que l'email n'est pas déjà utilisé
+  const { data: existingCommerce } = await supabase
+    .from("commerces")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
 
-  if (authError || !authData.user) {
-    if (authError?.message?.includes("already registered")) {
-      return { success: false, error: "Cette adresse email est déjà utilisée." };
-    }
-    return { success: false, error: authError?.message ?? "Erreur lors de la création du compte." };
+  if (existingCommerce) {
+    return { success: false, error: "Cette adresse email est déjà utilisée pour un commerce." };
   }
 
-  // Créer le profil
-  const { error: profileError } = await supabase.from("profiles").upsert({
-    id: authData.user.id,
-    email,
-    full_name: nom,
-    phone: telephone,
-    role: "commerce",
-  });
-
-  if (profileError) {
-    return { success: false, error: "Erreur lors de la création du profil." };
-  }
-
-  // Créer le commerce
+  // Créer le commerce SANS compte Auth (sera créé à la validation admin)
   const { data: commerce, error: commerceError } = await supabase
     .from("commerces")
     .insert({
-      profile_id: authData.user.id,
+      profile_id: null,
       name: nom,
       email,
       commerce_type: commerceType,
@@ -102,9 +84,6 @@ export async function inscriptionCommercant(
       phone: telephone,
       status: "pending",
       basket_types: [],
-      commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
-      subscription_plan: "starter",
-      subscription_status: "active",
     })
     .select("id")
     .single();
@@ -136,7 +115,7 @@ export async function inscriptionCommercant(
     return { success: false, error: "Erreur lors de l'upload des documents." };
   }
 
-  // Update commerce with document paths (stored as storage paths for signed URL generation)
+  // Update commerce with document paths
   await supabase
     .from("commerces")
     .update({

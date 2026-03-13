@@ -46,10 +46,11 @@ export type Database = {
           contact: string
           created_at: string
           department: string | null
+          email: string
           id: string
           id_document_url: string | null
           name: string
-          profile_id: string
+          profile_id: string | null
           rna_document_url: string | null
           status: Database["public"]["Enums"]["association_status"]
           updated_at: string
@@ -64,10 +65,11 @@ export type Database = {
           contact: string
           created_at?: string
           department?: string | null
+          email: string
           id?: string
           id_document_url?: string | null
           name: string
-          profile_id: string
+          profile_id?: string | null
           rna_document_url?: string | null
           status?: Database["public"]["Enums"]["association_status"]
           updated_at?: string
@@ -82,10 +84,11 @@ export type Database = {
           contact?: string
           created_at?: string
           department?: string | null
+          email?: string
           id?: string
           id_document_url?: string | null
           name?: string
-          profile_id?: string
+          profile_id?: string | null
           rna_document_url?: string | null
           status?: Database["public"]["Enums"]["association_status"]
           updated_at?: string
@@ -218,7 +221,7 @@ export type Database = {
           basket_types: Database["public"]["Enums"]["basket_type"][]
           city: string
           commerce_type: string
-          commission_rate: number
+          commission_rate: number | null
           created_at: string
           description: string | null
           email: string
@@ -237,7 +240,7 @@ export type Database = {
           phone: string | null
           photos: string[] | null
           postal_code: string | null
-          profile_id: string
+          profile_id: string | null
           status: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id: string | null
           stripe_customer_id: string | null
@@ -258,7 +261,7 @@ export type Database = {
           basket_types?: Database["public"]["Enums"]["basket_type"][]
           city: string
           commerce_type: string
-          commission_rate?: number
+          commission_rate?: number | null
           created_at?: string
           description?: string | null
           email: string
@@ -277,7 +280,7 @@ export type Database = {
           phone?: string | null
           photos?: string[] | null
           postal_code?: string | null
-          profile_id: string
+          profile_id?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -298,7 +301,7 @@ export type Database = {
           basket_types?: Database["public"]["Enums"]["basket_type"][]
           city?: string
           commerce_type?: string
-          commission_rate?: number
+          commission_rate?: number | null
           created_at?: string
           description?: string | null
           email?: string
@@ -317,7 +320,7 @@ export type Database = {
           phone?: string | null
           photos?: string[] | null
           postal_code?: string | null
-          profile_id?: string
+          profile_id?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
           stripe_customer_id?: string | null

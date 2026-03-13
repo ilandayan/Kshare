@@ -17,25 +17,18 @@ import { Separator } from "@/components/ui/separator";
 import { COMMERCE_TYPES, COMMERCE_SUBTYPES, HASHGAKHA_LIST } from "@/lib/constants";
 import { inscriptionCommercant } from "./_actions";
 
-const schema = z
-  .object({
-    email: z.string().email("Email invalide"),
-    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-    confirmPassword: z.string().min(1, "Confirmation du mot de passe requise"),
-    nom: z.string().min(2, "Le nom du commerce est requis"),
-    commerceType: z.string().min(1, "Le type de commerce est requis"),
-    adresse: z.string().min(5, "L'adresse est requise"),
-    ville: z.string().min(2, "La ville est requise"),
-    codePostal: z.string().regex(/^\d{5}$/, "Code postal invalide (5 chiffres)"),
-    hashgakha: z.string().min(1, "La cacherout est requise"),
-    telephone: z.string().regex(/^(\+33|0)[0-9]{9}$/, "Numéro de téléphone invalide"),
-    siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres"),
-    cgu: z.boolean().refine((v) => v === true, { message: "Vous devez accepter les CGU" }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
-    path: ["confirmPassword"],
-  });
+const schema = z.object({
+  nom: z.string().min(2, "Le nom du commerce est requis"),
+  email: z.string().email("Email invalide"),
+  commerceType: z.string().min(1, "Le type de commerce est requis"),
+  adresse: z.string().min(5, "L'adresse est requise"),
+  ville: z.string().min(2, "La ville est requise"),
+  codePostal: z.string().regex(/^\d{5}$/, "Code postal invalide (5 chiffres)"),
+  hashgakha: z.string().min(1, "La cacherout est requise"),
+  telephone: z.string().regex(/^(\+33|0)[0-9]{9}$/, "Numéro de téléphone invalide"),
+  siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres"),
+  cgu: z.boolean().refine((v) => v === true, { message: "Vous devez accepter les CGU" }),
+});
 
 type FormValues = z.infer<typeof schema>;
 
@@ -74,7 +67,6 @@ export default function InscriptionCommercantPage() {
     try {
       const fd = new FormData();
       fd.append("email", data.email);
-      fd.append("password", data.password);
       fd.append("nom", data.nom);
       fd.append("commerceType", data.commerceType);
       fd.append("adresse", data.adresse);
@@ -110,8 +102,11 @@ export default function InscriptionCommercantPage() {
             <p className="text-muted-foreground text-sm leading-relaxed">
               Votre demande est bien enregistrée, nous reviendrons vers vous sous 24h pour valider votre compte partenaire.
             </p>
+            <p className="text-muted-foreground text-sm leading-relaxed mt-2">
+              Une fois validé, vous recevrez un email pour créer votre mot de passe et accéder à votre espace.
+            </p>
             <Button asChild className="mt-6">
-              <Link href="/connexion">Retour à la connexion</Link>
+              <Link href="/">Retour à l&apos;accueil</Link>
             </Button>
           </CardContent>
         </Card>
@@ -131,12 +126,22 @@ export default function InscriptionCommercantPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Compte */}
+            {/* Informations commerce */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">Informations de connexion</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Informations du commerce</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="email">Email professionnel</Label>
+                  <Label htmlFor="nom">Nom du commerce <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="nom"
+                    placeholder="Boucherie Lévy"
+                    {...register("nom")}
+                  />
+                  {errors.nom && <p className="text-xs text-destructive">{errors.nom.message}</p>}
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="email">Email professionnel <span className="text-destructive">*</span></Label>
                   <Input
                     id="email"
                     type="email"
@@ -146,57 +151,14 @@ export default function InscriptionCommercantPage() {
                   />
                   {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...register("password")}
-                  />
-                  {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...register("confirmPassword")}
-                  />
-                  {errors.confirmPassword && (
-                    <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Informations commerce */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">Informations du commerce</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="nom">Nom du commerce</Label>
-                  <Input
-                    id="nom"
-                    placeholder="Boucherie Lévy"
-                    {...register("nom")}
-                  />
-                  {errors.nom && <p className="text-xs text-destructive">{errors.nom.message}</p>}
-                </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="commerceType">Type de commerce</Label>
+                  <Label htmlFor="commerceType">Type de commerce <span className="text-destructive">*</span></Label>
                   <Select onValueChange={(v) => {
                     setSelectedBaseType(v);
                     setSelectedSubtypes([]);
                     const subtypeConfig = COMMERCE_SUBTYPES[v];
                     if (subtypeConfig) {
-                      // Has subtypes → don't set commerceType yet, wait for sub-selection
                       setValue("commerceType", "", { shouldValidate: false });
                     } else {
                       setValue("commerceType", v, { shouldValidate: true });
@@ -235,22 +197,18 @@ export default function InscriptionCommercantPage() {
                                   onChange={() => {
                                     let next: string[];
                                     if (config.multi) {
-                                      // Checkbox: toggle
                                       next = isChecked
                                         ? selectedSubtypes.filter((s) => s !== opt.value)
                                         : [...selectedSubtypes, opt.value];
                                     } else {
-                                      // Radio: exclusive
                                       next = [opt.value];
                                     }
                                     setSelectedSubtypes(next);
 
-                                    // Compute composite commerce type
                                     let compositeType = "";
                                     if (next.length === 0) {
                                       compositeType = "";
                                     } else if (config.multi && next.length === config.options.length) {
-                                      // All selected → use base type (e.g. "Traiteur")
                                       compositeType = selectedBaseType;
                                     } else if (next.length === 1) {
                                       compositeType = `${selectedBaseType} ${next[0]}`;
@@ -281,7 +239,7 @@ export default function InscriptionCommercantPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hashgakha">Cacherout (supervision casher)</Label>
+                  <Label htmlFor="hashgakha">Cacherout (supervision casher) <span className="text-destructive">*</span></Label>
                   <Select onValueChange={(v) => {
                     if (v === "Autre") {
                       setHashgakhaAutre(true);
@@ -315,7 +273,7 @@ export default function InscriptionCommercantPage() {
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="adresse">Adresse</Label>
+                  <Label htmlFor="adresse">Adresse <span className="text-destructive">*</span></Label>
                   <Input
                     id="adresse"
                     placeholder="12 rue de la Paix"
@@ -325,13 +283,13 @@ export default function InscriptionCommercantPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ville">Ville</Label>
+                  <Label htmlFor="ville">Ville <span className="text-destructive">*</span></Label>
                   <Input id="ville" placeholder="Paris" {...register("ville")} />
                   {errors.ville && <p className="text-xs text-destructive">{errors.ville.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="codePostal">Code postal</Label>
+                  <Label htmlFor="codePostal">Code postal <span className="text-destructive">*</span></Label>
                   <Input id="codePostal" placeholder="75001" {...register("codePostal")} />
                   {errors.codePostal && (
                     <p className="text-xs text-destructive">{errors.codePostal.message}</p>
@@ -339,7 +297,7 @@ export default function InscriptionCommercantPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="telephone">Téléphone</Label>
+                  <Label htmlFor="telephone">Téléphone <span className="text-destructive">*</span></Label>
                   <Input
                     id="telephone"
                     type="tel"
@@ -353,7 +311,7 @@ export default function InscriptionCommercantPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="siret">Numéro SIRET</Label>
+                  <Label htmlFor="siret">Numéro SIRET <span className="text-destructive">*</span></Label>
                   <Input
                     id="siret"
                     placeholder="12345678901234"

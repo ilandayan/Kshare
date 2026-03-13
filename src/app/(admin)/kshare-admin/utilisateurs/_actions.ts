@@ -138,10 +138,12 @@ export async function deleteCommerce(commerceId: string): Promise<ActionResult> 
   await pauseStripeSubscription(supabase, commerceId);
 
   // Ban the auth user permanently (prevents login, preserves data)
-  const adminClient = createAdminClient();
-  await adminClient.auth.admin.updateUserById(commerce.profile_id, {
-    ban_duration: "876000h",
-  });
+  if (commerce.profile_id) {
+    const adminClient = createAdminClient();
+    await adminClient.auth.admin.updateUserById(commerce.profile_id, {
+      ban_duration: "876000h",
+    });
+  }
 
   revalidatePath("/kshare-admin/utilisateurs");
   return { success: true };
@@ -208,10 +210,12 @@ export async function deleteAssociation(assoId: string): Promise<ActionResult> {
   if (error) return { success: false, error: "Erreur lors de l'archivage de l'association." };
 
   // Ban the auth user permanently (prevents login, preserves data)
-  const adminClient = createAdminClient();
-  await adminClient.auth.admin.updateUserById(asso.profile_id, {
-    ban_duration: "876000h",
-  });
+  if (asso.profile_id) {
+    const adminClient = createAdminClient();
+    await adminClient.auth.admin.updateUserById(asso.profile_id, {
+      ban_duration: "876000h",
+    });
+  }
 
   revalidatePath("/kshare-admin/utilisateurs");
   return { success: true };

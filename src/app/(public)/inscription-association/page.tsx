@@ -15,26 +15,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { inscriptionAssociation } from "./_actions";
 
-const schema = z
-  .object({
-    email: z.string().email("Email invalide"),
-    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-    confirmPassword: z.string().min(1, "Confirmation du mot de passe requise"),
-    nomAsso: z.string().min(2, "Le nom de l'association est requis"),
-    rna: z
-      .string()
-      .regex(/^W\d{9}$/, "Numéro RNA invalide (format : W123456789)"),
-    adresse: z.string().min(5, "L'adresse est requise"),
-    ville: z.string().min(2, "La ville est requise"),
-    codePostal: z.string().regex(/^\d{5}$/, "Code postal invalide (5 chiffres)"),
-    nomResponsable: z.string().min(2, "Le nom du responsable est requis"),
-    telephone: z.string().regex(/^(\+33|0)[0-9]{9}$/, "Numéro de téléphone invalide"),
-    cgu: z.boolean().refine((v) => v === true, { message: "Vous devez accepter les CGU" }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
-    path: ["confirmPassword"],
-  });
+const schema = z.object({
+  nomAsso: z.string().min(2, "Le nom de l'association est requis"),
+  email: z.string().email("Email invalide"),
+  rna: z
+    .string()
+    .regex(/^W\d{9}$/, "Numéro RNA invalide (format : W123456789)"),
+  adresse: z.string().min(5, "L'adresse est requise"),
+  ville: z.string().min(2, "La ville est requise"),
+  codePostal: z.string().regex(/^\d{5}$/, "Code postal invalide (5 chiffres)"),
+  nomResponsable: z.string().min(2, "Le nom du responsable est requis"),
+  telephone: z.string().regex(/^(\+33|0)[0-9]{9}$/, "Numéro de téléphone invalide"),
+  cgu: z.boolean().refine((v) => v === true, { message: "Vous devez accepter les CGU" }),
+});
 
 type FormValues = z.infer<typeof schema>;
 
@@ -68,7 +61,6 @@ export default function InscriptionAssociationPage() {
     try {
       const fd = new FormData();
       fd.append("email", data.email);
-      fd.append("password", data.password);
       fd.append("nomAsso", data.nomAsso);
       fd.append("rna", data.rna);
       fd.append("adresse", data.adresse);
@@ -103,8 +95,11 @@ export default function InscriptionAssociationPage() {
             <p className="text-muted-foreground text-sm leading-relaxed">
               Votre demande est bien enregistrée, nous reviendrons vers vous sous 24h pour valider votre compte association.
             </p>
+            <p className="text-muted-foreground text-sm leading-relaxed mt-2">
+              Une fois validé, vous recevrez un email pour créer votre mot de passe et accéder à votre espace.
+            </p>
             <Button asChild className="mt-6">
-              <Link href="/connexion">Retour à la connexion</Link>
+              <Link href="/">Retour à l&apos;accueil</Link>
             </Button>
           </CardContent>
         </Card>
@@ -124,12 +119,22 @@ export default function InscriptionAssociationPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Compte */}
+            {/* Informations association */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">Informations de connexion</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Informations de l&apos;association</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="nomAsso">Nom de l&apos;association <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="nomAsso"
+                    placeholder="Association Kol Be'Seder"
+                    {...register("nomAsso")}
+                  />
+                  {errors.nomAsso && <p className="text-xs text-destructive">{errors.nomAsso.message}</p>}
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
                   <Input
                     id="email"
                     type="email"
@@ -139,52 +144,10 @@ export default function InscriptionAssociationPage() {
                   />
                   {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...register("password")}
-                  />
-                  {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...register("confirmPassword")}
-                  />
-                  {errors.confirmPassword && (
-                    <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Informations association */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">Informations de l&apos;association</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="nomAsso">Nom de l&apos;association</Label>
-                  <Input
-                    id="nomAsso"
-                    placeholder="Association Kol Be'Seder"
-                    {...register("nomAsso")}
-                  />
-                  {errors.nomAsso && <p className="text-xs text-destructive">{errors.nomAsso.message}</p>}
-                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="rna">
-                    Numéro RNA{" "}
+                    Numéro RNA <span className="text-destructive">*</span>{" "}
                     <span className="text-muted-foreground font-normal">(ex: W123456789)</span>
                   </Label>
                   <Input
@@ -195,32 +158,8 @@ export default function InscriptionAssociationPage() {
                   {errors.rna && <p className="text-xs text-destructive">{errors.rna.message}</p>}
                 </div>
 
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="adresse">Adresse du siège</Label>
-                  <Input
-                    id="adresse"
-                    placeholder="12 rue de la République"
-                    {...register("adresse")}
-                  />
-                  {errors.adresse && <p className="text-xs text-destructive">{errors.adresse.message}</p>}
-                </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="ville">Ville</Label>
-                  <Input id="ville" placeholder="Paris" {...register("ville")} />
-                  {errors.ville && <p className="text-xs text-destructive">{errors.ville.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="codePostal">Code postal</Label>
-                  <Input id="codePostal" placeholder="75011" {...register("codePostal")} />
-                  {errors.codePostal && (
-                    <p className="text-xs text-destructive">{errors.codePostal.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nomResponsable">Nom du responsable</Label>
+                  <Label htmlFor="nomResponsable">Nom du responsable <span className="text-destructive">*</span></Label>
                   <Input
                     id="nomResponsable"
                     placeholder="Prénom Nom"
@@ -231,8 +170,32 @@ export default function InscriptionAssociationPage() {
                   )}
                 </div>
 
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="adresse">Adresse du siège <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="adresse"
+                    placeholder="12 rue de la République"
+                    {...register("adresse")}
+                  />
+                  {errors.adresse && <p className="text-xs text-destructive">{errors.adresse.message}</p>}
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="telephone">Téléphone</Label>
+                  <Label htmlFor="ville">Ville <span className="text-destructive">*</span></Label>
+                  <Input id="ville" placeholder="Paris" {...register("ville")} />
+                  {errors.ville && <p className="text-xs text-destructive">{errors.ville.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="codePostal">Code postal <span className="text-destructive">*</span></Label>
+                  <Input id="codePostal" placeholder="75011" {...register("codePostal")} />
+                  {errors.codePostal && (
+                    <p className="text-xs text-destructive">{errors.codePostal.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="telephone">Téléphone <span className="text-destructive">*</span></Label>
                   <Input
                     id="telephone"
                     type="tel"
@@ -352,7 +315,7 @@ export default function InscriptionAssociationPage() {
 
             <p className="text-center text-sm text-muted-foreground">
               Déjà inscrit ?{" "}
-              <Link href="/connexion" className="text-primary hover:underline font-medium">
+              <Link href="/connexion?role=association" className="text-primary hover:underline font-medium">
                 Se connecter
               </Link>
             </p>
