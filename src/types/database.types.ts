@@ -225,6 +225,10 @@ export type Database = {
           created_at: string
           description: string | null
           email: string
+          contract_ip: string | null
+          contract_pdf_url: string | null
+          contract_signed_at: string | null
+          contract_user_agent: string | null
           hashgakha: string
           iban: string | null
           id: string
@@ -262,6 +266,10 @@ export type Database = {
           city: string
           commerce_type: string
           commission_rate?: number | null
+          contract_ip?: string | null
+          contract_pdf_url?: string | null
+          contract_signed_at?: string | null
+          contract_user_agent?: string | null
           created_at?: string
           description?: string | null
           email: string
@@ -302,6 +310,10 @@ export type Database = {
           city?: string
           commerce_type?: string
           commission_rate?: number | null
+          contract_ip?: string | null
+          contract_pdf_url?: string | null
+          contract_signed_at?: string | null
+          contract_user_agent?: string | null
           created_at?: string
           description?: string | null
           email?: string

@@ -46,6 +46,10 @@ interface SendEmailParams {
   replyTo?: string;
 }
 
+interface SendEmailWithAttachmentParams extends SendEmailParams {
+  attachments: { filename: string; content: Buffer }[];
+}
+
 // ── Envoi générique ──────────────────────────────────────────────
 
 const FROM_ADDRESS = "Kshare <noreply@k-share.fr>";
@@ -81,6 +85,52 @@ export async function sendEmail({
 
     if (error) {
       console.error("[resend] Send error:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("[resend] Unexpected error:", err);
+    return false;
+  }
+}
+
+/**
+ * Envoie un email avec pièce(s) jointe(s).
+ */
+export async function sendEmailWithAttachment({
+  to,
+  subject,
+  html,
+  replyTo,
+  attachments,
+}: SendEmailWithAttachmentParams): Promise<boolean> {
+  const resend = getResend();
+
+  if (!resend) {
+    console.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.info("📧 EMAIL + PJ (dev fallback)");
+    console.info(`To: ${to}`);
+    console.info(`Subject: ${subject}`);
+    console.info(`Attachments: ${attachments.map((a) => a.filename).join(", ")}`);
+    console.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    return true;
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_ADDRESS,
+      to,
+      subject,
+      html,
+      replyTo: replyTo ?? ADMIN_EMAIL,
+      attachments: attachments.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+      })),
+    });
+
+    if (error) {
+      console.error("[resend] Send with attachment error:", error);
       return false;
     }
     return true;
@@ -473,6 +523,35 @@ export function emailCompteRefuse(name: string, type: "commerce" | "association"
         Si vous pensez qu'il s'agit d'une erreur, n'hésitez pas à nous contacter à
         <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
       </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
+export function emailContratSigne(commerceName: string): {
+  subject: string;
+  html: string;
+} {
+  const safeName = escapeHtml(commerceName);
+  return {
+    subject: "Kshare — Votre contrat de partenariat signé",
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Contrat signé avec succès !</h2>
+      <p style="color:#333;line-height:1.7;">
+        Bonjour ${safeName},
+      </p>
+      <p style="color:#333;line-height:1.7;">
+        Votre contrat de partenariat Kshare a bien été signé électroniquement. Vous trouverez en pièce jointe
+        une copie du contrat au format PDF pour vos archives.
+      </p>
+      <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#166534;font-size:14px;">
+          ✅ Votre espace commerçant est maintenant pleinement actif. Vous pouvez commencer à publier vos paniers !
+        </p>
+      </div>
+      <a href="https://k-share.fr/shop/dashboard" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Accéder à mon espace
+      </a>
       <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
     `),
   };

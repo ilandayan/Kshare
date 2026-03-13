@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
@@ -20,9 +21,16 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("name, status")
+    .select("name, status, contract_signed_at")
     .eq("profile_id", user.id)
     .single();
+
+  // ── Blocage contrat : rediriger vers /shop/contrat si non signé ──
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? "";
+  if (!commerce?.contract_signed_at && !pathname.endsWith("/shop/contrat")) {
+    redirect("/shop/contrat");
+  }
 
   const commerceName = commerce?.name ?? "Mon commerce";
   const userInitial = (profile?.full_name ?? commerceName).charAt(0).toUpperCase();

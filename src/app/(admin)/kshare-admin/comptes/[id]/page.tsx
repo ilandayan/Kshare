@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, FileText, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileText, ExternalLink, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -69,16 +69,17 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   if (accountType === "commerce") {
     const { data: commerce } = await supabase
       .from("commerces")
-      .select("id, name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url")
+      .select("id, name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url, contract_signed_at, contract_pdf_url")
       .eq("id", id)
       .single();
 
     if (!commerce) notFound();
 
     // Generate signed URLs for documents
-    const [kbisSignedUrl, idDocSignedUrl] = await Promise.all([
+    const [kbisSignedUrl, idDocSignedUrl, contractSignedUrl] = await Promise.all([
       getSignedUrl(supabase, commerce.kbis_url),
       getSignedUrl(supabase, commerce.id_document_url),
+      getSignedUrl(supabase, commerce.contract_pdf_url),
     ]);
 
     return (
@@ -153,6 +154,43 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
             <CardContent className="space-y-3">
               <DocumentLink url={kbisSignedUrl} label="Extrait KBIS" />
               <DocumentLink url={idDocSignedUrl} label="Pièce d'identité du dirigeant" />
+            </CardContent>
+          </Card>
+
+          {/* Contrat de partenariat */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Contrat de partenariat</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3">
+                {commerce.contract_signed_at ? (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-green-700">Signé</p>
+                      <p className="text-xs text-muted-foreground">
+                        le{" "}
+                        {new Date(commerce.contract_signed_at).toLocaleDateString("fr-FR", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+                    <p className="text-sm font-medium text-amber-600">Non signé</p>
+                  </>
+                )}
+              </div>
+              {commerce.contract_signed_at && contractSignedUrl && (
+                <DocumentLink url={contractSignedUrl} label="Télécharger le contrat signé (PDF)" />
+              )}
             </CardContent>
           </Card>
 

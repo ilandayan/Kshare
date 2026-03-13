@@ -125,6 +125,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Ajouter le pathname dans les headers pour lecture dans les layouts
+  supabaseResponse.headers.set("x-pathname", pathname);
+
   return supabaseResponse;
 }
 
