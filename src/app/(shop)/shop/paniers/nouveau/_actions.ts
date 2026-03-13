@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { validateBasketPrice } from "@/lib/stripe/client";
+import { BASKET_TYPES_BY_COMMERCE } from "@/lib/constants";
 import type { Database } from "@/types/database.types";
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
@@ -34,7 +35,7 @@ export async function createBasket(data: CreateBasketData): Promise<CreateBasket
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, status, subscription_plan")
+    .select("id, status, subscription_plan, commerce_type")
     .eq("profile_id", user.id)
     .single();
 
@@ -49,6 +50,17 @@ export async function createBasket(data: CreateBasketData): Promise<CreateBasket
   // Must choose a plan before publishing
   if (!commerce.subscription_plan) {
     return { success: false, error: "Vous devez choisir un plan (Starter ou Pro) avant de publier des paniers." };
+  }
+
+  // Validate basket type against commerce type rules
+  if (commerce.commerce_type) {
+    const allowedTypes = BASKET_TYPES_BY_COMMERCE[commerce.commerce_type];
+    if (allowedTypes && !allowedTypes.includes(data.type)) {
+      return {
+        success: false,
+        error: `Un commerce de type "${commerce.commerce_type}" ne peut pas créer de panier "${data.type}".`,
+      };
+    }
   }
 
   // Server-side validation of prices and quantities

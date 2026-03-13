@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { BASKET_TYPES_BY_COMMERCE } from "@/lib/constants";
 import type { Database } from "@/types/database.types";
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
@@ -32,7 +33,7 @@ export async function createDonationBasket(
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, status")
+    .select("id, status, commerce_type")
     .eq("profile_id", user.id)
     .single();
 
@@ -49,6 +50,17 @@ export async function createDonationBasket(
       success: false,
       error: "Votre compte doit être validé pour créer des paniers.",
     };
+  }
+
+  // Validate basket type against commerce type rules
+  if (commerce.commerce_type) {
+    const allowedTypes = BASKET_TYPES_BY_COMMERCE[commerce.commerce_type];
+    if (allowedTypes && !allowedTypes.includes(data.type)) {
+      return {
+        success: false,
+        error: `Un commerce de type "${commerce.commerce_type}" ne peut pas créer de panier "${data.type}".`,
+      };
+    }
   }
 
   if (
