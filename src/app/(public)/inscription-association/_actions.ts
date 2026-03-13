@@ -32,11 +32,10 @@ export async function inscriptionAssociation(
   const adresse = (fd.get("adresse") as string)?.trim();
   const ville = (fd.get("ville") as string)?.trim();
   const codePostal = (fd.get("codePostal") as string)?.trim();
-  const nomResponsable = (fd.get("nomResponsable") as string)?.trim();
   const telephone = (fd.get("telephone") as string)?.trim();
 
   // ── Basic validation ──
-  if (!email || !nomAsso || !rna || !adresse || !ville || !codePostal || !nomResponsable || !telephone) {
+  if (!email || !nomAsso || !rna || !adresse || !ville || !codePostal || !telephone) {
     return { success: false, error: "Tous les champs sont obligatoires." };
   }
 
@@ -74,7 +73,7 @@ export async function inscriptionAssociation(
       profile_id: null,
       name: nomAsso,
       email,
-      contact: `${nomResponsable} · ${telephone}`,
+      contact: telephone,
       address: adresse,
       city: ville,
       department,

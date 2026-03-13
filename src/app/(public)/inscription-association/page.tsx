@@ -24,7 +24,6 @@ const schema = z.object({
   adresse: z.string().min(5, "L'adresse est requise"),
   ville: z.string().min(2, "La ville est requise"),
   codePostal: z.string().regex(/^\d{5}$/, "Code postal invalide (5 chiffres)"),
-  nomResponsable: z.string().min(2, "Le nom du responsable est requis"),
   telephone: z.string().regex(/^(\+33|0)[0-9]{9}$/, "Numéro de téléphone invalide"),
   cgu: z.boolean().refine((v) => v === true, { message: "Vous devez accepter les CGU" }),
 });
@@ -66,7 +65,6 @@ export default function InscriptionAssociationPage() {
       fd.append("adresse", data.adresse);
       fd.append("ville", data.ville);
       fd.append("codePostal", data.codePostal);
-      fd.append("nomResponsable", data.nomResponsable);
       fd.append("telephone", data.telephone);
       fd.append("rnaDocument", rnaFile!);
       fd.append("idDocument", idDocFile!);
@@ -133,18 +131,6 @@ export default function InscriptionAssociationPage() {
                   {errors.nomAsso && <p className="text-xs text-destructive">{errors.nomAsso.message}</p>}
                 </div>
 
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="contact@monassociation.org"
-                    autoComplete="email"
-                    {...register("email")}
-                  />
-                  {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="rna">
                     Numéro RNA <span className="text-destructive">*</span>{" "}
@@ -156,18 +142,6 @@ export default function InscriptionAssociationPage() {
                     {...register("rna")}
                   />
                   {errors.rna && <p className="text-xs text-destructive">{errors.rna.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nomResponsable">Nom du responsable <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="nomResponsable"
-                    placeholder="Prénom Nom"
-                    {...register("nomResponsable")}
-                  />
-                  {errors.nomResponsable && (
-                    <p className="text-xs text-destructive">{errors.nomResponsable.message}</p>
-                  )}
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
@@ -192,6 +166,18 @@ export default function InscriptionAssociationPage() {
                   {errors.codePostal && (
                     <p className="text-xs text-destructive">{errors.codePostal.message}</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="contact@monassociation.org"
+                    autoComplete="email"
+                    {...register("email")}
+                  />
+                  {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                 </div>
 
                 <div className="space-y-2">
