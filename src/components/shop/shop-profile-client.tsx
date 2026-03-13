@@ -421,8 +421,8 @@ export function ShopProfileClient({
         </Card>
       </div>
 
-      {/* ── Right column: Image + Logo ── */}
-      <div className="space-y-6">
+      {/* ── Right column: Image + Logo side by side ── */}
+      <div className="grid grid-cols-[1fr_auto] gap-4">
         {/* Cover image */}
         <Card>
           <CardHeader className="pb-3">
