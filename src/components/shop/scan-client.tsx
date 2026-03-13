@@ -136,12 +136,18 @@ export function ScanClient() {
     setOrder(null);
 
     startTransition(async () => {
-      const result = await rechercherParCode(token.trim());
-      searchingRef.current = false;
-      if (result.success) {
-        setOrder(result.order);
-      } else {
-        setError(result.error);
+      try {
+        const result = await rechercherParCode(token.trim());
+        searchingRef.current = false;
+        if (result.success) {
+          setOrder(result.order);
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        searchingRef.current = false;
+        console.error("[scan-client] Server action error:", err);
+        setError("Erreur de connexion. Veuillez réessayer.");
       }
     });
   }, []);
