@@ -102,9 +102,11 @@ export const HASHGAKHA_LIST = [
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   created: "Créée",
   paid: "Payée",
+  pending_association: "En attente (asso)",
   ready_for_pickup: "Prête au retrait",
   picked_up: "Récupérée",
   no_show: "Non récupérée",
+  expired: "Expirée",
   refunded: "Remboursée",
   cancelled_admin: "Annulée (admin)",
 };

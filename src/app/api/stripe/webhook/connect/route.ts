@@ -121,18 +121,39 @@ async function handleDisputeCreated(dispute: Stripe.Dispute, accountId: string):
 
   if (!commerce) return;
 
-  // Try to find order by charge
+  // Find order by payment_intent (reliable link between dispute and order)
   const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+  const paymentIntentId = typeof dispute.payment_intent === "string"
+    ? dispute.payment_intent
+    : dispute.payment_intent?.id;
   let orderId: string | null = null;
 
-  if (chargeId) {
+  if (paymentIntentId) {
     const { data: order } = await supabase
       .from("orders")
       .select("id")
-      .eq("commerce_id", commerce.id)
-      .limit(1)
+      .eq("stripe_payment_intent_id", paymentIntentId)
       .single();
     orderId = order?.id ?? null;
+  } else if (chargeId) {
+    // Fallback: try to find by charge via Stripe API
+    try {
+      const stripe = getStripe();
+      const charge = await stripe.charges.retrieve(chargeId);
+      if (charge.payment_intent) {
+        const piId = typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent.id;
+        const { data: order } = await supabase
+          .from("orders")
+          .select("id")
+          .eq("stripe_payment_intent_id", piId)
+          .single();
+        orderId = order?.id ?? null;
+      }
+    } catch (err) {
+      console.error("[connect-webhook] Failed to resolve order from charge:", err);
+    }
   }
 
   await supabase.from("disputes").insert({

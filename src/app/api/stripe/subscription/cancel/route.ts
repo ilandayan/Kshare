@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
 import { checkRateLimit, getClientIp, PAYMENT_RATE_LIMIT } from "@/lib/rate-limit";
 import { logAuditEvent } from "@/lib/audit-log";
+import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         status: "active",
         plan: "starter",
         monthly_price: 0,
-        commission_rate: 18,
+        commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
         canceled_at: new Date().toISOString(),
         stripe_subscription_id: null,
       })
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .update({
         subscription_status: "active",
         subscription_plan: "starter",
-        commission_rate: 18,
+        commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
       })
       .eq("id", commerce.id);
 

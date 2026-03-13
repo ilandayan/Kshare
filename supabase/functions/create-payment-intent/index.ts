@@ -2,12 +2,20 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17";
 
-const ALLOWED_ORIGINS = [
+const IS_DEV = Deno.env.get("ENVIRONMENT") === "development";
+
+const PROD_ORIGINS = [
   "https://k-share.fr",
   "https://www.k-share.fr",
+];
+
+const DEV_ORIGINS = [
+  ...PROD_ORIGINS,
   "http://localhost:3000",
   "http://localhost:8081",
 ];
+
+const ALLOWED_ORIGINS = IS_DEV ? DEV_ORIGINS : PROD_ORIGINS;
 
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
@@ -16,6 +24,7 @@ function getCorsHeaders(req: Request): Record<string, string> {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
   };
 }
 
@@ -60,14 +69,19 @@ Deno.serve(async (req: Request) => {
     }
 
     // Parse request body
-    const { basket_id, amount } = await req.json() as {
+    const { basket_id, amount, quantity: reqQuantity } = await req.json() as {
       basket_id: string;
-      amount: number; // in cents
+      amount?: number; // in cents — validated against DB price
+      quantity?: number;
     };
 
-    if (!basket_id || !amount || amount <= 0) {
+    const quantity = reqQuantity && Number.isInteger(reqQuantity) && reqQuantity >= 1 && reqQuantity <= 99
+      ? reqQuantity
+      : 1;
+
+    if (!basket_id) {
       return new Response(
-        JSON.stringify({ error: "basket_id and amount are required" }),
+        JSON.stringify({ error: "basket_id is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -111,6 +125,12 @@ Deno.serve(async (req: Request) => {
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    if (quantity > remaining) {
+      return new Response(
+        JSON.stringify({ error: `Quantité insuffisante — ${remaining} disponible(s).` }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Validate commerce has Stripe Connect set up
     const commerce = basket.commerces as {
@@ -136,23 +156,33 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ── Fee calculations ──
+    // ── Server-side amount calculation from DB price (never trust client) ──
+    const basketAmountInCents = Math.round(basket.sold_price * quantity * 100);
+
+    // If client sent an amount, validate it matches DB price (tolerance: 1 cent)
+    if (amount !== undefined && Math.abs(amount - basketAmountInCents) > 1) {
+      return new Response(
+        JSON.stringify({ error: "Le montant ne correspond pas au prix du panier." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Plan-based commission rate (fallback to DB value then 18%)
     const PLAN_RATES: Record<string, number> = { starter: 18, pro: 12 };
     const commissionRate =
       PLAN_RATES[commerce.subscription_plan ?? "starter"] ??
       commerce.commission_rate ??
       18;
-    const commissionInCents = Math.round(amount * (commissionRate / 100));
+    const commissionInCents = Math.round(basketAmountInCents * (commissionRate / 100));
 
     // Service fee: 1.5% + 0.79€ (paid by client, kept by Kshare)
     const SERVICE_FEE_PERCENT = 0.015;
     const SERVICE_FEE_FIXED_CENTS = 79;
     const serviceFeeInCents =
-      Math.round(amount * SERVICE_FEE_PERCENT) + SERVICE_FEE_FIXED_CENTS;
+      Math.round(basketAmountInCents * SERVICE_FEE_PERCENT) + SERVICE_FEE_FIXED_CENTS;
 
     // Client pays basket price + service fee
-    const totalAmountInCents = amount + serviceFeeInCents;
+    const totalAmountInCents = basketAmountInCents + serviceFeeInCents;
     // Kshare keeps commission + service fee
     const applicationFee = commissionInCents + serviceFeeInCents;
 
@@ -179,11 +209,13 @@ Deno.serve(async (req: Request) => {
         basket_id,
         commerce_id: commerce.id,
         user_id: user.id,
+        quantity: String(quantity),
         commission_rate: String(commissionRate),
-        basket_amount: String(amount),
+        basket_amount: String(basketAmountInCents),
         commission_amount: String(commissionInCents),
         service_fee_amount: String(serviceFeeInCents),
         idempotency_key: idempotencyKey,
+        source: "mobile",
       },
       automatic_payment_methods: { enabled: true },
     });
@@ -192,17 +224,30 @@ Deno.serve(async (req: Request) => {
     const pickupToken = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Create order in Supabase (status: created, awaiting payment confirmation)
+    const basketAmountEur = basketAmountInCents / 100;
+    const commissionAmountEur = commissionInCents / 100;
+    const serviceFeeAmountEur = serviceFeeInCents / 100;
+    const netAmountEur = basketAmountEur - commissionAmountEur;
+
     const { data: order, error: orderError } = await adminClient
       .from("orders")
       .insert({
         basket_id,
         client_id: user.id,
-        quantity: 1,
-        total_amount: totalAmountInCents / 100, // store in euros (basket + service fee)
+        commerce_id: commerce.id,
+        quantity,
+        total_amount: basketAmountEur,
+        unit_price: basket.sold_price,
+        commission_amount: commissionAmountEur,
+        net_amount: netAmountEur,
+        service_fee_amount: serviceFeeAmountEur,
         status: "created",
         stripe_payment_intent_id: paymentIntent.id,
         is_donation: basket.is_donation ?? false,
-        qr_code: pickupToken,
+        qr_code_token: pickupToken,
+        pickup_start: basket.pickup_start,
+        pickup_end: basket.pickup_end,
+        pickup_date: basket.day,
       })
       .select("id")
       .single();
@@ -213,18 +258,29 @@ Deno.serve(async (req: Request) => {
       throw new Error("Failed to create order: " + orderError?.message);
     }
 
-    // Reserve basket quantity optimistically
-    await adminClient
-      .from("baskets")
-      .update({ quantity_reserved: basket.quantity_reserved + 1 })
-      .eq("id", basket_id);
+    // Reserve basket quantity atomically (prevents race conditions)
+    const { data: reserved, error: reserveError } = await adminClient
+      .rpc("reserve_basket_quantity", {
+        p_basket_id: basket_id,
+        p_quantity: quantity,
+      });
+
+    if (reserveError || reserved === false) {
+      // Rollback: cancel the payment intent and order
+      await stripe.paymentIntents.cancel(paymentIntent.id).catch(() => {});
+      await adminClient.from("orders").delete().eq("id", order.id);
+      return new Response(
+        JSON.stringify({ error: "Ce panier vient d'être réservé par quelqu'un d'autre." }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     return new Response(
       JSON.stringify({
         clientSecret: paymentIntent.client_secret,
         orderId: order.id,
         pickupToken,
-        basketAmountCents: amount,
+        basketAmountCents: basketAmountInCents,
         serviceFeeCents: serviceFeeInCents,
         totalAmountCents: totalAmountInCents,
       }),

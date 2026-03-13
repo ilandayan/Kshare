@@ -112,8 +112,9 @@ function wrapHtml(content: string): string {
   <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;border:1px solid #e2e5f0;overflow:hidden;">
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#3744C8,#5B6EF5);padding:28px 32px;">
-      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">
-        🧺 Kshare
+      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.3px;display:flex;align-items:center;gap:0;">
+        <img src="https://k-share.fr/logo-k-blanc.png" alt="K" width="40" height="40" style="display:inline-block;vertical-align:middle;margin-left:-2px;" />
+        <span style="position:relative;left:-5px;top:3px;">share</span>
       </h1>
     </div>
     <!-- Body -->
@@ -122,8 +123,12 @@ function wrapHtml(content: string): string {
     </div>
     <!-- Footer -->
     <div style="padding:20px 32px;background:#f8f9fc;border-top:1px solid #e2e5f0;">
+      <p style="margin:0 0 8px;text-align:center;">
+        <img src="https://k-share.fr/logo.png" alt="Kshare" width="20" height="20" style="display:inline-block;vertical-align:middle;" />
+        <span style="font-size:13px;font-weight:600;color:#3744C8;vertical-align:middle;margin-left:0;">share</span>
+      </p>
       <p style="margin:0;font-size:12px;color:#888;text-align:center;">
-        Kshare — Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
+        Ensemble contre le gaspillage, pour une alimentation casher accessible.<br/>
         <a href="https://k-share.fr" style="color:#3744C8;text-decoration:none;">k-share.fr</a>
         &nbsp;·&nbsp;
         <a href="mailto:contact@k-share.fr" style="color:#3744C8;text-decoration:none;">contact@k-share.fr</a>

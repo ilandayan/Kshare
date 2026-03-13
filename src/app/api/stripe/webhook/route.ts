@@ -55,10 +55,24 @@ async function handleCheckoutSessionCompleted(
 
   const isClientDonation = isDonation === "true";
   const quantityNum = parseInt(quantity, 10);
+  if (!Number.isFinite(quantityNum) || quantityNum < 1 || quantityNum > 999) {
+    console.error("[webhook] Invalid quantity in metadata:", quantity, session.id);
+    return;
+  }
   // basketAmount = price of baskets only (without service fee)
   const basketAmountNum = parseInt(basketAmount ?? legacyTotalAmount ?? "0", 10) / 100;
   const commissionAmountNum = parseInt(commissionAmount ?? "0", 10) / 100;
   const serviceFeeAmountNum = parseInt(serviceFeeAmount ?? "0", 10) / 100;
+
+  if (!Number.isFinite(basketAmountNum) || basketAmountNum < 0 || basketAmountNum > 99999) {
+    console.error("[webhook] Invalid basketAmount in metadata:", basketAmount, session.id);
+    return;
+  }
+  if (!Number.isFinite(commissionAmountNum) || commissionAmountNum < 0) {
+    console.error("[webhook] Invalid commissionAmount in metadata:", commissionAmount, session.id);
+    return;
+  }
+
   const netAmountNum = basketAmountNum - commissionAmountNum;
 
   // Fetch basket info for pickup times
@@ -213,6 +227,129 @@ async function handleCheckoutSessionCompleted(
         .eq("id", basketId);
     }
   }
+}
+
+/**
+ * Handle payment_intent.succeeded — confirms orders created by the mobile app.
+ * The mobile flow creates an order with status "created" + a PaymentIntent.
+ * When Stripe confirms payment, we move the order to "paid", update basket
+ * quantities (reserved → sold), and create ledger entries.
+ */
+async function handlePaymentIntentSucceeded(
+  paymentIntent: Stripe.PaymentIntent
+): Promise<void> {
+  const supabase = createAdminClient();
+
+  const { source, basket_id, commerce_id, user_id, quantity, basket_amount, commission_amount, service_fee_amount } =
+    paymentIntent.metadata ?? {};
+
+  // Only handle mobile-created PaymentIntents (Checkout sessions have their own handler)
+  if (source !== "mobile") return;
+
+  if (!basket_id || !user_id) {
+    console.error("[webhook] Missing metadata in payment_intent.succeeded", paymentIntent.id);
+    return;
+  }
+
+  const quantityNum = parseInt(quantity ?? "1", 10);
+  if (!Number.isFinite(quantityNum) || quantityNum < 1 || quantityNum > 999) {
+    console.error("[webhook] Invalid quantity in PI metadata:", quantity, paymentIntent.id);
+    return;
+  }
+  const basketAmountNum = parseInt(basket_amount ?? "0", 10) / 100;
+  const commissionAmountNum = parseInt(commission_amount ?? "0", 10) / 100;
+  const serviceFeeAmountNum = parseInt(service_fee_amount ?? "0", 10) / 100;
+
+  if (!Number.isFinite(basketAmountNum) || basketAmountNum < 0 || basketAmountNum > 99999) {
+    console.error("[webhook] Invalid basket_amount in PI metadata:", basket_amount, paymentIntent.id);
+    return;
+  }
+
+  const netAmountNum = basketAmountNum - commissionAmountNum;
+
+  // Find the existing order created by the Edge Function
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("id, status, quantity")
+    .eq("stripe_payment_intent_id", paymentIntent.id)
+    .single();
+
+  if (orderError || !order) {
+    console.error("[webhook] Order not found for PaymentIntent:", paymentIntent.id);
+    return;
+  }
+
+  // Only confirm orders that are still in "created" status
+  if (order.status !== "created") {
+    console.log("[webhook] Order already processed:", order.id, order.status);
+    return;
+  }
+
+  // Update order to "paid"
+  const { error: updateError } = await supabase
+    .from("orders")
+    .update({ status: "paid" })
+    .eq("id", order.id);
+
+  if (updateError) {
+    console.error("[webhook] Failed to confirm order:", order.id, updateError);
+    return;
+  }
+
+  // Move quantities from reserved → sold on basket
+  const { data: basket } = await supabase
+    .from("baskets")
+    .select("quantity_reserved, quantity_sold")
+    .eq("id", basket_id)
+    .single();
+
+  if (basket) {
+    await supabase
+      .from("baskets")
+      .update({
+        quantity_reserved: Math.max(0, basket.quantity_reserved - quantityNum),
+        quantity_sold: basket.quantity_sold + quantityNum,
+      })
+      .eq("id", basket_id);
+  }
+
+  // Create ledger entries
+  if (commerce_id && commissionAmountNum > 0) {
+    try {
+      await createPaymentLedgerEntries({
+        commerceId: commerce_id,
+        orderId: order.id,
+        totalAmount: basketAmountNum,
+        commissionAmount: commissionAmountNum,
+        serviceFeeAmount: serviceFeeAmountNum,
+        netAmount: netAmountNum,
+        stripePaymentIntentId: paymentIntent.id,
+      });
+    } catch (ledgerErr) {
+      console.error("[webhook] Ledger entry failed (mobile):", ledgerErr);
+    }
+  }
+
+  // Fetch real Stripe fee
+  try {
+    const stripe = getStripe();
+    const pi = await stripe.paymentIntents.retrieve(paymentIntent.id, {
+      expand: ["latest_charge.balance_transaction"],
+    });
+    const charge = pi.latest_charge as Stripe.Charge | null;
+    const bt = charge?.balance_transaction as Stripe.BalanceTransaction | null;
+    if (bt) {
+      const stripeFee = bt.fee / 100;
+      await supabase
+        .from("orders")
+        .update({ stripe_fee_amount: stripeFee } as Record<string, unknown>)
+        .eq("id", order.id);
+    }
+  } catch (feeErr) {
+    console.error("[webhook] Failed to fetch Stripe fee (mobile):", feeErr);
+  }
+
+  console.log("[webhook] Mobile order confirmed:", order.id);
 }
 
 async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
@@ -417,6 +554,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case "checkout.session.completed":
         await handleCheckoutSessionCompleted(
           event.data.object as Stripe.Checkout.Session
+        );
+        break;
+
+      case "payment_intent.succeeded":
+        await handlePaymentIntentSucceeded(
+          event.data.object as Stripe.PaymentIntent
         );
         break;
 

@@ -13,8 +13,11 @@ interface NotificationPayload {
 }
 
 Deno.serve(async (req: Request) => {
-  // Verify the request is from Supabase (service role)
+  // Verify the request is authorized (service role key or shared secret)
   const authHeader = req.headers.get("Authorization");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
   if (!authHeader?.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
@@ -22,8 +25,15 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  // Only accept service role key as Bearer token (internal server-to-server calls)
+  const token = authHeader.replace("Bearer ", "");
+  if (token !== serviceRoleKey) {
+    return new Response(JSON.stringify({ error: "Forbidden — service role required" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
