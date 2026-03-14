@@ -26,7 +26,7 @@ export function AssoUserMenu({ assoName, userInitial }: AssoUserMenuProps) {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/connexion?role=association");
+    window.location.href = "/connexion?role=association";
   }
 
   return (

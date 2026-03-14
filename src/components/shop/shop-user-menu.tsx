@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronDown, User, LogOut, CreditCard, Settings } from "lucide-react";
 import Link from "next/link";
@@ -13,13 +12,11 @@ interface ShopUserMenuProps {
 
 export function ShopUserMenu({ commerceName, userInitial }: ShopUserMenuProps) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/connexion?role=commerce");
-    router.refresh();
+    window.location.href = "/connexion?role=commerce";
   }
 
   return (

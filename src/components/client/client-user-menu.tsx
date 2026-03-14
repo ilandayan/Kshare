@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronDown, User, LogOut, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -13,13 +12,11 @@ interface ClientUserMenuProps {
 
 export function ClientUserMenu({ userName, userInitial }: ClientUserMenuProps) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/connexion");
-    router.refresh();
+    window.location.href = "/connexion";
   }
 
   return (
@@ -67,7 +64,7 @@ export function ClientUserMenu({ userName, userInitial }: ClientUserMenuProps) {
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors w-full text-left"
             >
               <LogOut className="h-4 w-4" />
-              Deconnexion
+              Déconnexion
             </button>
           </div>
         </>

@@ -25,7 +25,7 @@ export function AdminUserMenu({ adminName }: AdminUserMenuProps) {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/connexion?role=admin");
+    window.location.href = "/connexion?role=admin";
   }
 
   const initial = adminName.charAt(0).toUpperCase();
