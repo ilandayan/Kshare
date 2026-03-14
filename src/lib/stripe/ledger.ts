@@ -31,21 +31,18 @@ interface CreateLedgerEntryParams {
 export async function createLedgerEntry(params: CreateLedgerEntryParams): Promise<void> {
   const supabase = createAdminClient();
 
-  // Get current balance for this commerce
-  const currentBalance = await getCommerceBalance(params.commerceId);
-  const newBalance = Math.round((currentBalance + params.credit - params.debit) * 100) / 100;
-
-  const { error } = await supabase.from("ledger_entries").insert({
-    commerce_id: params.commerceId,
-    order_id: params.orderId ?? null,
-    payout_id: params.payoutId ?? null,
-    type: params.type,
-    debit: params.debit,
-    credit: params.credit,
-    balance_after: newBalance,
-    description: params.description,
-    stripe_object_id: params.stripeObjectId ?? null,
-    idempotency_key: params.idempotencyKey,
+  // Use atomic RPC to calculate balance_after in a single SQL statement
+  // Prevents race conditions when multiple webhooks create entries concurrently
+  const { error } = await supabase.rpc("create_ledger_entry_atomic", {
+    p_commerce_id: params.commerceId,
+    p_order_id: params.orderId ?? undefined,
+    p_payout_id: params.payoutId ?? undefined,
+    p_type: params.type,
+    p_debit: params.debit,
+    p_credit: params.credit,
+    p_description: params.description,
+    p_stripe_object_id: params.stripeObjectId ?? undefined,
+    p_idempotency_key: params.idempotencyKey,
   });
 
   if (error) {

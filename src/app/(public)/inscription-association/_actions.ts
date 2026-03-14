@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export type InscriptionAssoResult =
   | { success: true }
@@ -25,6 +27,20 @@ function validateFile(file: File | null, label: string): string | null {
 export async function inscriptionAssociation(
   fd: FormData
 ): Promise<InscriptionAssoResult> {
+  // ── Rate limiting ──
+  const hdrs = await headers();
+  const clientIp =
+    hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    hdrs.get("x-real-ip") ??
+    "unknown";
+  const { allowed } = checkRateLimit(`inscription-association:${clientIp}`, {
+    limit: 5,
+    windowSeconds: 300, // 5 requêtes par 5 minutes
+  });
+  if (!allowed) {
+    return { success: false, error: "Trop de tentatives. Veuillez réessayer dans quelques minutes." };
+  }
+
   // ── Extract text fields ──
   const email = (fd.get("email") as string)?.trim();
   const nomAsso = (fd.get("nomAsso") as string)?.trim();
@@ -70,7 +86,6 @@ export async function inscriptionAssociation(
   const { data: asso, error: assoError } = await supabase
     .from("associations")
     .insert({
-      profile_id: null,
       name: nomAsso,
       email,
       contact: telephone,

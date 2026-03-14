@@ -234,13 +234,13 @@ export type Database = {
           city: string
           commerce_type: string
           commission_rate: number | null
-          created_at: string
-          description: string | null
-          email: string
           contract_ip: string | null
           contract_pdf_url: string | null
           contract_signed_at: string | null
           contract_user_agent: string | null
+          created_at: string
+          description: string | null
+          email: string
           hashgakha: string
           iban: string | null
           id: string
@@ -257,6 +257,7 @@ export type Database = {
           photos: string[] | null
           postal_code: string | null
           profile_id: string | null
+          siret: string | null
           status: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id: string | null
           stripe_customer_id: string | null
@@ -301,6 +302,7 @@ export type Database = {
           photos?: string[] | null
           postal_code?: string | null
           profile_id?: string | null
+          siret?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -345,6 +347,7 @@ export type Database = {
           photos?: string[] | null
           postal_code?: string | null
           profile_id?: string | null
+          siret?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -1244,6 +1247,24 @@ export type Database = {
           name: string
         }[]
       }
+      confirm_basket_sold: {
+        Args: { p_basket_id: string; p_quantity: number }
+        Returns: undefined
+      }
+      create_ledger_entry_atomic: {
+        Args: {
+          p_commerce_id: string
+          p_credit?: number
+          p_debit?: number
+          p_description?: string
+          p_idempotency_key?: string
+          p_order_id?: string
+          p_payout_id?: string
+          p_stripe_object_id?: string
+          p_type?: Database["public"]["Enums"]["ledger_entry_type"]
+        }
+        Returns: undefined
+      }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
@@ -1381,6 +1402,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      increment_basket_sold: {
+        Args: { p_basket_id: string; p_quantity: number }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:

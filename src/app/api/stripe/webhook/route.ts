@@ -124,21 +124,11 @@ async function handleCheckoutSessionCompleted(
       return;
     }
 
-    // Increment quantity_reserved (not quantity_sold)
-    const { data: currentBasket } = await supabase
-      .from("baskets")
-      .select("quantity_reserved")
-      .eq("id", basketId)
-      .single();
-
-    if (currentBasket) {
-      await supabase
-        .from("baskets")
-        .update({
-          quantity_reserved: currentBasket.quantity_reserved + quantityNum,
-        })
-        .eq("id", basketId);
-    }
+    // Atomically increment quantity_reserved
+    await supabase.rpc("reserve_basket_quantity", {
+      p_basket_id: basketId,
+      p_quantity: quantityNum,
+    });
   } else {
     // Achat classique
     const pickupCode = generatePickupCode();
@@ -211,21 +201,11 @@ async function handleCheckoutSessionCompleted(
       }
     }
 
-    // Update basket quantities
-    const { data: currentBasket } = await supabase
-      .from("baskets")
-      .select("quantity_sold")
-      .eq("id", basketId)
-      .single();
-
-    if (currentBasket) {
-      await supabase
-        .from("baskets")
-        .update({
-          quantity_sold: currentBasket.quantity_sold + quantityNum,
-        })
-        .eq("id", basketId);
-    }
+    // Atomically increment quantity_sold
+    await supabase.rpc("increment_basket_sold", {
+      p_basket_id: basketId,
+      p_quantity: quantityNum,
+    });
   }
 }
 
@@ -296,22 +276,11 @@ async function handlePaymentIntentSucceeded(
     return;
   }
 
-  // Move quantities from reserved → sold on basket
-  const { data: basket } = await supabase
-    .from("baskets")
-    .select("quantity_reserved, quantity_sold")
-    .eq("id", basket_id)
-    .single();
-
-  if (basket) {
-    await supabase
-      .from("baskets")
-      .update({
-        quantity_reserved: Math.max(0, basket.quantity_reserved - quantityNum),
-        quantity_sold: basket.quantity_sold + quantityNum,
-      })
-      .eq("id", basket_id);
-  }
+  // Atomically move quantities from reserved → sold
+  await supabase.rpc("confirm_basket_sold", {
+    p_basket_id: basket_id,
+    p_quantity: quantityNum,
+  });
 
   // Create ledger entries
   if (commerce_id && commissionAmountNum > 0) {

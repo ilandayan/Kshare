@@ -220,8 +220,10 @@ Deno.serve(async (req: Request) => {
       automatic_payment_methods: { enabled: true },
     });
 
-    // Generate 6-digit pickup token
-    const pickupToken = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate 6-digit pickup token (cryptographically secure)
+    const randomArray = new Uint32Array(1);
+    crypto.getRandomValues(randomArray);
+    const pickupToken = (100000 + (randomArray[0] % 900000)).toString();
 
     // Create order in Supabase (status: created, awaiting payment confirmation)
     const basketAmountEur = basketAmountInCents / 100;

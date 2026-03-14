@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export type InscriptionCommercantResult =
   | { success: true }
@@ -29,6 +31,20 @@ function validateFile(
 export async function inscriptionCommercant(
   fd: FormData
 ): Promise<InscriptionCommercantResult> {
+  // ── Rate limiting ──
+  const hdrs = await headers();
+  const clientIp =
+    hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    hdrs.get("x-real-ip") ??
+    "unknown";
+  const { allowed } = checkRateLimit(`inscription-commercant:${clientIp}`, {
+    limit: 5,
+    windowSeconds: 300, // 5 requêtes par 5 minutes
+  });
+  if (!allowed) {
+    return { success: false, error: "Trop de tentatives. Veuillez réessayer dans quelques minutes." };
+  }
+
   // ── Extract text fields ──
   const email = (fd.get("email") as string)?.trim();
   const nom = (fd.get("nom") as string)?.trim();
@@ -73,7 +89,6 @@ export async function inscriptionCommercant(
   const { data: commerce, error: commerceError } = await supabase
     .from("commerces")
     .insert({
-      profile_id: null,
       name: nom,
       email,
       commerce_type: commerceType,
@@ -82,6 +97,7 @@ export async function inscriptionCommercant(
       postal_code: codePostal,
       hashgakha,
       phone: telephone,
+      siret,
       status: "pending",
       basket_types: [],
     })
