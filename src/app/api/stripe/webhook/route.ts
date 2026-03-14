@@ -202,7 +202,7 @@ async function handleCheckoutSessionCompleted(
           const stripeFee = bt.fee / 100; // cents → EUR
           await supabase
             .from("orders")
-            .update({ stripe_fee_amount: stripeFee } as Record<string, unknown>)
+            .update({ stripe_fee_amount: stripeFee })
             .eq("id", order.id);
         }
       } catch (feeErr) {
@@ -281,7 +281,7 @@ async function handlePaymentIntentSucceeded(
 
   // Only confirm orders that are still in "created" status
   if (order.status !== "created") {
-    console.log("[webhook] Order already processed:", order.id, order.status);
+    console.info("[webhook] Order already processed:", order.id, order.status);
     return;
   }
 
@@ -342,14 +342,14 @@ async function handlePaymentIntentSucceeded(
       const stripeFee = bt.fee / 100;
       await supabase
         .from("orders")
-        .update({ stripe_fee_amount: stripeFee } as Record<string, unknown>)
+        .update({ stripe_fee_amount: stripeFee })
         .eq("id", order.id);
     }
   } catch (feeErr) {
     console.error("[webhook] Failed to fetch Stripe fee (mobile):", feeErr);
   }
 
-  console.log("[webhook] Mobile order confirmed:", order.id);
+  console.info("[webhook] Mobile order confirmed:", order.id);
 }
 
 async function handleAccountUpdated(account: Stripe.Account): Promise<void> {

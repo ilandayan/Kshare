@@ -138,7 +138,9 @@ export const COMMERCE_STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
   validated: "Validé",
   suspended: "Suspendu",
-  rejected: "Rejeté",
+  refused: "Refusé",
+  complement_required: "Compléments requis",
+  archived: "Archivé",
 };
 
 export const HASHGAKHA_LIST = [

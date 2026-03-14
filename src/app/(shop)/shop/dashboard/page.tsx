@@ -96,7 +96,7 @@ export default async function DashboardPage({
   const allOrders  = orders ?? [];
   const allBaskets = basketsRaw ?? [];
 
-  const commissionRate = (commerce.commission_rate ?? 15) / 100;
+  const commissionRate = (commerce.commission_rate ?? 18) / 100;
   const caGenere   = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
   const commission = caGenere * commissionRate;
   const caNet      = caGenere - commission;

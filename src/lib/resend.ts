@@ -249,8 +249,8 @@ const AUTO_RESPONSE_TEMPLATES: Record<
         </p>
       </div>
       <p style="color:#333;line-height:1.7;">
-        Pour rappel, les <strong>50 premiers commerçants</strong> bénéficient de
-        <strong>3 mois d'abonnement offerts</strong> et d'un taux de commission réduit à 10%.
+        Pour rappel, Kshare propose deux formules : <strong>Plan Starter</strong> (gratuit, 18% de commission)
+        ou <strong>Plan Pro</strong> (29€/mois, commission réduite à 12%).
       </p>
       <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
     `,

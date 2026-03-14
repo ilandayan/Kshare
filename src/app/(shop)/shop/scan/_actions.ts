@@ -61,7 +61,6 @@ export async function rechercherParCode(
     if (!commerce) return { success: false, error: "Commerce introuvable." };
 
     const cleanToken = token.trim();
-    console.log("[scan] Searching order for commerce:", commerce.id, "token:", cleanToken);
 
     // Query order — baskets join is optional (non-inner), won't block the query
     const { data: order, error: orderError } = await supabase
@@ -88,8 +87,6 @@ export async function rechercherParCode(
       console.error("[scan] No order found for commerce:", commerce.id, "token:", cleanToken);
       return { success: false, error: "Aucune commande trouvée avec ce code." };
     }
-
-    console.log("[scan] Order found:", order.id, "status:", order.status);
 
     // Fetch client name separately (RLS may block cross-user profile reads)
     let clientName = "Client";
@@ -138,7 +135,7 @@ export async function confirmerRetraitScan(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifie." };
+  if (!user) return { success: false, error: "Non authentifié." };
 
   const { data: commerce } = await supabase
     .from("commerces")
@@ -158,7 +155,7 @@ export async function confirmerRetraitScan(
   }
 
   if (order.status !== "paid" && order.status !== "ready_for_pickup") {
-    return { success: false, error: "Cette commande ne peut pas etre confirmee." };
+    return { success: false, error: "Cette commande ne peut pas être confirmée." };
   }
 
   const { error } = await supabase

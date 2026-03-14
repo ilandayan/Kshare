@@ -75,12 +75,11 @@ Modèle similaire à Too Good To Go, spécialisé dans l'univers casher.
 
 ### Modèle économique
 
-- Commission Kshare : **15 %** par panier vendu (10 % pendant 3 mois pour lancement)
-- Abonnement commerçant : **30 €/mois**
-- Offre lancement 50 premiers commerçants : 3 mois offerts + commission 10 %
-- Autres nouveaux commerçants : 1 mois offert
-- Reversement hebdomadaire aux commerces via Stripe
-- Abonnement commerçant via SEPA
+- **Plan Starter** : gratuit, commission **18 %** par panier vendu
+- **Plan Pro** : **29 €/mois** (SEPA), commission réduite à **12 %**
+- Changement de plan possible **1 fois par an**
+- Frais de service client : **1,5 % + 0,79 €** par commande
+- Reversement hebdomadaire aux commerces (chaque mardi) via Stripe Connect
 
 ---
 

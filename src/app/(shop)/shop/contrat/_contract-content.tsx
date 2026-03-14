@@ -41,7 +41,7 @@ const ARTICLES = [
   {
     title: "Article 7 — Reversements",
     content:
-      "Les sommes dues au Commerce partenaire sont reversées de manière hebdomadaire, chaque lundi, via Stripe Connect sur le compte bancaire renseigné par le Commerce.\n\nLe reversement correspond au montant total des ventes de la semaine précédente, déduction faite de la commission Kshare.\n\nEn cas de litige, remboursement client ou annulation, le montant concerné sera déduit du prochain reversement.",
+      "Les sommes dues au Commerce partenaire sont reversées de manière hebdomadaire, chaque mardi, via Stripe Connect sur le compte bancaire renseigné par le Commerce.\n\nLe reversement correspond au montant total des ventes de la semaine précédente, déduction faite de la commission Kshare.\n\nEn cas de litige, remboursement client ou annulation, le montant concerné sera déduit du prochain reversement.",
   },
   {
     title: "Article 8 — Durée et résiliation",

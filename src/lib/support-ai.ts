@@ -52,7 +52,7 @@ Après la commande, vous recevez un QR code. Rendez-vous au commerce dans le cr�
 - Mix (mélange) ➕
 
 ### Comment devenir commerçant partenaire ?
-Inscrivez-vous sur k-share.fr/inscription-commercant. Notre équipe valide votre compte sous 48h. Abonnement : 30€/mois. Commission : 15% par panier vendu (10% pour les 50 premiers commerçants pendant 3 mois).
+Inscrivez-vous sur k-share.fr/inscription-commercant. Notre équipe valide votre compte sous 48h. Deux formules : Plan Starter (gratuit, commission 18%) ou Plan Pro (29€/mois, commission réduite à 12%). Le commerçant choisit son plan lors de l'inscription et peut en changer une fois par an.
 
 ### Comment fonctionne le don de paniers ?
 Les commerçants peuvent proposer des paniers en don. Les associations validées sur Kshare peuvent les réserver et les récupérer gratuitement.

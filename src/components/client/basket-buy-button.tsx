@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ShoppingCart, Minus, Plus, Loader2, Heart } from "lucide-react";
+import { SERVICE_FEE_FIXED, SERVICE_FEE_PERCENT } from "@/lib/constants";
 
 interface BasketBuyButtonProps {
   basketId: string;
@@ -27,9 +28,9 @@ export function BasketBuyButton({
   const donationPrice =
     Math.round((soldPrice - soldPrice * (commissionRate / 100)) * 100) / 100;
 
-  // Frais de service plateforme : 1.5% du prix panier + 0.50€
+  // Frais de service plateforme : 1.5% du prix panier + 0.79€
   const serviceFee =
-    Math.round((soldPrice * quantity * 0.015 + 0.5) * 100) / 100;
+    Math.round((soldPrice * quantity * SERVICE_FEE_PERCENT + SERVICE_FEE_FIXED) * 100) / 100;
 
   async function handleBuy() {
     setLoading(true);
@@ -53,7 +54,7 @@ export function BasketBuyButton({
         window.location.href = data.url;
       }
     } catch {
-      setError("Erreur de connexion. Veuillez reessayer.");
+      setError("Erreur de connexion. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ export function BasketBuyButton({
         window.location.href = data.url;
       }
     } catch {
-      setError("Erreur de connexion. Veuillez reessayer.");
+      setError("Erreur de connexion. Veuillez réessayer.");
     } finally {
       setDonationLoading(false);
     }
@@ -90,7 +91,7 @@ export function BasketBuyButton({
   if (isDonation) {
     return (
       <p className="text-sm text-gray-500 italic">
-        Ce panier est reserve aux associations partenaires.
+        Ce panier est réservé aux associations partenaires.
       </p>
     );
   }
@@ -112,7 +113,7 @@ export function BasketBuyButton({
     <div className="space-y-4">
       {/* Quantity selector */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">Quantite</span>
+        <span className="text-sm font-medium text-gray-700">Quantité</span>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -200,13 +201,13 @@ export function BasketBuyButton({
           ) : (
             <>
               <Heart className="h-5 w-5" />
-              Offrir a une association — {donationTotal.toFixed(2)}&nbsp;&euro;
+              Offrir à une association — {donationTotal.toFixed(2)}&nbsp;&euro;
             </>
           )}
         </button>
         <p className="text-xs text-gray-400 text-center leading-relaxed">
-          Prix reduit (sans commission Kshare). Vous ne serez debite que si une
-          association recupere le panier.
+          Prix réduit (sans commission Kshare). Vous ne serez débité que si une
+          association récupère le panier.
         </p>
       </div>
     </div>
