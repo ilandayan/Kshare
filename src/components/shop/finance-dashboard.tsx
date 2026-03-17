@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, TrendingUp, ArrowDownRight, Calendar, Percent } from "lucide-react";
+import { Wallet, TrendingUp, ArrowDownRight, Calendar } from "lucide-react";
 
 interface FinanceSummary {
   totalSales: number;
@@ -79,16 +79,16 @@ export function FinanceDashboard({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Commissions Kshare
+              CA net
             </CardTitle>
-            <Percent className="h-4 w-4 text-orange-500" />
+            <TrendingUp className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {formatEUR(summary.totalCommissions)}
+            <div className="text-2xl font-bold text-emerald-700">
+              {formatEUR(summary.totalSales - summary.totalCommissions)}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {commissionRate}% prélevé sur les ventes
+              Après commission ({commissionRate}%)
             </p>
           </CardContent>
         </Card>
