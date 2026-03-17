@@ -55,7 +55,7 @@ export default async function AdminDashboard({
   // Fetch validated commerces list for filter
   const { data: commercesList } = await supabase
     .from("commerces")
-    .select("id, name, city, commission_rate")
+    .select("id, name, city, commission_rate, average_rating, total_ratings")
     .eq("status", "validated")
     .order("name");
 
@@ -124,9 +124,9 @@ export default async function AdminDashboard({
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
 
-  const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number; favoris: number }>();
+  const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number; favoris: number; avgRating: number | null; totalRatings: number }>();
   for (const c of commercesList ?? []) {
-    rankingMap.set(c.id, { name: c.name, city: c.city ?? "", ca: 0, commission: 0, paniers: 0, favoris: favoritesPerCommerce.get(c.id) ?? 0 });
+    rankingMap.set(c.id, { name: c.name, city: c.city ?? "", ca: 0, commission: 0, paniers: 0, favoris: favoritesPerCommerce.get(c.id) ?? 0, avgRating: c.average_rating ?? null, totalRatings: c.total_ratings ?? 0 });
   }
   for (const o of rankingOrders ?? []) {
     const entry = rankingMap.get(o.commerce_id);
@@ -144,6 +144,11 @@ export default async function AdminDashboard({
   const favoritesRanking = [...rankingMap.values()]
     .filter((c) => c.favoris > 0)
     .sort((a, b) => b.favoris - a.favoris);
+
+  // Ratings ranking — sorted by average rating (then by total ratings)
+  const ratingsRanking = [...rankingMap.values()]
+    .filter((c) => c.avgRating !== null && c.totalRatings > 0)
+    .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0) || b.totalRatings - a.totalRatings);
 
   // ── Dynamic chart data based on period ──
   let dayData: { day: string; ca: number; ventes: number }[];
@@ -316,6 +321,7 @@ export default async function AdminDashboard({
         ventesTitle={ventesTitle}
         ranking={ranking}
         favoritesRanking={favoritesRanking}
+        ratingsRanking={ratingsRanking}
       />
     </div>
   );
