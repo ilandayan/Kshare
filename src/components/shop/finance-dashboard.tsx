@@ -71,7 +71,7 @@ export function FinanceDashboard({
           <CardContent>
             <div className="text-2xl font-bold">{formatEUR(summary.totalSales)}</div>
             <p className="text-xs text-gray-500 mt-1">
-              Montant brut
+              Montant brut (avant commission)
             </p>
           </CardContent>
         </Card>
