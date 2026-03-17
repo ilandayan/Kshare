@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminCharts }  from "@/components/admin/admin-charts";
-import { Euro, TrendingUp, ShoppingBag, Package, BarChart3, Store, Heart, Gift, CreditCard, Banknote, Receipt } from "lucide-react";
+import { Euro, TrendingUp, ShoppingBag, Package, BarChart3, Store, Heart, Gift, CreditCard, Banknote, Receipt, Star } from "lucide-react";
 
 function getPeriodStart(period: string): Date {
   const now = new Date();
@@ -81,6 +81,20 @@ export default async function AdminDashboard({
     .select("*", { count: "exact", head: true })
     .eq("status", "validated");
 
+  // Favorites — all time (not period-filtered, favorites are cumulative)
+  const { data: favorites } = await supabase
+    .from("favorites")
+    .select("id, commerce_id, created_at");
+
+  const allFavorites = favorites ?? [];
+  const totalFavorites = allFavorites.length;
+
+  // Favorites count per commerce
+  const favoritesPerCommerce = new Map<string, number>();
+  for (const fav of allFavorites) {
+    favoritesPerCommerce.set(fav.commerce_id, (favoritesPerCommerce.get(fav.commerce_id) ?? 0) + 1);
+  }
+
   const allOrders  = orders  ?? [];
   const allBaskets = baskets ?? [];
 
@@ -110,9 +124,9 @@ export default async function AdminDashboard({
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
 
-  const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number }>();
+  const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number; favoris: number }>();
   for (const c of commercesList ?? []) {
-    rankingMap.set(c.id, { name: c.name, city: c.city ?? "", ca: 0, commission: 0, paniers: 0 });
+    rankingMap.set(c.id, { name: c.name, city: c.city ?? "", ca: 0, commission: 0, paniers: 0, favoris: favoritesPerCommerce.get(c.id) ?? 0 });
   }
   for (const o of rankingOrders ?? []) {
     const entry = rankingMap.get(o.commerce_id);
@@ -123,8 +137,13 @@ export default async function AdminDashboard({
     }
   }
   const ranking = [...rankingMap.values()]
-    .filter((c) => c.ca > 0 || c.paniers > 0)
+    .filter((c) => c.ca > 0 || c.paniers > 0 || c.favoris > 0)
     .sort((a, b) => b.ca - a.ca);
+
+  // Favorites ranking — sorted by favorites count
+  const favoritesRanking = [...rankingMap.values()]
+    .filter((c) => c.favoris > 0)
+    .sort((a, b) => b.favoris - a.favoris);
 
   // ── Dynamic chart data based on period ──
   let dayData: { day: string; ca: number; ventes: number }[];
@@ -265,6 +284,7 @@ export default async function AdminDashboard({
     { label: "Commerces actifs",  value: (activeCommerces ?? 0).toString(), sub: undefined,                        iconBg: "bg-orange-100", iconColor: "text-orange-600", icon: Store },
     { label: "Dons commerçants",  value: donCommerce.toString(),          sub: undefined,                          iconBg: "bg-pink-100",   iconColor: "text-pink-500",   icon: Heart },
     { label: "Dons clients",      value: donClients.toString(),           sub: undefined,                          iconBg: "bg-rose-100",   iconColor: "text-rose-500",   icon: Gift },
+    { label: "Favoris total",     value: totalFavorites.toString(),       sub: `${favoritesPerCommerce.size} commerce${favoritesPerCommerce.size > 1 ? "s" : ""} en favoris`, iconBg: "bg-amber-100",  iconColor: "text-amber-500",  icon: Star },
   ];
 
   return (
@@ -295,6 +315,7 @@ export default async function AdminDashboard({
         caTitle={caTitle}
         ventesTitle={ventesTitle}
         ranking={ranking}
+        favoritesRanking={favoritesRanking}
       />
     </div>
   );

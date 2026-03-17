@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from "recharts";
-import { UtensilsCrossed, Milk, Leaf, Wine, Layers, ShoppingCart, Trophy, type LucideIcon } from "lucide-react";
+import { UtensilsCrossed, Milk, Leaf, Wine, Layers, ShoppingCart, Trophy, Star, type LucideIcon } from "lucide-react";
 
 const TYPE_ICON_MAP: Record<string, LucideIcon> = {
   UtensilsCrossed, Milk, Leaf, Wine, Layers, ShoppingCart,
@@ -13,7 +13,7 @@ const TYPE_ICON_MAP: Record<string, LucideIcon> = {
 
 interface DayData  { day: string; ventes: number; ca: number }
 interface TypeData { type: string; count: number; percent: number; iconName: string; color: string }
-interface RankingEntry { name: string; city: string; ca: number; commission: number; paniers: number }
+interface RankingEntry { name: string; city: string; ca: number; commission: number; paniers: number; favoris: number }
 
 interface AdminChartsProps {
   period: string;
@@ -24,6 +24,7 @@ interface AdminChartsProps {
   caTitle?: string;
   ventesTitle?: string;
   ranking: RankingEntry[];
+  favoritesRanking?: RankingEntry[];
 }
 
 const PERIODS = [
@@ -86,7 +87,7 @@ function AdminFilters({ period, commerce, commercesList }: { period: string; com
   );
 }
 
-export function AdminCharts({ period, commerce, commercesList, dayData, typeData, caTitle, ventesTitle, ranking }: AdminChartsProps) {
+export function AdminCharts({ period, commerce, commercesList, dayData, typeData, caTitle, ventesTitle, ranking, favoritesRanking = [] }: AdminChartsProps) {
   return (
     <>
       <AdminFilters period={period} commerce={commerce} commercesList={commercesList} />
@@ -182,6 +183,7 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
                   <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paniers</th>
                   <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">CA</th>
                   <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Commission</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Favoris</th>
                 </tr>
               </thead>
               <tbody>
@@ -208,6 +210,16 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
                       <td className="py-3 px-2 text-right font-medium text-gray-900">{entry.paniers}</td>
                       <td className="py-3 px-2 text-right font-bold text-green-600">{entry.ca.toFixed(2)}€</td>
                       <td className="py-3 px-2 text-right font-medium text-purple-600">{entry.commission.toFixed(2)}€</td>
+                      <td className="py-3 px-2 text-right">
+                        {entry.favoris > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-amber-500 font-medium">
+                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                            {entry.favoris}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -216,6 +228,66 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
           </div>
         )}
       </div>
+
+      {/* Favorites ranking */}
+      {favoritesRanking.length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-6 mt-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center">
+              <Star className="h-5 w-5 text-amber-500 fill-amber-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 text-sm">Commerces les plus mis en favoris</h3>
+              <p className="text-xs text-gray-400">Classement par nombre de clients ayant ajouté le commerce en favoris</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#e2e5f0]">
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">#</th>
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Commerce</th>
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ville</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Favoris</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paniers vendus</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">CA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {favoritesRanking.map((entry, i) => (
+                  <tr
+                    key={entry.name}
+                    className="border-b border-[#e2e5f0]/50 last:border-0 hover:bg-[#f8f9fc] transition-colors"
+                  >
+                    <td className="py-3 px-2">
+                      {i < 3 ? (
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold text-white ${
+                          i === 0 ? "bg-amber-500" : i === 1 ? "bg-gray-400" : "bg-amber-700"
+                        }`}>
+                          {i + 1}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 font-medium pl-1.5">{i + 1}</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2 font-medium text-gray-900">{entry.name}</td>
+                    <td className="py-3 px-2 text-gray-500">{entry.city || "—"}</td>
+                    <td className="py-3 px-2 text-right">
+                      <span className="inline-flex items-center gap-1 text-amber-500 font-bold">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        {entry.favoris}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 text-right font-medium text-gray-900">{entry.paniers}</td>
+                    <td className="py-3 px-2 text-right font-bold text-green-600">{entry.ca.toFixed(2)}€</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   );
 }
