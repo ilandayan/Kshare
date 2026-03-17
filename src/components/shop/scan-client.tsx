@@ -203,7 +203,7 @@ export function ScanClient() {
           {/* Tab selector */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
             <button
-              onClick={() => { setMode("qr"); setError(""); }}
+              onClick={() => { setMode("qr"); setError(""); searchingRef.current = false; }}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 mode === "qr"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -214,7 +214,7 @@ export function ScanClient() {
               Scanner QR
             </button>
             <button
-              onClick={() => { setMode("code"); setError(""); }}
+              onClick={() => { setMode("code"); setError(""); searchingRef.current = false; }}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 mode === "code"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -251,7 +251,7 @@ export function ScanClient() {
           {mode === "qr" && !isPending && (
             <QrScanner
               onScan={handleQrScan}
-              onSwitchToCode={() => { setMode("code"); setError(""); }}
+              onSwitchToCode={() => { setMode("code"); setError(""); searchingRef.current = false; }}
             />
           )}
 
