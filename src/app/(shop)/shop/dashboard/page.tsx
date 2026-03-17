@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardCharts } from "@/components/shop/dashboard-charts";
-import { TrendingUp, ShoppingBag, Heart, Euro } from "lucide-react";
+import { TrendingUp, ShoppingBag, Heart, Euro, Star } from "lucide-react";
 
 /* ── Period helpers ────────────────────────────────────────────── */
 function getPeriodStart(period: string, commerceCreatedAt?: string): Date {
@@ -71,7 +71,7 @@ export default async function DashboardPage({
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, name, commission_rate, created_at")
+    .select("id, name, commission_rate, created_at, average_rating, total_ratings")
     .eq("profile_id", user.id)
     .single();
   if (!commerce) redirect("/inscription-commercant");
@@ -265,12 +265,20 @@ export default async function DashboardPage({
       iconColor: "text-amber-600",
       icon: Heart,
     },
+    {
+      label: "Note moyenne",
+      value: (commerce.average_rating ?? 0) > 0 ? `${Number(commerce.average_rating).toFixed(1)}/5` : "—",
+      sub: (commerce.total_ratings ?? 0) > 0 ? `${commerce.total_ratings} avis clients` : "Aucun avis pour le moment",
+      iconBg: "bg-yellow-100",
+      iconColor: "text-yellow-500",
+      icon: Star,
+    },
   ];
 
   return (
     <div>
       {/* KPI row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
         {kpis.map((k) => (
           <div key={k.label} className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
