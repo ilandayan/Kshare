@@ -1,8 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { notifyOrderStatusChange } from "@/lib/notifications";
 
 export type ScanResult =
   | {
@@ -21,10 +19,6 @@ export type ScanResult =
         qrCodeToken: string;
       };
     }
-  | { success: false; error: string };
-
-export type ConfirmResult =
-  | { success: true }
   | { success: false; error: string };
 
 /** Look up an order by QR code token for the current commerce */
@@ -125,59 +119,4 @@ export async function rechercherParCode(
     console.error("[scan] Unexpected error in rechercherParCode:", message);
     return { success: false, error: "Erreur inattendue. Veuillez réessayer." };
   }
-}
-
-/** Commerce validates client presence — marks order as ready_for_pickup.
- *  Only the client's slide confirmation sets the order to "picked_up". */
-export async function validerPresenceClient(
-  orderId: string
-): Promise<ConfirmResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
-
-  const { data: commerce } = await supabase
-    .from("commerces")
-    .select("id, name")
-    .eq("profile_id", user.id)
-    .single();
-  if (!commerce) return { success: false, error: "Commerce introuvable." };
-
-  const { data: order } = await supabase
-    .from("orders")
-    .select("id, status, commerce_id, client_id")
-    .eq("id", orderId)
-    .single();
-
-  if (!order || order.commerce_id !== commerce.id) {
-    return { success: false, error: "Commande introuvable." };
-  }
-
-  if (order.status === "ready_for_pickup") {
-    // Already ready — nothing to do, just show success
-    revalidatePath("/shop/scan");
-    revalidatePath("/shop/paniers/orders");
-    return { success: true };
-  }
-
-  if (order.status !== "paid") {
-    return { success: false, error: "Cette commande ne peut pas être validée." };
-  }
-
-  const { error } = await supabase
-    .from("orders")
-    .update({ status: "ready_for_pickup" })
-    .eq("id", orderId)
-    .eq("commerce_id", commerce.id);
-
-  if (error) return { success: false, error: "Erreur lors de la validation." };
-
-  // Notify client that order is ready for pickup
-  notifyOrderStatusChange(orderId, order.client_id, "ready_for_pickup", commerce.name ?? "le commerce");
-
-  revalidatePath("/shop/scan");
-  revalidatePath("/shop/paniers/orders");
-  return { success: true };
 }

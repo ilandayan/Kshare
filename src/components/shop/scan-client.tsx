@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, Component, type ReactNode } from "react";
 import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
-import { rechercherParCode, validerPresenceClient, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
+import { rechercherParCode, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
 /* ── Error Boundary ── */
 class QrErrorBoundary extends Component<
@@ -171,9 +171,7 @@ export function ScanClient() {
   const [code, setCode] = useState("");
   const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchingRef = useRef(false);
 
@@ -217,25 +215,6 @@ export function ScanClient() {
     doSearch(scannedCode);
   }
 
-  function handleValidatePresence() {
-    if (!order) return;
-    setIsConfirming(true);
-    validerPresenceClient(order.id)
-      .then((result) => {
-        setIsConfirming(false);
-        if (result.success) {
-          setConfirmed(true);
-          setOrder({ ...order, status: "ready_for_pickup" });
-        } else {
-          setError(result.error);
-        }
-      })
-      .catch(() => {
-        setIsConfirming(false);
-        setError("Erreur lors de la validation. Veuillez réessayer.");
-      });
-  }
-
   function switchMode(newMode: InputMode) {
     setMode(newMode);
     setError("");
@@ -248,7 +227,6 @@ export function ScanClient() {
     setCode("");
     setOrder(null);
     setError("");
-    setConfirmed(false);
     setIsSearching(false);
     searchingRef.current = false;
     if (mode === "code") {
@@ -412,84 +390,34 @@ export function ScanClient() {
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Info + nouveau scan */}
           <div className="px-6 py-4 border-t border-gray-100 space-y-3">
-            {confirmed ? (
-              <>
-                <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl p-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">Présence validée !</p>
-                    <p className="text-xs text-green-600 mt-0.5">Le client peut maintenant confirmer le retrait depuis son application.</p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity"
-                >
-                  Nouveau scan
-                </button>
-              </>
-            ) : order.status === "paid" ? (
-              <>
-                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                  <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-700">
-                    Vérifiez l&apos;identité du client puis validez sa présence. Le client confirmera le retrait depuis son application.
-                  </p>
-                </div>
-                <button
-                  onClick={handleValidatePresence}
-                  disabled={isConfirming}
-                  className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isConfirming ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-5 h-5" />
-                  )}
-                  Valider la présence du client
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Annuler
-                </button>
-              </>
-            ) : order.status === "ready_for_pickup" ? (
-              <>
-                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                  <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-700">
-                    Commande prête au retrait. En attente de la confirmation du client depuis son application.
-                  </p>
-                </div>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity"
-                >
-                  Nouveau scan
-                </button>
-              </>
+            {order.status === "picked_up" ? (
+              <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl p-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-green-700">Ce panier a déjà été retiré.</p>
+              </div>
+            ) : ["paid", "ready_for_pickup"].includes(order.status) ? (
+              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700">
+                  Le client confirmera le retrait depuis son application.
+                </p>
+              </div>
             ) : (
-              <>
-                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700">
-                    {order.status === "picked_up"
-                      ? "Ce panier a déjà été retiré."
-                      : "Cette commande ne peut pas être confirmée dans son état actuel."}
-                  </p>
-                </div>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity"
-                >
-                  Nouveau scan
-                </button>
-              </>
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700">
+                  Cette commande ne peut pas être retirée dans son état actuel.
+                </p>
+              </div>
             )}
+            <button
+              onClick={handleReset}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity"
+            >
+              Nouveau scan
+            </button>
           </div>
         </div>
       )}
