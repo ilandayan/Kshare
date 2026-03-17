@@ -116,7 +116,7 @@ function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void;
 }
 
 export function ScanClient() {
-  const [mode, setMode] = useState<InputMode>("code");
+  const [mode, setMode] = useState<InputMode>("qr");
   const [code, setCode] = useState("");
   const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
