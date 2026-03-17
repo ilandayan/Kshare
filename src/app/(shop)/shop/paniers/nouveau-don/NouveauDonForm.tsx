@@ -151,7 +151,7 @@ export function NouveauDonForm({ allowedTypes }: NouveauDonFormProps) {
       <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 mb-6">
         <Heart className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-sm text-amber-800">
-          <p className="font-medium mb-1">Panier don (Tsedaka / Mitzva)</p>
+          <p className="font-medium mb-1">Panier don (Tsedaka)</p>
           <p className="text-amber-700">
             Ce panier sera mis à disposition des associations partenaires
             gratuitement. Aucun prix ne sera facturé.

@@ -15,7 +15,7 @@ const TYPE_ICONS: Record<string, { label: string; Icon: LucideIcon }> = {
 function StatusBadge({ status, isDonation }: { status: string; isDonation?: boolean }) {
   if (isDonation) return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-      <Handshake className="h-3.5 w-3.5" /> Don (Mitzva)
+      <Handshake className="h-3.5 w-3.5" /> Don (Tsedaka)
     </span>
   );
   if (status === "published") return (

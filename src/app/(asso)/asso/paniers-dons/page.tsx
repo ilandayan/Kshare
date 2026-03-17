@@ -174,9 +174,9 @@ export default async function PaniersDonsPage() {
               <Info className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="font-semibold text-purple-900 text-sm mb-1">Mitzvot &amp; Tsedaka</p>
+              <p className="font-semibold text-purple-900 text-sm mb-1">Tsedaka</p>
               <p className="text-sm text-purple-700 leading-relaxed">
-                En récupérant ces paniers, votre association accomplit une mitzvah de tsedaka (bienfaisance).
+                En récupérant ces paniers, votre association accomplit un acte de tsedaka (bienfaisance).
                 Ces dons permettent de réduire le gaspillage alimentaire tout en aidant les familles dans le besoin.
               </p>
             </div>

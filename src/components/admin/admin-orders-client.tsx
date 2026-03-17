@@ -96,7 +96,7 @@ function OrderRow({ order }: { order: AdminOrder }) {
             <span className="font-mono font-semibold text-[#3744C8] text-sm">{order.orderNumber}</span>
             {order.isDonation && (
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
-                Don - Mitzvah
+                Don - Tsedaka
               </span>
             )}
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${status.cls}`}>

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getStripe, calculateCommission, calculateServiceFee, getCommissionRateForPlan } from "@/lib/stripe/client";
 import { checkRateLimit, getClientIp, PAYMENT_RATE_LIMIT } from "@/lib/rate-limit";
 import { logAuditEvent } from "@/lib/audit-log";
-import { BASKET_MIN_PRICE, type SubscriptionPlanId } from "@/lib/constants";
+import { BASKET_MIN_PRICE, DONATION_SERVICE_FEE_FIXED, SERVICE_FEE_PERCENT, type SubscriptionPlanId } from "@/lib/constants";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -133,14 +133,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let serviceFeeInCents: number;
 
     if (isClientDonation) {
-      // Don client: prix = sold_price - commission Kshare, no service fee
+      // Don client: prix = sold_price - commission Kshare, frais réels Stripe (1.5% + 0.25€)
       const planRate = getCommissionRateForPlan(
         (commerce.subscription_plan as SubscriptionPlanId) ?? "starter"
       );
       const { commission } = calculateCommission(basket.sold_price, planRate);
       unitPrice = Math.round((basket.sold_price - commission) * 100) / 100;
       commissionInCents = 0;
-      serviceFeeInCents = 0;
+      const donationTotal = unitPrice * quantity;
+      serviceFeeInCents = Math.round(
+        (donationTotal * SERVICE_FEE_PERCENT + DONATION_SERVICE_FEE_FIXED) * 100
+      );
     } else if (isBasketDonation) {
       unitPrice = basket.sold_price;
       commissionInCents = 0;

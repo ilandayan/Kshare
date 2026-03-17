@@ -3,6 +3,7 @@ import {
   SUBSCRIPTION_PLANS,
   SERVICE_FEE_FIXED,
   SERVICE_FEE_PERCENT,
+  DONATION_SERVICE_FEE_FIXED,
   BASKET_MIN_PRICE,
   BASKET_MIN_DISCOUNT,
   type SubscriptionPlanId,
@@ -45,10 +46,12 @@ export function getCommissionRateForPlan(plan: SubscriptionPlanId): number {
 
 /**
  * Service fee to cover Stripe costs (paid by client, kept by Kshare).
- * Formula: basketPrice * 1.5% + 0.79€
+ * Normal: basketPrice * 1.5% + 0.79€
+ * Donation: basketPrice * 1.5% + 0.25€ (frais réels Stripe)
  */
-export function calculateServiceFee(basketPrice: number): number {
-  return Math.round((basketPrice * SERVICE_FEE_PERCENT + SERVICE_FEE_FIXED) * 100) / 100;
+export function calculateServiceFee(basketPrice: number, isDonation = false): number {
+  const fixedFee = isDonation ? DONATION_SERVICE_FEE_FIXED : SERVICE_FEE_FIXED;
+  return Math.round((basketPrice * SERVICE_FEE_PERCENT + fixedFee) * 100) / 100;
 }
 
 // ── Basket Validation ─────────────────────────────────────────

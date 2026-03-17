@@ -71,10 +71,11 @@ Deno.serve(async (req: Request) => {
     }
 
     // Parse request body
-    const { basket_id, amount, quantity: reqQuantity } = await req.json() as {
+    const { basket_id, amount, quantity: reqQuantity, is_donation: isClientDonation } = await req.json() as {
       basket_id: string;
       amount?: number; // in cents — validated against DB price
       quantity?: number;
+      is_donation?: boolean;
     };
 
     const quantity = reqQuantity && Number.isInteger(reqQuantity) && reqQuantity >= 1 && reqQuantity <= 99
@@ -159,15 +160,9 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── Server-side amount calculation from DB price (never trust client) ──
-    const basketAmountInCents = Math.round(basket.sold_price * quantity * 100);
-
-    // If client sent an amount, validate it matches DB price (tolerance: 1 cent)
-    if (amount !== undefined && Math.abs(amount - basketAmountInCents) > 1) {
-      return new Response(
-        JSON.stringify({ error: "Le montant ne correspond pas au prix du panier." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
+    const SERVICE_FEE_PERCENT = 0.015;
+    const SERVICE_FEE_FIXED_CENTS = 79; // 0.79€ — paniers normaux
+    const DONATION_SERVICE_FEE_FIXED_CENTS = 25; // 0.25€ — frais réels Stripe pour dons
 
     // Plan-based commission rate (fallback to DB value then 18%)
     const PLAN_RATES: Record<string, number> = { starter: 18, pro: 12 };
@@ -175,13 +170,31 @@ Deno.serve(async (req: Request) => {
       PLAN_RATES[commerce.subscription_plan ?? "starter"] ??
       commerce.commission_rate ??
       18;
-    const commissionInCents = Math.round(basketAmountInCents * (commissionRate / 100));
 
-    // Service fee: 1.5% + 0.79€ (paid by client, kept by Kshare)
-    const SERVICE_FEE_PERCENT = 0.015;
-    const SERVICE_FEE_FIXED_CENTS = 79;
-    const serviceFeeInCents =
-      Math.round(basketAmountInCents * SERVICE_FEE_PERCENT) + SERVICE_FEE_FIXED_CENTS;
+    let basketAmountInCents: number;
+    let commissionInCents: number;
+    let serviceFeeInCents: number;
+
+    if (isClientDonation) {
+      // Don client: prix = sold_price - commission, frais réels Stripe (1.5% + 0.25€)
+      const commissionAmount = Math.round(basket.sold_price * quantity * 100 * (commissionRate / 100));
+      const unitPriceCents = Math.round(basket.sold_price * 100) - Math.round(basket.sold_price * 100 * (commissionRate / 100));
+      basketAmountInCents = unitPriceCents * quantity;
+      commissionInCents = 0;
+      serviceFeeInCents = Math.round(basketAmountInCents * SERVICE_FEE_PERCENT) + DONATION_SERVICE_FEE_FIXED_CENTS;
+    } else {
+      basketAmountInCents = Math.round(basket.sold_price * quantity * 100);
+      commissionInCents = Math.round(basketAmountInCents * (commissionRate / 100));
+      serviceFeeInCents = Math.round(basketAmountInCents * SERVICE_FEE_PERCENT) + SERVICE_FEE_FIXED_CENTS;
+    }
+
+    // If client sent an amount, validate it matches DB price (tolerance: 1 cent)
+    if (amount !== undefined && !isClientDonation && Math.abs(amount - basketAmountInCents) > 1) {
+      return new Response(
+        JSON.stringify({ error: "Le montant ne correspond pas au prix du panier." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Client pays basket price + service fee
     const totalAmountInCents = basketAmountInCents + serviceFeeInCents;
@@ -243,6 +256,7 @@ Deno.serve(async (req: Request) => {
       transfer_data: {
         destination: commerce.stripe_account_id,
       },
+      ...(isClientDonation ? { capture_method: "manual" as const } : {}),
       metadata: {
         basket_id,
         commerce_id: commerce.id,
@@ -254,8 +268,9 @@ Deno.serve(async (req: Request) => {
         service_fee_amount: String(serviceFeeInCents),
         idempotency_key: idempotencyKey,
         source: "mobile",
+        ...(isClientDonation ? { isDonation: "true" } : {}),
       },
-      setup_future_usage: "off_session",
+      ...(isClientDonation ? {} : { setup_future_usage: "off_session" as const }),
       payment_method_types: ["card"],
     });
 
@@ -270,6 +285,19 @@ Deno.serve(async (req: Request) => {
     const serviceFeeAmountEur = serviceFeeInCents / 100;
     const netAmountEur = basketAmountEur - commissionAmountEur;
 
+    // Compute donation expiration if applicable
+    let donationExpiresAt: string | null = null;
+    if (isClientDonation) {
+      const now = new Date();
+      const targetDate =
+        basket.day === "tomorrow"
+          ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+          : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const [h, m] = basket.pickup_end.split(":").map(Number);
+      targetDate.setHours(h, m, 0, 0);
+      donationExpiresAt = targetDate.toISOString();
+    }
+
     const { data: order, error: orderError } = await adminClient
       .from("orders")
       .insert({
@@ -278,17 +306,18 @@ Deno.serve(async (req: Request) => {
         commerce_id: commerce.id,
         quantity,
         total_amount: basketAmountEur,
-        unit_price: basket.sold_price,
+        unit_price: basketAmountEur / quantity,
         commission_amount: commissionAmountEur,
         net_amount: netAmountEur,
         service_fee_amount: serviceFeeAmountEur,
-        status: "created",
+        status: isClientDonation ? "pending_association" : "created",
         stripe_payment_intent_id: paymentIntent.id,
-        is_donation: basket.is_donation ?? false,
-        qr_code_token: pickupToken,
+        is_donation: isClientDonation || (basket.is_donation ?? false),
+        qr_code_token: isClientDonation ? null : pickupToken,
         pickup_start: basket.pickup_start,
         pickup_end: basket.pickup_end,
         pickup_date: basket.day,
+        ...(donationExpiresAt ? { donation_expires_at: donationExpiresAt } : {}),
       })
       .select("id")
       .single();

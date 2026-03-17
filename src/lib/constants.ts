@@ -17,8 +17,9 @@ export const SUBSCRIPTION_PLANS = {
 export type SubscriptionPlanId = keyof typeof SUBSCRIPTION_PLANS;
 
 // ── Service Fee (paid by client, kept by Kshare) ─────────────
-export const SERVICE_FEE_FIXED = 0.79; // EUR
+export const SERVICE_FEE_FIXED = 0.79; // EUR — paniers normaux
 export const SERVICE_FEE_PERCENT = 0.015; // 1.5%
+export const DONATION_SERVICE_FEE_FIXED = 0.25; // EUR — frais réels Stripe pour les dons
 
 // ── Basket Constraints ───────────────────────────────────────
 export const BASKET_MIN_PRICE = 5; // EUR minimum sold_price

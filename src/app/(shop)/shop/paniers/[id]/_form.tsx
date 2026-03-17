@@ -509,7 +509,7 @@ export default function BasketEditForm({ basket }: BasketEditFormProps) {
                 <Separator />
                 <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-200 bg-amber-50">
                   <span className="text-sm font-medium text-amber-800">
-                    Ce panier est un don pour les associations (Tsedaka / Mitzva)
+                    Ce panier est un don pour les associations (Tsedaka)
                   </span>
                 </div>
               </>

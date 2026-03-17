@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ShoppingCart, Minus, Plus, Loader2, Heart } from "lucide-react";
-import { SERVICE_FEE_FIXED, SERVICE_FEE_PERCENT } from "@/lib/constants";
+import { SERVICE_FEE_FIXED, SERVICE_FEE_PERCENT, DONATION_SERVICE_FEE_FIXED } from "@/lib/constants";
 
 interface BasketBuyButtonProps {
   basketId: string;
@@ -31,6 +31,10 @@ export function BasketBuyButton({
   // Frais de service plateforme : 1.5% du prix panier + 0.79€
   const serviceFee =
     Math.round((soldPrice * quantity * SERVICE_FEE_PERCENT + SERVICE_FEE_FIXED) * 100) / 100;
+
+  // Frais de service pour les dons : frais réels Stripe (1.5% + 0.25€)
+  const donationServiceFee =
+    Math.round((donationPrice * quantity * SERVICE_FEE_PERCENT + DONATION_SERVICE_FEE_FIXED) * 100) / 100;
 
   async function handleBuy() {
     setLoading(true);
@@ -107,7 +111,7 @@ export function BasketBuyButton({
   const basketTotal = soldPrice * quantity;
   const totalWithFee = Math.round((basketTotal + serviceFee) * 100) / 100;
   const donationTotal =
-    Math.round(donationPrice * quantity * 100) / 100;
+    Math.round((donationPrice * quantity + donationServiceFee) * 100) / 100;
 
   return (
     <div className="space-y-4">
@@ -205,6 +209,16 @@ export function BasketBuyButton({
             </>
           )}
         </button>
+        <div className="space-y-1 mt-1">
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span>Panier (sans commission)</span>
+            <span>{(donationPrice * quantity).toFixed(2)}&nbsp;&euro;</span>
+          </div>
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span>Frais de gestion</span>
+            <span>{donationServiceFee.toFixed(2)}&nbsp;&euro;</span>
+          </div>
+        </div>
         <p className="text-xs text-gray-400 text-center leading-relaxed">
           Prix réduit (sans commission Kshare). Vous ne serez débité que si une
           association récupère le panier.
