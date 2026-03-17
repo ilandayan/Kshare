@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -177,6 +177,7 @@ function ClientsTab({ rows }: { rows: ClientRow[] }) {
   const [filter, setFilter] = useState("Tous");
   const [isPending, startTransition] = useTransition();
   const [confirmAction, setConfirmAction] = useState<{ type: "suspend" | "unsuspend" | "delete"; id: string; name: string } | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const kpis = [
     { label: "Total Clients",   value: rows.length.toString(),                                            borderColor: "border-l-blue-500",   icon: "Users" },
@@ -246,30 +247,64 @@ function ClientsTab({ rows }: { rows: ClientRow[] }) {
             {filtered.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-sm">Aucun client trouvé</td></tr>
             ) : filtered.map((r) => (
-              <tr key={r.id} className="hover:bg-[#fafbff] transition-colors">
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar initials={r.initials} />
-                    <div><div className="font-semibold text-sm text-[#3744C8]">{r.fullName}</div><div className="text-xs text-gray-400"><MapPin className="h-3 w-3 inline mr-0.5" />{r.city}</div></div>
-                  </div>
-                </td>
-                <td className="px-5 py-4"><div className="text-xs text-gray-600"><Mail className="h-3 w-3 inline mr-0.5" />{r.email}</div><div className="text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 inline mr-0.5" />{r.phone}</div></td>
-                <td className="px-5 py-4 text-sm text-gray-500">{r.inscriptionDate}</td>
-                <td className="px-5 py-4"><div className="text-xs text-gray-600"><ShoppingBag className="h-3 w-3 inline mr-0.5" />{r.basketCount} <span className="text-pink-500 ml-1"><Handshake className="h-3 w-3 inline mr-0.5" />{r.donationsAmount}€</span></div></td>
-                <td className="px-5 py-4 text-xs text-gray-400"><Clock className="h-3 w-3 inline mr-0.5" />{r.lastActivity}</td>
-                <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-1">
-                    <button className="p-1.5 text-gray-400 hover:text-[#3744C8] transition-colors cursor-pointer" title="Voir"><Eye className="h-4 w-4" /></button>
-                    {r.status === "suspendu" ? (
-                      <button onClick={() => setConfirmAction({ type: "unsuspend", id: r.id, name: r.fullName })} className="p-1.5 text-orange-400 hover:text-green-600 transition-colors cursor-pointer" title="Réactiver"><RotateCcw className="h-4 w-4" /></button>
-                    ) : (
-                      <button onClick={() => setConfirmAction({ type: "suspend", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors cursor-pointer" title="Suspendre"><Ban className="h-4 w-4" /></button>
-                    )}
-                    <button onClick={() => setConfirmAction({ type: "delete", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                </td>
-              </tr>
+              <Fragment key={r.id}>
+                <tr className="hover:bg-[#fafbff] transition-colors group">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar initials={r.initials} />
+                      <div><div className="font-semibold text-sm text-[#3744C8]">{r.fullName}</div><div className="text-xs text-gray-400"><MapPin className="h-3 w-3 inline mr-0.5" />{r.city}</div></div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4"><div className="text-xs text-gray-600"><Mail className="h-3 w-3 inline mr-0.5" />{r.email}</div><div className="text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 inline mr-0.5" />{r.phone}</div></td>
+                  <td className="px-5 py-4 text-sm text-gray-500">{r.inscriptionDate}</td>
+                  <td className="px-5 py-4"><div className="text-xs text-gray-600"><ShoppingBag className="h-3 w-3 inline mr-0.5" />{r.basketCount} <span className="text-pink-500 ml-1"><Handshake className="h-3 w-3 inline mr-0.5" />{r.donationsAmount}€</span></div></td>
+                  <td className="px-5 py-4 text-xs text-gray-400"><Clock className="h-3 w-3 inline mr-0.5" />{r.lastActivity}</td>
+                  <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} className={`p-1.5 transition-colors cursor-pointer ${expandedId === r.id ? "text-[#3744C8]" : "text-gray-400 hover:text-[#3744C8]"}`} title="Voir"><Eye className="h-4 w-4" /></button>
+                      {r.status === "suspendu" ? (
+                        <button onClick={() => setConfirmAction({ type: "unsuspend", id: r.id, name: r.fullName })} className="p-1.5 text-orange-400 hover:text-green-600 transition-colors cursor-pointer" title="Réactiver"><RotateCcw className="h-4 w-4" /></button>
+                      ) : (
+                        <button onClick={() => setConfirmAction({ type: "suspend", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors cursor-pointer" title="Suspendre"><Ban className="h-4 w-4" /></button>
+                      )}
+                      <button onClick={() => setConfirmAction({ type: "delete", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </td>
+                </tr>
+                {expandedId === r.id && (
+                  <tr className="bg-[#fafbff]">
+                    <td colSpan={7} className="px-5 py-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
+                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Identité</div>
+                          <div className="space-y-1.5">
+                            <div className="font-medium text-gray-900">{r.fullName}</div>
+                            <div className="text-xs text-gray-500 flex items-center gap-1"><Mail className="h-3 w-3" />{r.email}</div>
+                            <div className="text-xs text-gray-500 flex items-center gap-1"><Phone className="h-3 w-3" />{r.phone}</div>
+                            <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="h-3 w-3" />{r.city}</div>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
+                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Statistiques</div>
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between"><span className="text-gray-500">Paniers achetés</span><span className="font-semibold text-gray-900">{r.basketCount}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Total dons</span><span className="font-semibold text-pink-600">{r.donationsAmount.toFixed(2)}€</span></div>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
+                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Compte</div>
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between"><span className="text-gray-500">Inscription</span><span className="font-medium text-gray-900">{r.inscriptionDate}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Dernière activité</span><span className="font-medium text-gray-900">{r.lastActivity}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Statut</span><StatusBadge status={r.status} /></div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -398,7 +433,7 @@ function CommercantTab({ rows }: { rows: CommercantRow[] }) {
                 <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 text-gray-400 hover:text-[#3744C8] transition-colors cursor-pointer" title="Voir"><Eye className="h-4 w-4" /></button>
+                    <button onClick={() => router.push(`/kshare-admin/comptes/${r.id}?type=commerce`)} className="p-1.5 text-gray-400 hover:text-[#3744C8] transition-colors cursor-pointer" title="Voir"><Eye className="h-4 w-4" /></button>
                     {r.status === "suspendu" ? (
                       <button onClick={() => setConfirmAction({ type: "unsuspend", id: r.id, name: r.commerceName })} className="p-1.5 text-orange-400 hover:text-green-600 transition-colors cursor-pointer" title="Réactiver"><RotateCcw className="h-4 w-4" /></button>
                     ) : (
@@ -536,7 +571,7 @@ function AssoTab({ rows }: { rows: AssoRow[] }) {
                 <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 text-gray-400 hover:text-purple-600 transition-colors cursor-pointer" title="Voir"><Eye className="h-4 w-4" /></button>
+                    <button onClick={() => router.push(`/kshare-admin/comptes/${r.id}?type=association`)} className="p-1.5 text-gray-400 hover:text-purple-600 transition-colors cursor-pointer" title="Voir"><Eye className="h-4 w-4" /></button>
                     {r.status === "suspendu" ? (
                       <button onClick={() => setConfirmAction({ type: "unsuspend", id: r.id, name: r.name })} className="p-1.5 text-orange-400 hover:text-green-600 transition-colors cursor-pointer" title="Réactiver"><RotateCcw className="h-4 w-4" /></button>
                     ) : (
