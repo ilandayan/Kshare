@@ -174,25 +174,16 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
           <p className="text-sm text-gray-400 text-center py-6">Aucune donnée sur la période sélectionnée.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed">
-              <colgroup>
-                <col className="w-[5%]" />
-                <col className="w-[25%]" />
-                <col className="w-[15%]" />
-                <col className="w-[12%]" />
-                <col className="w-[14%]" />
-                <col className="w-[16%]" />
-                <col className="w-[13%]" />
-              </colgroup>
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e2e5f0]">
-                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">#</th>
                   <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Commerce</th>
                   <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ville</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paniers</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">CA</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Commission</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Favoris</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paniers</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">CA</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Commission</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Favoris</th>
                 </tr>
               </thead>
               <tbody>
@@ -214,14 +205,14 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
                           <span className="text-gray-400 font-medium pl-1.5">{i + 1}</span>
                         )}
                       </td>
-                      <td className="py-3 px-3 font-medium text-gray-900 truncate">{entry.name}</td>
-                      <td className="py-3 px-3 text-gray-500 truncate">{entry.city || "—"}</td>
-                      <td className="py-3 px-3 text-right font-medium text-gray-900">{entry.paniers}</td>
-                      <td className="py-3 px-3 text-right font-bold text-green-600">{entry.ca.toFixed(2)}€</td>
-                      <td className="py-3 px-3 text-right font-medium text-purple-600">{entry.commission.toFixed(2)}€</td>
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 font-medium text-gray-900">{entry.name}</td>
+                      <td className="py-3 px-3 text-gray-500">{entry.city || "—"}</td>
+                      <td className="py-3 px-3 font-medium text-gray-900">{entry.paniers}</td>
+                      <td className="py-3 px-3 font-bold text-green-600">{entry.ca.toFixed(2)}€</td>
+                      <td className="py-3 px-3 font-medium text-purple-600">{entry.commission.toFixed(2)}€</td>
+                      <td className="py-3 px-3">
                         {entry.favoris > 0 ? (
-                          <span className="inline-flex items-center justify-end gap-1 text-amber-500 font-medium">
+                          <span className="inline-flex items-center gap-1 text-amber-500 font-medium">
                             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                             {entry.favoris}
                           </span>
@@ -252,23 +243,15 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed">
-              <colgroup>
-                <col className="w-[5%]" />
-                <col className="w-[28%]" />
-                <col className="w-[17%]" />
-                <col className="w-[17%]" />
-                <col className="w-[17%]" />
-                <col className="w-[16%]" />
-              </colgroup>
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e2e5f0]">
-                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">#</th>
                   <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Commerce</th>
                   <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ville</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Favoris</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paniers vendus</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">CA</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Favoris</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paniers vendus</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">CA</th>
                 </tr>
               </thead>
               <tbody>
@@ -288,16 +271,16 @@ export function AdminCharts({ period, commerce, commercesList, dayData, typeData
                         <span className="text-gray-400 font-medium pl-1.5">{i + 1}</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 font-medium text-gray-900 truncate">{entry.name}</td>
-                    <td className="py-3 px-3 text-gray-500 truncate">{entry.city || "—"}</td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="inline-flex items-center justify-end gap-1 text-amber-500 font-bold">
+                    <td className="py-3 px-3 font-medium text-gray-900">{entry.name}</td>
+                    <td className="py-3 px-3 text-gray-500">{entry.city || "—"}</td>
+                    <td className="py-3 px-3">
+                      <span className="inline-flex items-center gap-1 text-amber-500 font-bold">
                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                         {entry.favoris}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-medium text-gray-900">{entry.paniers}</td>
-                    <td className="py-3 px-3 text-right font-bold text-green-600">{entry.ca.toFixed(2)}€</td>
+                    <td className="py-3 px-3 font-medium text-gray-900">{entry.paniers}</td>
+                    <td className="py-3 px-3 font-bold text-green-600">{entry.ca.toFixed(2)}€</td>
                   </tr>
                 ))}
               </tbody>
