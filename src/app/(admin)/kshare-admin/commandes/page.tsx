@@ -16,17 +16,27 @@ function formatDate(iso: string): string {
 export default async function AdminCommandesPage() {
   const supabase = await createClient();
 
-  const { data: raw } = await supabase
-    .from("orders")
-    .select(`
-      id, status, quantity, total_amount, created_at, is_donation,
-      baskets!inner(sold_price, type),
-      profiles!orders_client_id_fkey(full_name, email, phone),
-      commerces(name, commerce_type),
-      associations(name, profiles!associations_profile_id_fkey(email, phone))
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const [{ data: raw }, { data: ratingsRaw }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select(`
+        id, status, quantity, total_amount, created_at, is_donation,
+        baskets!inner(sold_price, type),
+        profiles!orders_client_id_fkey(full_name, email, phone),
+        commerces(name, commerce_type),
+        associations(name, profiles!associations_profile_id_fkey(email, phone))
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("ratings")
+      .select("order_id, score"),
+  ]);
+
+  const ratingsMap = new Map<string, number>();
+  for (const r of ratingsRaw ?? []) {
+    ratingsMap.set(r.order_id, r.score);
+  }
 
   const orders: AdminOrder[] = (raw ?? []).map((o) => {
     const basket    = o.baskets    as { sold_price: number; type: string } | null;
@@ -50,6 +60,7 @@ export default async function AdminCommandesPage() {
       associationName:  asso?.name,
       associationEmail: asso?.profiles?.email ?? undefined,
       associationPhone: asso?.profiles?.phone ?? undefined,
+      rating:           ratingsMap.get(o.id) ?? null,
     };
   });
 

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ChevronDown, ChevronUp, Calendar, Package, Clock, ShoppingCart, Wallet, ShoppingBag, Handshake, CheckCircle, XCircle, Loader2, type LucideIcon } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Calendar, Package, Clock, ShoppingCart, Wallet, ShoppingBag, Handshake, CheckCircle, XCircle, Loader2, Star, type LucideIcon } from "lucide-react";
 import { marquerPretRetrait, confirmerRetrait, marquerNoShow } from "@/app/(shop)/shop/paniers/orders/_actions";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ interface Order {
   basketType: string;
   basketDay: string;
   pickupTime: string;
+  rating: number | null;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
@@ -127,6 +128,17 @@ function OrderRow({ order }: { order: Order }) {
               <div className="font-semibold text-gray-900 text-sm">{order.pickupTime}</div>
             </div>
           </div>
+
+          {/* Rating display */}
+          {order.rating !== null && (
+            <div className="flex items-center gap-2 mt-3 px-1">
+              <div className="flex items-center gap-1.5 bg-amber-50 rounded-lg px-3 py-1.5">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-bold text-amber-700">{order.rating}/5</span>
+                <span className="text-xs text-amber-600 ml-1">Note client</span>
+              </div>
+            </div>
+          )}
 
           {/* Action buttons */}
           {["paid", "ready_for_pickup"].includes(order.status) && (

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package, ShoppingCart, Wallet, ShoppingBag, Handshake, Mail, Phone, RotateCcw, XCircle, ArrowRightLeft, Loader2, type LucideIcon } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package, ShoppingCart, Wallet, ShoppingBag, Handshake, Mail, Phone, RotateCcw, XCircle, ArrowRightLeft, Loader2, Star, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminRembourserCommande,
@@ -31,6 +31,7 @@ export interface AdminOrder {
   associationName?: string;
   associationEmail?: string;
   associationPhone?: string;
+  rating: number | null;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
@@ -101,6 +102,12 @@ function OrderRow({ order }: { order: AdminOrder }) {
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${status.cls}`}>
               {status.label}
             </span>
+            {order.rating !== null && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                {order.rating}/5
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {order.date}</span>

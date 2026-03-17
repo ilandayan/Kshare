@@ -25,15 +25,26 @@ export default async function OrdersPage() {
     .single();
   if (!commerce) redirect("/connexion");
 
-  const { data: raw } = await supabase
-    .from("orders")
-    .select(`
-      id, status, quantity, total_amount, created_at, is_donation,
-      baskets!inner(sold_price, type, day, pickup_start, pickup_end)
-    `)
-    .eq("commerce_id", commerce.id)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const [{ data: raw }, { data: ratingsRaw }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select(`
+        id, status, quantity, total_amount, created_at, is_donation,
+        baskets!inner(sold_price, type, day, pickup_start, pickup_end)
+      `)
+      .eq("commerce_id", commerce.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("ratings")
+      .select("order_id, score")
+      .eq("commerce_id", commerce.id),
+  ]);
+
+  const ratingsMap = new Map<string, number>();
+  for (const r of ratingsRaw ?? []) {
+    ratingsMap.set(r.order_id, r.score);
+  }
 
   const orders = (raw ?? []).map((o) => {
     const basket = o.baskets as { sold_price: number; type: string; day: string; pickup_start: string; pickup_end: string } | null;
@@ -52,6 +63,7 @@ export default async function OrdersPage() {
       basketType: basket?.type ?? "",
       basketDay: basket?.day === "today" ? "Aujourd'hui" : "Demain",
       pickupTime: `${basket?.pickup_start?.slice(0, 5) ?? ""} – ${basket?.pickup_end?.slice(0, 5) ?? ""}`,
+      rating: ratingsMap.get(o.id) ?? null,
     };
   });
 
