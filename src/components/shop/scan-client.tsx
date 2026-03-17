@@ -25,7 +25,8 @@ type InputMode = "code" | "qr";
 
 function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void; onSwitchToCode: () => void }) {
   const scannerRef = useRef<HTMLDivElement>(null);
-  const html5QrRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const html5QrRef = useRef<any>(null);
   const [started, setStarted] = useState(false);
   const [cameraError, setCameraError] = useState("");
 
@@ -115,7 +116,7 @@ function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void;
 }
 
 export function ScanClient() {
-  const [mode, setMode] = useState<InputMode>("qr");
+  const [mode, setMode] = useState<InputMode>("code");
   const [code, setCode] = useState("");
   const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
