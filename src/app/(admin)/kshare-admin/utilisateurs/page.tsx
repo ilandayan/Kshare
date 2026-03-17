@@ -96,7 +96,7 @@ export default async function AdminUtilisateursPage({
   const { data: commerces } = await supabase
     .from("commerces")
     .select(`
-      id, name, commerce_type, hashgakha, status,
+      id, name, commerce_type, hashgakha, status, average_rating, total_ratings,
       profiles!commerces_profile_id_fkey(full_name, email, phone, created_at),
       baskets(id, quantity_sold)
     `)
@@ -117,6 +117,8 @@ export default async function AdminUtilisateursPage({
       hashgakha:     c.hashgakha ?? "—",
       proposedCount: baskets.length,
       soldCount:     baskets.reduce((s, b) => s + (b.quantity_sold ?? 0), 0),
+      averageRating: (c as Record<string, unknown>).average_rating as number ?? 0,
+      totalRatings:  (c as Record<string, unknown>).total_ratings as number ?? 0,
       lastActivity:  timeSince(profile?.created_at ?? null),
       status:        c.status === "validated" ? "actif" : c.status === "archived" ? "archivé" : c.status === "suspended" ? "suspendu" : "en attente",
     };

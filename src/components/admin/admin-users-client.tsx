@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Search, Eye, Edit2, Users, CheckCircle, ShoppingBag, Handshake, Store, MapPin, Mail, Phone, Clock,
-  Ban, Trash2, RotateCcw, AlertTriangle, X,
+  Ban, Trash2, RotateCcw, AlertTriangle, X, Star,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -31,6 +31,7 @@ export interface CommercantRow {
   id: string; initials: string; fullName: string; city: string;
   commerceName: string; commerceType: string; email: string; phone: string;
   hashgakha: string; proposedCount: number; soldCount: number;
+  averageRating: number; totalRatings: number;
   lastActivity: string; status: UserStatus;
 }
 export interface AssoRow {
@@ -410,13 +411,13 @@ function CommercantTab({ rows }: { rows: CommercantRow[] }) {
       <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm overflow-x-auto">
         <table className="w-full min-w-[900px]">
           <thead><tr className="border-b border-[#e2e5f0]">
-            {["COMMERÇANT","COMMERCE","CONTACT","CACHEROUT","STATISTIQUES","DERNIÈRE ACTIVITÉ","STATUT","ACTIONS"].map((h) => (
+            {["COMMERÇANT","COMMERCE","CONTACT","CACHEROUT","STATISTIQUES","NOTE","DERNIÈRE ACTIVITÉ","STATUT","ACTIONS"].map((h) => (
               <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">{h}</th>
             ))}
           </tr></thead>
           <tbody className="divide-y divide-[#f0f1f5]">
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-10 text-gray-400 text-sm">Aucun commerçant trouvé</td></tr>
+              <tr><td colSpan={9} className="text-center py-10 text-gray-400 text-sm">Aucun commerçant trouvé</td></tr>
             ) : filtered.map((r) => (
               <tr key={r.id} className="hover:bg-[#fafbff] transition-colors">
                 <td className="px-5 py-4">
@@ -429,6 +430,7 @@ function CommercantTab({ rows }: { rows: CommercantRow[] }) {
                 <td className="px-5 py-4"><div className="text-xs text-gray-600"><Mail className="h-3 w-3 inline mr-0.5" />{r.email}</div><div className="text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 inline mr-0.5" />{r.phone}</div></td>
                 <td className="px-5 py-4"><span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-medium">{r.hashgakha || "—"}</span></td>
                 <td className="px-5 py-4"><div className="text-xs text-gray-600"><ShoppingBag className="h-3 w-3 inline mr-0.5" />{r.proposedCount} proposés</div><div className="text-xs text-green-600 mt-0.5"><CheckCircle className="h-3 w-3 inline mr-0.5 text-green-600" />{r.soldCount} vendus</div></td>
+                <td className="px-5 py-4">{r.totalRatings > 0 ? (<div className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" /><span className="text-sm font-semibold text-gray-800">{r.averageRating.toFixed(1)}</span><span className="text-xs text-gray-400">({r.totalRatings})</span></div>) : (<span className="text-xs text-gray-400">—</span>)}</td>
                 <td className="px-5 py-4 text-xs text-gray-400"><Clock className="h-3 w-3 inline mr-0.5" />{r.lastActivity}</td>
                 <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
                 <td className="px-5 py-4">
