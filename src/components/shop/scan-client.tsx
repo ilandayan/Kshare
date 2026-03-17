@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
 import { rechercherParCode, confirmerRetraitScan, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
@@ -121,10 +121,9 @@ export function ScanClient() {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [isConfirming, startConfirmTransition] = useTransition();
+  const [isSearching, setIsSearching] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const searchingRef = useRef(false);
 
   useEffect(() => {
     if (mode === "code") {
@@ -133,27 +132,26 @@ export function ScanClient() {
   }, [mode]);
 
   const doSearch = useCallback((token: string) => {
-    if (!token.trim() || searchingRef.current) return;
-    searchingRef.current = true;
+    if (!token.trim() || isSearching) return;
+    setIsSearching(true);
     setError("");
     setOrder(null);
 
-    startTransition(async () => {
-      try {
-        const result = await rechercherParCode(token.trim());
-        searchingRef.current = false;
+    rechercherParCode(token.trim())
+      .then((result) => {
+        setIsSearching(false);
         if (result.success) {
           setOrder(result.order);
         } else {
           setError(result.error);
         }
-      } catch (err) {
-        searchingRef.current = false;
+      })
+      .catch((err) => {
+        setIsSearching(false);
         console.error("[scan-client] Server action error:", err);
         setError("Erreur de connexion. Veuillez réessayer.");
-      }
-    });
-  }, []);
+      });
+  }, [isSearching]);
 
   function handleSearch() {
     doSearch(code);
@@ -166,19 +164,28 @@ export function ScanClient() {
 
   function handleConfirmPickup() {
     if (!order) return;
-    startConfirmTransition(async () => {
-      try {
-        const result = await confirmerRetraitScan(order.id);
+    setIsConfirming(true);
+    confirmerRetraitScan(order.id)
+      .then((result) => {
+        setIsConfirming(false);
         if (result.success) {
           setConfirmed(true);
           setOrder({ ...order, status: "picked_up" });
         } else {
           setError(result.error);
         }
-      } catch {
+      })
+      .catch(() => {
+        setIsConfirming(false);
         setError("Erreur lors de la confirmation. Veuillez réessayer.");
-      }
-    });
+      });
+  }
+
+  function switchMode(newMode: InputMode) {
+    setMode(newMode);
+    setError("");
+    setIsSearching(false);
+    setCode("");
   }
 
   function handleReset() {
@@ -186,7 +193,7 @@ export function ScanClient() {
     setOrder(null);
     setError("");
     setConfirmed(false);
-    searchingRef.current = false;
+    setIsSearching(false);
     if (mode === "code") {
       inputRef.current?.focus();
     }
@@ -203,7 +210,7 @@ export function ScanClient() {
           {/* Tab selector */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
             <button
-              onClick={() => { setMode("qr"); setError(""); searchingRef.current = false; }}
+              onClick={() => switchMode("qr")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 mode === "qr"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -214,7 +221,7 @@ export function ScanClient() {
               Scanner QR
             </button>
             <button
-              onClick={() => { setMode("code"); setError(""); searchingRef.current = false; }}
+              onClick={() => switchMode("code")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 mode === "code"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -248,15 +255,15 @@ export function ScanClient() {
           </div>
 
           {/* QR mode */}
-          {mode === "qr" && !isPending && (
+          {mode === "qr" && !isSearching && (
             <QrScanner
               onScan={handleQrScan}
-              onSwitchToCode={() => { setMode("code"); setError(""); searchingRef.current = false; }}
+              onSwitchToCode={() => switchMode("code")}
             />
           )}
 
           {/* QR searching state */}
-          {mode === "qr" && isPending && (
+          {mode === "qr" && isSearching && (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-8 h-8 text-[#2d4de0] animate-spin" />
               <p className="text-sm text-gray-500">Recherche de la commande…</p>
@@ -274,14 +281,14 @@ export function ScanClient() {
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="Ex : 847291"
                 className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-lg font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-[#2d4de0]/30 focus:border-[#2d4de0] placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-sans"
-                disabled={isPending}
+                disabled={isSearching}
               />
               <button
                 onClick={handleSearch}
-                disabled={isPending || !code.trim()}
+                disabled={isSearching || !code.trim()}
                 className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-2"
               >
-                {isPending ? (
+                {isSearching ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Search className="w-5 h-5" />
