@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, Component, type ReactNode } from "react";
 import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
-import { rechercherParCode, confirmerRetraitScan, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
+import { rechercherParCode, validerPresenceClient, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
 /* ── Error Boundary ── */
 class QrErrorBoundary extends Component<
@@ -217,22 +217,22 @@ export function ScanClient() {
     doSearch(scannedCode);
   }
 
-  function handleConfirmPickup() {
+  function handleValidatePresence() {
     if (!order) return;
     setIsConfirming(true);
-    confirmerRetraitScan(order.id)
+    validerPresenceClient(order.id)
       .then((result) => {
         setIsConfirming(false);
         if (result.success) {
           setConfirmed(true);
-          setOrder({ ...order, status: "picked_up" });
+          setOrder({ ...order, status: "ready_for_pickup" });
         } else {
           setError(result.error);
         }
       })
       .catch(() => {
         setIsConfirming(false);
-        setError("Erreur lors de la confirmation. Veuillez réessayer.");
+        setError("Erreur lors de la validation. Veuillez réessayer.");
       });
   }
 
@@ -419,8 +419,8 @@ export function ScanClient() {
                 <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl p-3">
                   <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-green-800">Retrait confirmé !</p>
-                    <p className="text-xs text-green-600 mt-0.5">Le panier a été remis au client avec succès.</p>
+                    <p className="text-sm font-medium text-green-800">Présence validée !</p>
+                    <p className="text-xs text-green-600 mt-0.5">Le client peut maintenant confirmer le retrait depuis son application.</p>
                   </div>
                 </div>
                 <button
@@ -430,16 +430,16 @@ export function ScanClient() {
                   Nouveau scan
                 </button>
               </>
-            ) : (order.status === "paid" || order.status === "ready_for_pickup") ? (
+            ) : order.status === "paid" ? (
               <>
                 <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
                   <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                   <p className="text-xs text-blue-700">
-                    Vérifiez l&apos;identité du client puis confirmez la remise du panier.
+                    Vérifiez l&apos;identité du client puis validez sa présence. Le client confirmera le retrait depuis son application.
                   </p>
                 </div>
                 <button
-                  onClick={handleConfirmPickup}
+                  onClick={handleValidatePresence}
                   disabled={isConfirming}
                   className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
@@ -448,13 +448,28 @@ export function ScanClient() {
                   ) : (
                     <CheckCircle2 className="w-5 h-5" />
                   )}
-                  Confirmer le retrait
+                  Valider la présence du client
                 </button>
                 <button
                   onClick={handleReset}
                   className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
                 >
                   Annuler
+                </button>
+              </>
+            ) : order.status === "ready_for_pickup" ? (
+              <>
+                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                  <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-700">
+                    Commande prête au retrait. En attente de la confirmation du client depuis son application.
+                  </p>
+                </div>
+                <button
+                  onClick={handleReset}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity"
+                >
+                  Nouveau scan
                 </button>
               </>
             ) : (

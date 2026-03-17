@@ -70,56 +70,6 @@ export async function marquerPretRetrait(
   return { success: true };
 }
 
-/** Mark order as "picked up" (client has collected) */
-export async function confirmerRetrait(
-  orderId: string
-): Promise<OrderActionResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifie." };
-
-  const commerceId = await getCommerceId(supabase, user.id);
-  if (!commerceId) return { success: false, error: "Commerce introuvable." };
-
-  const { data: order } = await supabase
-    .from("orders")
-    .select("id, status, commerce_id, client_id")
-    .eq("id", orderId)
-    .single();
-
-  if (!order || order.commerce_id !== commerceId) {
-    return { success: false, error: "Commande introuvable." };
-  }
-
-  if (order.status !== "ready_for_pickup" && order.status !== "paid") {
-    return { success: false, error: "Cette commande ne peut pas etre confirmee." };
-  }
-
-  const { data: commerceData } = await supabase
-    .from("commerces")
-    .select("name")
-    .eq("id", commerceId)
-    .single();
-
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      status: "picked_up",
-      picked_up_at: new Date().toISOString(),
-    })
-    .eq("id", orderId)
-    .eq("commerce_id", commerceId);
-
-  if (error) return { success: false, error: "Erreur lors de la confirmation." };
-
-  notifyOrderStatusChange(orderId, order.client_id, "picked_up", commerceData?.name ?? "le commerce");
-
-  revalidatePath("/shop/paniers/orders");
-  return { success: true };
-}
-
 /** Mark order as "no show" (client did not come) */
 export async function marquerNoShow(
   orderId: string

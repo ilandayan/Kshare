@@ -8,7 +8,7 @@ import {
   XCircle, Loader2, Star, CircleDot, PackageCheck,
   type LucideIcon,
 } from "lucide-react";
-import { marquerPretRetrait, confirmerRetrait, marquerNoShow } from "@/app/(shop)/shop/paniers/orders/_actions";
+import { marquerPretRetrait, marquerNoShow } from "@/app/(shop)/shop/paniers/orders/_actions";
 import { toast } from "sonner";
 
 const KPI_ICONS: Record<string, LucideIcon> = {
@@ -163,14 +163,12 @@ function OrderRow({ order, compact }: { order: Order; compact?: boolean }) {
                   Prêt pour retrait
                 </button>
               )}
-              <button
-                disabled={isPending}
-                onClick={() => handleAction(confirmerRetrait, "Retrait confirmé !")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-              >
-                {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                Confirmer retrait
-              </button>
+              {order.status === "ready_for_pickup" && (
+                <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold">
+                  <Clock className="h-3.5 w-3.5" />
+                  En attente de confirmation client
+                </span>
+              )}
               <button
                 disabled={isPending}
                 onClick={() => handleAction(marquerNoShow, "Commande marquée comme non venu")}

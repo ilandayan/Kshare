@@ -127,8 +127,9 @@ export async function rechercherParCode(
   }
 }
 
-/** Confirm pickup for an order */
-export async function confirmerRetraitScan(
+/** Commerce validates client presence — marks order as ready_for_pickup.
+ *  Only the client's slide confirmation sets the order to "picked_up". */
+export async function validerPresenceClient(
   orderId: string
 ): Promise<ConfirmResult> {
   const supabase = await createClient();
@@ -154,23 +155,27 @@ export async function confirmerRetraitScan(
     return { success: false, error: "Commande introuvable." };
   }
 
-  if (order.status !== "paid" && order.status !== "ready_for_pickup") {
-    return { success: false, error: "Cette commande ne peut pas être confirmée." };
+  if (order.status === "ready_for_pickup") {
+    // Already ready — nothing to do, just show success
+    revalidatePath("/shop/scan");
+    revalidatePath("/shop/paniers/orders");
+    return { success: true };
+  }
+
+  if (order.status !== "paid") {
+    return { success: false, error: "Cette commande ne peut pas être validée." };
   }
 
   const { error } = await supabase
     .from("orders")
-    .update({
-      status: "picked_up",
-      picked_up_at: new Date().toISOString(),
-    })
+    .update({ status: "ready_for_pickup" })
     .eq("id", orderId)
     .eq("commerce_id", commerce.id);
 
-  if (error) return { success: false, error: "Erreur lors de la confirmation." };
+  if (error) return { success: false, error: "Erreur lors de la validation." };
 
-  // Send push notification to client (fire-and-forget)
-  notifyOrderStatusChange(orderId, order.client_id, "picked_up", commerce.name ?? "le commerce");
+  // Notify client that order is ready for pickup
+  notifyOrderStatusChange(orderId, order.client_id, "ready_for_pickup", commerce.name ?? "le commerce");
 
   revalidatePath("/shop/scan");
   revalidatePath("/shop/paniers/orders");
