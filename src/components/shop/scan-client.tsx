@@ -1,9 +1,28 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, Component, type ReactNode } from "react";
 import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
 import { rechercherParCode, confirmerRetraitScan, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
+/* ── Error Boundary ── */
+class QrErrorBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { fallback: ReactNode; children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
+/* ── Constants ── */
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   paid:             { label: "Payé",            color: "text-green-700",  bg: "bg-green-50 border-green-200" },
   ready_for_pickup: { label: "Prêt à retirer",  color: "text-blue-700",   bg: "bg-blue-50 border-blue-200" },
@@ -20,24 +39,26 @@ const BASKET_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 type OrderData = Extract<ScanResult, { success: true }>["order"];
-
 type InputMode = "code" | "qr";
 
+/* ── QR Scanner ── */
 function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void; onSwitchToCode: () => void }) {
   const scannerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const html5QrRef = useRef<any>(null);
   const [started, setStarted] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const hasFiredRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function start() {
       try {
-        const { Html5Qrcode } = await import("html5-qrcode");
+        const mod = await import("html5-qrcode");
         if (cancelled || !scannerRef.current) return;
 
+        const Html5Qrcode = mod.Html5Qrcode;
         const scannerId = "qr-reader-" + Date.now();
         scannerRef.current.id = scannerId;
 
@@ -48,11 +69,12 @@ function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void;
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
-            onScan(decodedText);
+            if (!hasFiredRef.current) {
+              hasFiredRef.current = true;
+              onScan(decodedText);
+            }
           },
-          () => {
-            // ignore scan failures (no QR in frame)
-          }
+          () => {}
         );
         if (!cancelled) setStarted(true);
       } catch (err) {
@@ -67,10 +89,14 @@ function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void;
 
     return () => {
       cancelled = true;
-      if (html5QrRef.current) {
-        html5QrRef.current.stop().catch(() => {});
-        html5QrRef.current.clear();
-        html5QrRef.current = null;
+      try {
+        if (html5QrRef.current) {
+          html5QrRef.current.stop().catch(() => {});
+          try { html5QrRef.current.clear(); } catch { /* ignore */ }
+          html5QrRef.current = null;
+        }
+      } catch {
+        // Cleanup errors are non-fatal
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,6 +141,31 @@ function QrScanner({ onScan, onSwitchToCode }: { onScan: (code: string) => void;
   );
 }
 
+/* ── Camera Fallback (shown when QR crashes) ── */
+function CameraFallback({ onSwitchToCode }: { onSwitchToCode: () => void }) {
+  return (
+    <div className="space-y-3">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+        <Camera className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-amber-800">Scanner non disponible</p>
+          <p className="text-xs text-amber-600 mt-1">
+            Utilisez la saisie manuelle du code de retrait.
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onSwitchToCode}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1e2a78] to-[#4f6df5] text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+      >
+        <Keyboard className="w-4 h-4" />
+        Saisir le code manuellement
+      </button>
+    </div>
+  );
+}
+
+/* ── Main Component ── */
 export function ScanClient() {
   const [mode, setMode] = useState<InputMode>("qr");
   const [code, setCode] = useState("");
@@ -124,21 +175,24 @@ export function ScanClient() {
   const [isSearching, setIsSearching] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchingRef = useRef(false);
 
   useEffect(() => {
     if (mode === "code") {
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [mode]);
 
   const doSearch = useCallback((token: string) => {
-    if (!token.trim() || isSearching) return;
+    if (!token.trim() || searchingRef.current) return;
+    searchingRef.current = true;
     setIsSearching(true);
     setError("");
     setOrder(null);
 
     rechercherParCode(token.trim())
       .then((result) => {
+        searchingRef.current = false;
         setIsSearching(false);
         if (result.success) {
           setOrder(result.order);
@@ -147,11 +201,12 @@ export function ScanClient() {
         }
       })
       .catch((err) => {
+        searchingRef.current = false;
         setIsSearching(false);
         console.error("[scan-client] Server action error:", err);
         setError("Erreur de connexion. Veuillez réessayer.");
       });
-  }, [isSearching]);
+  }, []);
 
   function handleSearch() {
     doSearch(code);
@@ -185,6 +240,7 @@ export function ScanClient() {
     setMode(newMode);
     setError("");
     setIsSearching(false);
+    searchingRef.current = false;
     setCode("");
   }
 
@@ -194,8 +250,9 @@ export function ScanClient() {
     setError("");
     setConfirmed(false);
     setIsSearching(false);
+    searchingRef.current = false;
     if (mode === "code") {
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
 
@@ -256,10 +313,14 @@ export function ScanClient() {
 
           {/* QR mode */}
           {mode === "qr" && !isSearching && (
-            <QrScanner
-              onScan={handleQrScan}
-              onSwitchToCode={() => switchMode("code")}
-            />
+            <QrErrorBoundary
+              fallback={<CameraFallback onSwitchToCode={() => switchMode("code")} />}
+            >
+              <QrScanner
+                onScan={handleQrScan}
+                onSwitchToCode={() => switchMode("code")}
+              />
+            </QrErrorBoundary>
           )}
 
           {/* QR searching state */}
