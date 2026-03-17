@@ -172,10 +172,11 @@ kshare/
 
 ## Paiements (Stripe)
 
+- **Modèle Stripe Connect : Plateforme** (les marchands encaissent directement les paiements, Kshare prélève une commission via `application_fee_amount`)
 - Paiement client dans l'app via Stripe Checkout / Payment Intent
-- Commission 15 % prélevée automatiquement (Stripe Connect)
-- Reversement hebdomadaire au commerce
-- Abonnement 30 €/mois via SEPA Direct Debit
+- Commission prélevée automatiquement (Starter 18 %, Pro 12 %)
+- Reversement hebdomadaire au commerce (chaque mardi)
+- Abonnement Pro 29 €/mois via SEPA Direct Debit
 - Webhooks Stripe gérés via Supabase Edge Function
 - Pas de données bancaires stockées côté Kshare
 

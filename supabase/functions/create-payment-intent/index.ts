@@ -39,6 +39,7 @@ Deno.serve(async (req: Request) => {
   try {
     // Auth: verify Supabase JWT
     const authHeader = req.headers.get("Authorization");
+    console.log("[create-payment-intent] Auth header present:", !!authHeader, authHeader?.substring(0, 20));
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization header" }), {
         status: 401,
@@ -61,8 +62,9 @@ Deno.serve(async (req: Request) => {
 
     // Verify user is authenticated
     const { data: { user }, error: authError } = await userClient.auth.getUser();
+    console.log("[create-payment-intent] Auth result:", user?.id, authError?.message);
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", detail: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -193,14 +195,50 @@ Deno.serve(async (req: Request) => {
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeSecretKey) throw new Error("STRIPE_SECRET_KEY not configured");
 
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2026-02-25",
-    });
+    const stripe = new Stripe(stripeSecretKey);
+
+    // ── Get or create Stripe Customer for this user ──
+    // Check if user already has a stripe_customer_id in profiles
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
+    let stripeCustomerId = profile?.stripe_customer_id;
+
+    if (!stripeCustomerId) {
+      // Create a new Stripe Customer
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { supabase_user_id: user.id },
+      });
+      stripeCustomerId = customer.id;
+
+      // Save it to profiles
+      await adminClient
+        .from("profiles")
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq("id", user.id);
+    }
+
+    // Create an ephemeral key for the customer (allows Payment Sheet to save cards)
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: stripeCustomerId },
+      { apiVersion: "2024-12-18.acacia" },
+    );
 
     // Create Stripe Payment Intent with Connect
+    console.log("[create-payment-intent] Creating PI", {
+      amount: totalAmountInCents,
+      fee: applicationFee,
+      destination: commerce.stripe_account_id,
+      customer: stripeCustomerId,
+    });
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmountInCents,
       currency: "eur",
+      customer: stripeCustomerId,
       application_fee_amount: applicationFee,
       transfer_data: {
         destination: commerce.stripe_account_id,
@@ -217,7 +255,8 @@ Deno.serve(async (req: Request) => {
         idempotency_key: idempotencyKey,
         source: "mobile",
       },
-      automatic_payment_methods: { enabled: true },
+      setup_future_usage: "off_session",
+      payment_method_types: ["card"],
     });
 
     // Generate 6-digit pickup token (cryptographically secure)
@@ -280,6 +319,8 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         clientSecret: paymentIntent.client_secret,
+        ephemeralKey: ephemeralKey.secret,
+        customerId: stripeCustomerId,
         orderId: order.id,
         pickupToken,
         basketAmountCents: basketAmountInCents,
@@ -291,10 +332,16 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    console.error("[create-payment-intent]", message);
-    return new Response(JSON.stringify({ error: message }), {
+  } catch (err: unknown) {
+    const stripeError = err as { type?: string; code?: string; message?: string; statusCode?: number };
+    const detail = {
+      error: stripeError.message ?? "Internal server error",
+      type: stripeError.type,
+      code: stripeError.code,
+      statusCode: stripeError.statusCode,
+    };
+    console.error("[create-payment-intent] ERROR", JSON.stringify(detail));
+    return new Response(JSON.stringify(detail), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
