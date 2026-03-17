@@ -326,7 +326,7 @@ export default function NotreMissionPage() {
                     "Économies garanties : jusqu'à -70% sur des produits casher",
                     "100% casher certifié avec cacherout vérifiée",
                     "Géolocalisation pour trouver les paniers les plus proches",
-                    "Faites une mitsva en offrant un panier à une association",
+                    "Faites une mitzvah en offrant un panier à une association",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />

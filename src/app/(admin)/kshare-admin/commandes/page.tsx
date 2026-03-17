@@ -73,7 +73,7 @@ export default async function AdminCommandesPage() {
     { label: "Total Commandes", value: totalCommandes.toString(),       borderColor: "border-l-blue-500",   icon: "ShoppingCart" },
     { label: "Revenu Total",    value: `${revenuTotal.toFixed(2)}€`,    borderColor: "border-l-green-500",  icon: "Wallet" },
     { label: "Paniers Vendus",  value: paniersVendus.toString(),         borderColor: "border-l-orange-500", icon: "ShoppingBag" },
-    { label: "Dons (Mitzvot)",  value: dons.toString(),                  borderColor: "border-l-purple-500", icon: "Handshake" },
+    { label: "Dons (Mitzvah)",  value: dons.toString(),                  borderColor: "border-l-purple-500", icon: "Handshake" },
   ];
 
   return (

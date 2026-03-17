@@ -168,15 +168,15 @@ export default async function PaniersDonsPage() {
           <Section title="Aujourd'hui" items={today} />
           <Section title="Demain"       items={tomorrow} />
 
-          {/* Mitzvot info box */}
+          {/* Mitzvah info box */}
           <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-2xl p-5 flex items-start gap-4">
             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
               <Info className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="font-semibold text-purple-900 text-sm mb-1">Mitsva & Tsedaka</p>
+              <p className="font-semibold text-purple-900 text-sm mb-1">Mitzvah & Tsedaka</p>
               <p className="text-sm text-purple-700 leading-relaxed">
-                En récupérant ces paniers, votre association accomplit une mitsva de tsedaka (bienfaisance).
+                En récupérant ces paniers, votre association accomplit une mitzvah de tsedaka (bienfaisance).
                 Ces dons permettent de réduire le gaspillage alimentaire tout en aidant les familles dans le besoin.
               </p>
             </div>
