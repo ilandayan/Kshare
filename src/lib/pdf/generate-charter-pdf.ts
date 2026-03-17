@@ -34,7 +34,7 @@ function getCharterArticles(): { title: string; content: string }[] {
     {
       title: "Article 4 — Paniers dons",
       content:
-        "Les paniers dons sont offerts par les commerces partenaires via la plateforme Kshare. Ils sont composes de produits alimentaires casher invendus ou proches de leur date limite de consommation.\n\nL'association s'engage a ne pas selectionner les paniers en fonction de leur contenu et a accepter la variabilite des produits proposes.\n\nLes paniers dons sont strictement gratuits. Aucune contrepartie financiere ne peut etre demandee aux beneficiaires finaux.",
+        "Les paniers dons sont offerts par les commerces partenaires ou par les clients via la plateforme Kshare. Ils sont composes de produits alimentaires casher invendus ou proches de leur date limite de consommation.\n\nL'association s'engage a ne pas selectionner les paniers en fonction de leur contenu et a accepter la variabilite des produits proposes.\n\nLes paniers dons sont strictement gratuits. Aucune contrepartie financiere ne peut etre demandee aux beneficiaires finaux.",
     },
     {
       title: "Article 5 — Retrait et logistique",
