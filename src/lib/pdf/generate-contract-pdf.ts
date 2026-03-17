@@ -50,7 +50,7 @@ function getContractArticles(): { title: string; content: string }[] {
     {
       title: "Article 6 — Abonnement et paiement",
       content:
-        "Le plan Starter est gratuit et ne necessite aucun moyen de paiement pour l'abonnement.\n\nLe plan Pro est soumis a un abonnement mensuel de 29 EUR HT, preleve par prelevement SEPA. Le Commerce autorise Kshare a effectuer ce prelevement de maniere recurrente.\n\nEn cas de non-paiement de l'abonnement Pro, Kshare se reserve le droit de suspendre l'acces a la plateforme apres mise en demeure restee sans effet pendant 15 jours. Le Commerce sera alors automatiquement bascule sur le plan Starter.",
+        "Le plan Starter est gratuit et ne necessite aucun moyen de paiement pour l'abonnement.\n\nLe plan Pro est soumis a un abonnement mensuel de 29 EUR HT, preleve par prelevement SEPA. Le Commerce autorise Kshare a effectuer ce prelevement de maniere recurrente.\n\nEn cas de non-paiement de l'abonnement Pro, Kshare se reserve le droit de suspendre l'acces a la plateforme jusqu'a regularisation complete du paiement de l'abonnement en cours.",
     },
     {
       title: "Article 7 — Reversements",

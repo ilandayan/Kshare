@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
 import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from "@/lib/constants";
+import { sendEmail, emailPaiementEchoue } from "@/lib/resend";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -416,12 +417,11 @@ async function handleSubscriptionCreatedOrUpdated(
     })
     .eq("id", commerce.id);
 
-  // Auto-suspend commerce when subscription becomes unpaid
-  // (only if commerce was previously validated — don't re-suspend an already suspended commerce)
-  if (mappedStatus === "unpaid" && previousStatus === "validated") {
+  // When subscription becomes unpaid, record the failure date (suspension handled by cron at J+5)
+  if (mappedStatus === "unpaid" && previousSubscriptionStatus !== "unpaid") {
     await supabase
       .from("commerces")
-      .update({ status: "suspended" })
+      .update({ payment_failed_at: new Date().toISOString() })
       .eq("id", commerce.id);
   }
 
@@ -430,12 +430,15 @@ async function handleSubscriptionCreatedOrUpdated(
   // This prevents restoring commerces suspended manually by admin for other reasons
   if (
     (mappedStatus === "active" || mappedStatus === "offered") &&
-    previousStatus === "suspended" &&
     previousSubscriptionStatus === "unpaid"
   ) {
+    const updates: Record<string, unknown> = { payment_failed_at: null };
+    if (previousStatus === "suspended") {
+      updates.status = "validated";
+    }
     await supabase
       .from("commerces")
-      .update({ status: "validated" })
+      .update(updates)
       .eq("id", commerce.id);
   }
 }
@@ -461,14 +464,11 @@ async function handleSubscriptionDeleted(
     return;
   }
 
-  // Downgrade to Starter plan (commerce stays active, just loses Pro benefits)
+  // Mark subscription as cancelled — no automatic downgrade to Starter
   await supabase
     .from("subscriptions")
     .update({
-      status: "active",
-      plan: "starter",
-      monthly_price: 0,
-      commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
+      status: "cancellation_requested",
       canceled_at: new Date().toISOString(),
       stripe_subscription_id: null,
     })
@@ -477,11 +477,74 @@ async function handleSubscriptionDeleted(
   await supabase
     .from("commerces")
     .update({
-      subscription_status: "active",
-      subscription_plan: "starter",
-      commission_rate: SUBSCRIPTION_PLANS.starter.commissionRate,
+      subscription_status: "cancellation_requested",
     })
     .eq("id", commerce.id);
+}
+
+/**
+ * Handle invoice.payment_failed — notify commerce when subscription payment fails.
+ */
+async function handleInvoicePaymentFailed(
+  invoice: Stripe.Invoice
+): Promise<void> {
+  // Only handle subscription invoices
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!(invoice as any).subscription) return;
+
+  const customerId =
+    typeof invoice.customer === "string"
+      ? invoice.customer
+      : (invoice.customer as { id: string } | null)?.id;
+
+  if (!customerId) {
+    console.error("[webhook] No customer on failed invoice:", invoice.id);
+    return;
+  }
+
+  const supabase = createAdminClient();
+
+  // Find the commerce and their profile email
+  const { data: commerce, error: commerceError } = await supabase
+    .from("commerces")
+    .select("id, name, payment_failed_at, profiles!commerces_profile_id_fkey(email)")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (commerceError || !commerce) {
+    console.error("[webhook] Commerce not found for customer:", customerId);
+    return;
+  }
+
+  // Record payment_failed_at if not already set
+  if (!commerce.payment_failed_at) {
+    await supabase
+      .from("commerces")
+      .update({ payment_failed_at: new Date().toISOString() })
+      .eq("id", commerce.id);
+  }
+
+  const profile = commerce.profiles as { email: string | null } | null;
+  const email = profile?.email;
+
+  if (!email) {
+    console.error("[webhook] No email for commerce:", commerce.id);
+    return;
+  }
+
+  // Format amount from invoice
+  const amount = invoice.amount_due
+    ? `${(invoice.amount_due / 100).toFixed(2).replace(".", ",")} €`
+    : "29,00 €";
+
+  const { subject, html } = emailPaiementEchoue(commerce.name, amount);
+  const sent = await sendEmail({ to: email, subject, html });
+
+  if (sent) {
+    console.info("[webhook] Payment failure email sent to:", email, "commerce:", commerce.id);
+  } else {
+    console.error("[webhook] Failed to send payment failure email to:", email);
+  }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -546,6 +609,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case "customer.subscription.deleted":
         await handleSubscriptionDeleted(
           event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "invoice.payment_failed":
+        await handleInvoicePaymentFailed(
+          event.data.object as Stripe.Invoice
         );
         break;
 

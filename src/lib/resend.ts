@@ -586,6 +586,138 @@ export function emailContratSigne(commerceName: string): {
   };
 }
 
+export function emailPaiementEchoue(
+  commerceName: string,
+  invoiceAmount: string = "29,00 €"
+): {
+  subject: string;
+  html: string;
+} {
+  const safeName = escapeHtml(commerceName);
+  return {
+    subject: "Kshare — Échec du prélèvement de votre abonnement Pro",
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${safeName},</h2>
+      <p style="color:#333;line-height:1.7;">
+        Nous vous informons que le prélèvement SEPA de <strong>${invoiceAmount} HT</strong>
+        correspondant à votre abonnement <strong>Plan Pro</strong> n'a pas pu être effectué.
+      </p>
+      <div style="background:#fef2f2;border-left:4px solid #ef4444;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#991b1b;font-size:14px;">
+          ⚠️ Sans régularisation, votre accès à la plateforme pourra être suspendu
+          conformément à l'article 6 de votre contrat de partenariat.
+        </p>
+      </div>
+      <p style="color:#333;line-height:1.7;font-weight:600;">Comment régulariser votre paiement :</p>
+      <ol style="color:#333;line-height:2;padding-left:20px;">
+        <li>Connectez-vous à votre <a href="https://k-share.fr/shop/parametres" style="color:#3744C8;font-weight:600;">espace commerçant</a></li>
+        <li>Rendez-vous dans la section <strong>Paramètres → Abonnement</strong></li>
+        <li>Vérifiez que vos informations bancaires (IBAN) sont à jour</li>
+        <li>Le prélèvement sera automatiquement retenté dans les prochains jours</li>
+      </ol>
+      <a href="https://k-share.fr/shop/parametres" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">
+        Accéder à mes paramètres
+      </a>
+      <p style="color:#333;line-height:1.7;">
+        Si vous rencontrez des difficultés ou souhaitez changer de formule, contactez-nous à
+        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+      </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
+export function emailRappelPaiement(
+  commerceName: string,
+  joursRestants: number = 2
+): {
+  subject: string;
+  html: string;
+} {
+  const safeName = escapeHtml(commerceName);
+  return {
+    subject: "Kshare — Rappel : régularisez votre abonnement Pro",
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${safeName},</h2>
+      <p style="color:#333;line-height:1.7;">
+        Nous vous avons contacté il y a quelques jours concernant l'échec du prélèvement
+        de votre abonnement <strong>Plan Pro</strong>.
+      </p>
+      <p style="color:#333;line-height:1.7;">
+        À ce jour, votre paiement n'a toujours pas été régularisé.
+      </p>
+      <div style="background:#fef2f2;border-left:4px solid #ef4444;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#991b1b;font-size:14px;">
+          🚨 <strong>Attention :</strong> sans régularisation dans les <strong>${joursRestants} jour${joursRestants > 1 ? "s" : ""}</strong>,
+          votre accès à la plateforme sera automatiquement suspendu conformément à l'article 6
+          de votre contrat de partenariat.
+        </p>
+      </div>
+      <p style="color:#333;line-height:1.7;font-weight:600;">Comment régulariser votre paiement :</p>
+      <ol style="color:#333;line-height:2;padding-left:20px;">
+        <li>Connectez-vous à votre <a href="https://k-share.fr/shop/parametres" style="color:#3744C8;font-weight:600;">espace commerçant</a></li>
+        <li>Rendez-vous dans la section <strong>Paramètres → Abonnement</strong></li>
+        <li>Vérifiez que vos informations bancaires (IBAN) sont à jour</li>
+        <li>Assurez-vous que votre compte dispose des fonds nécessaires</li>
+        <li>Le prélèvement sera automatiquement retenté dans les prochains jours</li>
+      </ol>
+      <a href="https://k-share.fr/shop/parametres" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">
+        Régulariser mon abonnement
+      </a>
+      <p style="color:#333;line-height:1.7;">
+        Si vous rencontrez des difficultés ou souhaitez changer de formule, contactez-nous à
+        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+      </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
+export function emailSuspensionCompte(
+  commerceName: string
+): {
+  subject: string;
+  html: string;
+} {
+  const safeName = escapeHtml(commerceName);
+  return {
+    subject: "Kshare — Votre accès a été suspendu",
+    html: wrapHtml(`
+      <h2 style="color:#ef4444;margin:0 0 16px;">Bonjour ${safeName},</h2>
+      <p style="color:#333;line-height:1.7;">
+        Suite à l'absence de régularisation du paiement de votre abonnement <strong>Plan Pro</strong>,
+        votre accès à la plateforme Kshare a été <strong>suspendu</strong> conformément à l'article 6
+        de votre contrat de partenariat.
+      </p>
+      <div style="background:#fef2f2;border-left:4px solid #ef4444;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#991b1b;font-size:14px;">
+          🔒 Votre compte est suspendu. Vos paniers ne sont plus visibles sur la plateforme
+          et vous ne pouvez plus recevoir de commandes.
+        </p>
+      </div>
+      <p style="color:#333;line-height:1.7;">
+        <strong>Votre accès sera rétabli automatiquement dès régularisation de votre paiement.</strong>
+      </p>
+      <p style="color:#333;line-height:1.7;font-weight:600;">Comment régulariser votre paiement :</p>
+      <ol style="color:#333;line-height:2;padding-left:20px;">
+        <li>Connectez-vous à votre <a href="https://k-share.fr/shop/parametres" style="color:#3744C8;font-weight:600;">espace commerçant</a></li>
+        <li>Rendez-vous dans la section <strong>Paramètres → Abonnement</strong></li>
+        <li>Vérifiez que vos informations bancaires (IBAN) sont à jour</li>
+        <li>Assurez-vous que votre compte dispose des fonds nécessaires</li>
+        <li>Le prélèvement sera automatiquement retenté dans les prochains jours</li>
+      </ol>
+      <a href="https://k-share.fr/shop/parametres" style="display:inline-block;padding:12px 24px;background:#ef4444;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">
+        Régulariser mon abonnement
+      </a>
+      <p style="color:#333;line-height:1.7;">
+        Si vous rencontrez des difficultés ou souhaitez changer de formule, contactez-nous à
+        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+      </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
 export function emailDemandeComplements(
   name: string,
   type: "commerce" | "association",

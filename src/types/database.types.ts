@@ -253,6 +253,7 @@ export type Database = {
           longitude: number | null
           name: string
           opening_hours: Json | null
+          payment_failed_at: string | null
           phone: string | null
           photos: string[] | null
           postal_code: string | null
@@ -298,6 +299,7 @@ export type Database = {
           longitude?: number | null
           name: string
           opening_hours?: Json | null
+          payment_failed_at?: string | null
           phone?: string | null
           photos?: string[] | null
           postal_code?: string | null
@@ -343,6 +345,7 @@ export type Database = {
           longitude?: number | null
           name?: string
           opening_hours?: Json | null
+          payment_failed_at?: string | null
           phone?: string | null
           photos?: string[] | null
           postal_code?: string | null
@@ -782,6 +785,7 @@ export type Database = {
           is_archived: boolean
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -794,6 +798,7 @@ export type Database = {
           is_archived?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -806,6 +811,7 @@ export type Database = {
           is_archived?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
