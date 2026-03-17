@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, Component, type ReactNode } from "react";
-import { ScanLine, Search, XCircle, Package, Clock, User, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
+import { ScanLine, Search, XCircle, Package, Clock, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
 import { rechercherParCode, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
 /* ── Error Boundary ── */
@@ -364,11 +364,6 @@ export function ScanClient() {
 
           {/* Details */}
           <div className="px-6 py-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <User className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-600">Client</span>
-              <span className="ml-auto text-sm font-medium text-gray-900">{order.clientName}</span>
-            </div>
             <div className="flex items-center gap-3">
               <Package className="w-4 h-4 text-gray-400" />
               <span className="text-sm text-gray-600">Panier</span>

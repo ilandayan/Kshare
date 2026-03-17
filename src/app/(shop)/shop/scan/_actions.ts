@@ -15,7 +15,6 @@ export type ScanResult =
         basketType: string;
         pickupStart: string;
         pickupEnd: string;
-        clientName: string;
         qrCodeToken: string;
       };
     }
@@ -61,7 +60,7 @@ export async function rechercherParCode(
       .from("orders")
       .select(`
         id, status, quantity, total_amount, is_donation, qr_code_token, created_at,
-        pickup_start, pickup_end, pickup_date, client_id,
+        pickup_start, pickup_end,
         baskets(type)
       `)
       .eq("commerce_id", commerce.id)
@@ -82,17 +81,6 @@ export async function rechercherParCode(
       return { success: false, error: "Aucune commande trouvée avec ce code." };
     }
 
-    // Fetch client name separately (RLS may block cross-user profile reads)
-    let clientName = "Client";
-    if (order.client_id) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", order.client_id)
-        .single();
-      if (profile?.full_name) clientName = profile.full_name;
-    }
-
     const basket = order.baskets as { type: string } | null;
 
     const year = new Date(order.created_at).getFullYear();
@@ -110,7 +98,6 @@ export async function rechercherParCode(
         basketType: basket?.type ?? "",
         pickupStart: order.pickup_start?.slice(0, 5) ?? "",
         pickupEnd: order.pickup_end?.slice(0, 5) ?? "",
-        clientName,
         qrCodeToken: order.qr_code_token ?? "",
       },
     };
