@@ -30,11 +30,12 @@ export default async function OrdersPage() {
       .from("orders")
       .select(`
         id, status, quantity, total_amount, created_at, is_donation,
+        pickup_date, pickup_start, pickup_end,
         baskets!inner(sold_price, type, day, pickup_start, pickup_end)
       `)
       .eq("commerce_id", commerce.id)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(200),
     supabase
       .from("ratings")
       .select("order_id, score")
@@ -45,6 +46,10 @@ export default async function OrdersPage() {
   for (const r of ratingsRaw ?? []) {
     ratingsMap.set(r.order_id, r.score);
   }
+
+  // Today's date in YYYY-MM-DD format (local timezone)
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   const orders = (raw ?? []).map((o) => {
     const basket = o.baskets as { sold_price: number; type: string; day: string; pickup_start: string; pickup_end: string } | null;
@@ -62,7 +67,9 @@ export default async function OrdersPage() {
       isDonation: o.is_donation ?? false,
       basketType: basket?.type ?? "",
       basketDay: basket?.day === "today" ? "Aujourd'hui" : "Demain",
-      pickupTime: `${basket?.pickup_start?.slice(0, 5) ?? ""} – ${basket?.pickup_end?.slice(0, 5) ?? ""}`,
+      pickupTime: `${(o.pickup_start ?? basket?.pickup_start)?.slice(0, 5) ?? ""} – ${(o.pickup_end ?? basket?.pickup_end)?.slice(0, 5) ?? ""}`,
+      pickupDate: o.pickup_date ?? "",
+      isToday: o.pickup_date === todayStr,
       rating: ratingsMap.get(o.id) ?? null,
     };
   });
@@ -86,7 +93,7 @@ export default async function OrdersPage() {
         <h1 className="text-xl font-bold text-gray-900">Commandes</h1>
         <p className="text-sm text-gray-400 mt-0.5">Toutes les commandes de votre commerce</p>
       </div>
-      <ShopOrdersClient orders={orders} kpis={kpis} />
+      <ShopOrdersClient orders={orders} kpis={kpis} todayStr={todayStr} />
     </div>
   );
 }
