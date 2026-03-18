@@ -12,8 +12,13 @@ export const dynamic = "force-dynamic";
  * and triggers a Stripe payout for each commerce.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || cronSecret.length < 16) {
+    console.error("[cron/weekly-payout] CRON_SECRET not configured or too short");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+  }
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

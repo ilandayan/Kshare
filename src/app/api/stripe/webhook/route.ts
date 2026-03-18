@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomInt } from "crypto";
+import { randomInt, randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
 import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
@@ -10,8 +10,8 @@ import type Stripe from "stripe";
 export const dynamic = "force-dynamic";
 
 function generatePickupCode(): string {
-  // Use crypto for cryptographically secure random number generation
-  return randomInt(100000, 1000000).toString();
+  // 12-char hex token = 6 bytes = 281 trillion combinations (vs 900K for 6 digits)
+  return randomBytes(6).toString("hex").toUpperCase();
 }
 
 function computeDonationExpiresAt(

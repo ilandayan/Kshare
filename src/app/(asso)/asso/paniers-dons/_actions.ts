@@ -60,9 +60,9 @@ export async function validerDonClient(
   if (!order.stripe_payment_intent_id)
     return { success: false, error: "Identifiant de paiement manquant." };
 
-  // Générer un code de retrait
-  const { randomInt } = await import("crypto");
-  const pickupCode = randomInt(100000, 1000000).toString();
+  // Générer un code de retrait (12-char hex = 281 trillion combinations)
+  const { randomBytes } = await import("crypto");
+  const pickupCode = randomBytes(6).toString("hex").toUpperCase();
 
   // Assigner l'association — le paiement sera capturé à la collecte
   const { error: updateError } = await admin

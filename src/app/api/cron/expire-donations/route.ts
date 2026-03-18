@@ -14,9 +14,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // Vérifier le secret cron — obligatoire en production
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    console.error("[cron/expire-donations] CRON_SECRET non configuré");
-    return NextResponse.json({ error: "Configuration manquante" }, { status: 500 });
+  if (!cronSecret || cronSecret.length < 16) {
+    console.error("[cron/expire-donations] CRON_SECRET not configured or too short");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
   }
 
   const authHeader = request.headers.get("authorization");
