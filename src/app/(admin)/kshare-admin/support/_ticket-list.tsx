@@ -132,6 +132,11 @@ export default function SupportTicketList({
                 >
                   {statusLabels[ticket.status] ?? ticket.status}
                 </span>
+                {ticket.status === "resolved" && ticket.messages?.some((m) => m.sender === "ai") && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-200">
+                    🤖 IA
+                  </span>
+                )}
               </td>
               <td className="py-3 px-4">
                 <Button variant="ghost" size="sm" className="gap-1.5">
