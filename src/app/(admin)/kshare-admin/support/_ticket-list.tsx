@@ -19,6 +19,7 @@ import { replyToTicket, resolveTicket } from "./_actions";
 
 type TicketMessage = {
   role: string;
+  sender?: string;
   content: string;
   created_at: string;
 };

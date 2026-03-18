@@ -119,9 +119,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       await supabase
         .from("orders")
         .update({
-          payout_status: "paid",
+          payout_status: "paid" as unknown as string,
           payout_date: new Date().toISOString(),
-        })
+        } as Record<string, unknown>)
         .in("id", orderIds);
 
       results.push({
