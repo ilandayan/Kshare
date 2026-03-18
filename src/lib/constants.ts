@@ -43,7 +43,7 @@ export const BASKET_TYPES = [
     icon: "UtensilsCrossed",
     shortDescription: "Panier viande",
     description:
-      "Panier surprise de produits carnés casher.",
+      "Panier surprise de produits carnés casher. Le contenu varie selon les invendus du jour.",
   },
   {
     value: "halavi",
@@ -51,7 +51,7 @@ export const BASKET_TYPES = [
     icon: "Milk",
     shortDescription: "Panier laitier",
     description:
-      "Panier surprise de produits laitiers casher.",
+      "Panier surprise de produits laitiers casher. Le contenu varie selon les invendus du jour.",
   },
   {
     value: "parve",
@@ -59,7 +59,7 @@ export const BASKET_TYPES = [
     icon: "Leaf",
     shortDescription: "Panier neutre",
     description:
-      "Panier surprise de produits parvé casher.",
+      "Panier surprise de produits parvé casher. Le contenu varie selon les invendus du jour.",
   },
   {
     value: "shabbat",
@@ -67,7 +67,7 @@ export const BASKET_TYPES = [
     icon: "Wine",
     shortDescription: "Panier Shabbat",
     description:
-      "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat.",
+      "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat. Le contenu varie selon les invendus du jour.",
   },
   {
     value: "mix",
@@ -75,7 +75,7 @@ export const BASKET_TYPES = [
     icon: "Layers",
     shortDescription: "Panier mixte",
     description:
-      "Panier surprise mixte composé d'un assortiment varié de produits casher.",
+      "Panier surprise mixte composé d'un assortiment varié de produits casher. Le contenu varie selon les invendus du jour.",
   },
 ] as const;
 

@@ -5,11 +5,11 @@ import { BasketBuyButton } from "@/components/client/basket-buy-button";
 import { ArrowLeft, Clock, MapPin, Store, Info, ShieldCheck } from "lucide-react";
 
 const TYPE_CONFIG: Record<string, { emoji: string; label: string; description: string }> = {
-  bassari:  { emoji: "🥩", label: "Panier Bassari",  description: "Panier surprise de produits carnés casher." },
-  halavi:   { emoji: "🧀", label: "Panier Halavi",   description: "Panier surprise de produits laitiers casher." },
-  parve:    { emoji: "🌿", label: "Panier Parvé",    description: "Panier surprise de produits parvé casher." },
-  shabbat:  { emoji: "🍷", label: "Panier Shabbat",  description: "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat." },
-  mix:      { emoji: "➕", label: "Panier Mix",      description: "Panier surprise mixte composé d'un assortiment varié de produits casher." },
+  bassari:  { emoji: "🥩", label: "Panier Bassari",  description: "Panier surprise de produits carnés casher. Le contenu varie selon les invendus du jour." },
+  halavi:   { emoji: "🧀", label: "Panier Halavi",   description: "Panier surprise de produits laitiers casher. Le contenu varie selon les invendus du jour." },
+  parve:    { emoji: "🌿", label: "Panier Parvé",    description: "Panier surprise de produits parvé casher. Le contenu varie selon les invendus du jour." },
+  shabbat:  { emoji: "🍷", label: "Panier Shabbat",  description: "Panier surprise spécial Shabbat composé d'un assortiment de produits casher pour le repas du Shabbat. Le contenu varie selon les invendus du jour." },
+  mix:      { emoji: "➕", label: "Panier Mix",      description: "Panier surprise mixte composé d'un assortiment varié de produits casher. Le contenu varie selon les invendus du jour." },
 };
 
 const DAY_LABELS: Record<string, string> = {
