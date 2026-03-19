@@ -41,6 +41,62 @@ export async function sendPushNotification(params: SendNotificationParams): Prom
   }
 }
 
+// ── Basket type labels for notifications ────────────────────────────
+const BASKET_TYPE_LABELS: Record<string, string> = {
+  bassari: "Bassari",
+  halavi: "Halavi",
+  parve: "Parve",
+  shabbat: "Shabbat",
+  mix: "Mix",
+};
+
+/**
+ * Notify all clients who favorited a commerce that a new basket is available.
+ * Non-blocking: errors are logged but never thrown.
+ */
+export async function notifyNewBasket(
+  commerceId: string,
+  commerceName: string,
+  basketType: string,
+  soldPrice: number,
+  isDonation: boolean,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+
+    // Get all clients who favorited this commerce
+    const { data: favorites, error } = await supabase
+      .from("favorites")
+      .select("client_id")
+      .eq("commerce_id", commerceId);
+
+    if (error || !favorites || favorites.length === 0) return;
+
+    const typeLabel = BASKET_TYPE_LABELS[basketType] ?? basketType;
+    const priceText = isDonation
+      ? "Don gratuit"
+      : `${soldPrice.toFixed(2).replace(".", ",")} €`;
+
+    const title = `Nouveau panier chez ${commerceName} !`;
+    const body = `Panier ${typeLabel} a ${priceText}. Reservez-le vite !`;
+
+    // Send push to each favorited client (fire-and-forget, in parallel)
+    await Promise.allSettled(
+      favorites.map((fav) =>
+        sendPushNotification({
+          profileId: fav.client_id,
+          title,
+          body,
+          type: "new_basket",
+          data: { commerceId, basketType },
+        })
+      )
+    );
+  } catch (err) {
+    console.error("[notifications] Failed to notify new basket:", err);
+  }
+}
+
 /** Notification templates for order status changes */
 export const ORDER_NOTIFICATIONS = {
   paid: (commerceName: string) => ({

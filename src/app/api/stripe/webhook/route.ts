@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
 import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from "@/lib/constants";
-import { sendEmail, emailPaiementEchoue } from "@/lib/resend";
+import { sendEmail, emailPaiementEchoue, emailConfirmationCommande } from "@/lib/resend";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -76,10 +76,10 @@ async function handleCheckoutSessionCompleted(
 
   const netAmountNum = basketAmountNum - commissionAmountNum;
 
-  // Fetch basket info for pickup times
+  // Fetch basket info for pickup times + type + commerce name
   const { data: basket, error: basketError } = await supabase
     .from("baskets")
-    .select("sold_price, pickup_start, pickup_end, day")
+    .select("sold_price, pickup_start, pickup_end, day, type, commerces(name)")
     .eq("id", basketId)
     .single();
 
@@ -87,6 +87,13 @@ async function handleCheckoutSessionCompleted(
     console.error("[webhook] Basket not found:", basketId);
     return;
   }
+
+  // Fetch client profile for email
+  const { data: clientProfile } = await supabase
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", profileId)
+    .single();
 
   const paymentIntentId =
     typeof session.payment_intent === "string"
@@ -207,6 +214,28 @@ async function handleCheckoutSessionCompleted(
       p_basket_id: basketId,
       p_quantity: quantityNum,
     });
+
+    // Send confirmation email to client (non-blocking)
+    if (clientProfile?.email && order) {
+      try {
+        const commerceName = (basket as unknown as { commerces: { name: string } | null }).commerces?.name ?? "le commerce";
+        const { subject, html } = emailConfirmationCommande({
+          clientName: clientProfile.full_name ?? "Client",
+          commerceName,
+          basketType: (basket as unknown as { type: string }).type ?? "mix",
+          quantity: quantityNum,
+          totalAmount: basketAmountNum,
+          serviceFeeAmount: serviceFeeAmountNum,
+          pickupDate: basket.day ?? new Date().toISOString().split("T")[0],
+          pickupStart: basket.pickup_start ?? "",
+          pickupEnd: basket.pickup_end ?? "",
+          orderId: order.id,
+        });
+        await sendEmail({ to: clientProfile.email, subject, html });
+      } catch (emailErr) {
+        console.error("[webhook] Failed to send confirmation email:", emailErr);
+      }
+    }
   }
 }
 
@@ -317,6 +346,42 @@ async function handlePaymentIntentSucceeded(
     }
   } catch (feeErr) {
     console.error("[webhook] Failed to fetch Stripe fee (mobile):", feeErr);
+  }
+
+  // Send confirmation email to client (non-blocking)
+  if (user_id) {
+    try {
+      const { data: clientProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", user_id)
+        .single();
+
+      const { data: basket } = await supabase
+        .from("baskets")
+        .select("type, pickup_start, pickup_end, day, commerces(name)")
+        .eq("id", basket_id)
+        .single();
+
+      if (clientProfile?.email && basket) {
+        const commerceName = (basket as unknown as { commerces: { name: string } | null }).commerces?.name ?? "le commerce";
+        const { subject, html } = emailConfirmationCommande({
+          clientName: clientProfile.full_name ?? "Client",
+          commerceName,
+          basketType: (basket as unknown as { type: string }).type ?? "mix",
+          quantity: quantityNum,
+          totalAmount: basketAmountNum,
+          serviceFeeAmount: serviceFeeAmountNum,
+          pickupDate: basket.day ?? new Date().toISOString().split("T")[0],
+          pickupStart: basket.pickup_start ?? "",
+          pickupEnd: basket.pickup_end ?? "",
+          orderId: order.id,
+        });
+        await sendEmail({ to: clientProfile.email, subject, html });
+      }
+    } catch (emailErr) {
+      console.error("[webhook] Failed to send confirmation email (mobile):", emailErr);
+    }
   }
 
   console.info("[webhook] Mobile order confirmed:", order.id);

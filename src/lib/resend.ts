@@ -718,6 +718,141 @@ export function emailSuspensionCompte(
   };
 }
 
+// ── Templates transactionnels client ──────────────────────────────
+
+const BASKET_TYPE_EMOJIS: Record<string, string> = {
+  bassari: "\u{1F969}",
+  halavi: "\u{1F9C0}",
+  parve: "\u{1F33F}",
+  shabbat: "\u{1F377}",
+  mix: "\u{2795}",
+};
+
+const BASKET_TYPE_LABELS: Record<string, string> = {
+  bassari: "Bassari (Viande)",
+  halavi: "Halavi (Laitier)",
+  parve: "Parv\u00e9 (Neutre)",
+  shabbat: "Shabbat",
+  mix: "Mix",
+};
+
+export function emailConfirmationCommande(params: {
+  clientName: string;
+  commerceName: string;
+  basketType: string;
+  quantity: number;
+  totalAmount: number;
+  serviceFeeAmount: number;
+  pickupDate: string;
+  pickupStart: string;
+  pickupEnd: string;
+  orderId: string;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.clientName);
+  const safeCommerce = escapeHtml(params.commerceName);
+  const emoji = BASKET_TYPE_EMOJIS[params.basketType] ?? "\u{1F4E6}";
+  const typeLabel = BASKET_TYPE_LABELS[params.basketType] ?? params.basketType;
+  const totalDisplay = params.totalAmount.toFixed(2).replace(".", ",");
+  const feeDisplay = params.serviceFeeAmount.toFixed(2).replace(".", ",");
+  const grandTotal = (params.totalAmount + params.serviceFeeAmount).toFixed(2).replace(".", ",");
+
+  // Format date: "2026-03-19" → "19 mars 2026"
+  const dateObj = new Date(params.pickupDate + "T00:00:00");
+  const dateDisplay = dateObj.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  return {
+    subject: `Kshare \u2014 Votre commande est confirm\u00e9e !`,
+    html: wrapHtml(`
+      <h2 style="color:#22c55e;margin:0 0 16px;">\u2705 Commande confirm\u00e9e !</h2>
+      <p style="color:#333;line-height:1.7;">
+        Bonjour ${safeName},
+      </p>
+      <p style="color:#333;line-height:1.7;">
+        Votre commande chez <strong>${safeCommerce}</strong> a bien \u00e9t\u00e9 enregistr\u00e9e et pay\u00e9e.
+      </p>
+
+      <div style="background:#f8f9fc;border-radius:12px;padding:20px;margin:16px 0;border:1px solid #e2e5f0;">
+        <table style="width:100%;font-size:14px;border-collapse:collapse;">
+          <tr>
+            <td style="padding:8px 0;color:#888;">Panier</td>
+            <td style="padding:8px 0;color:#333;font-weight:600;text-align:right;">${emoji} ${escapeHtml(typeLabel)} \u00d7${params.quantity}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#888;">Sous-total</td>
+            <td style="padding:8px 0;color:#333;text-align:right;">${totalDisplay} \u20ac</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#888;">Frais de service</td>
+            <td style="padding:8px 0;color:#333;text-align:right;">${feeDisplay} \u20ac</td>
+          </tr>
+          <tr style="border-top:1px solid #e2e5f0;">
+            <td style="padding:12px 0 8px;color:#333;font-weight:700;">Total pay\u00e9</td>
+            <td style="padding:12px 0 8px;color:#3744C8;font-weight:700;font-size:16px;text-align:right;">${grandTotal} \u20ac</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#166534;font-size:14px;">
+          \u{1F4C5} <strong>Retrait le ${dateDisplay}</strong><br/>
+          \u{1F552} De <strong>${escapeHtml(params.pickupStart)}</strong> \u00e0 <strong>${escapeHtml(params.pickupEnd)}</strong><br/>
+          \u{1F3EA} Chez <strong>${safeCommerce}</strong>
+        </p>
+      </div>
+
+      <p style="color:#333;line-height:1.7;">
+        Pr\u00e9sentez votre <strong>QR code</strong> en magasin pour r\u00e9cup\u00e9rer votre panier.
+        Vous le trouverez dans l\u2019onglet <strong>\u00ab\u00a0Mes paniers\u00a0\u00bb</strong> de l\u2019application.
+      </p>
+
+      <p style="color:#888;font-size:13px;margin-top:24px;">L\u2019\u00e9quipe Kshare</p>
+    `),
+  };
+}
+
+export function emailBienvenue(params: {
+  name: string;
+  confirmationLink: string;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.name);
+  return {
+    subject: "Kshare \u2014 Bienvenue ! Validez votre email",
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bienvenue sur Kshare, ${safeName} ! \u{1F389}</h2>
+      <p style="color:#333;line-height:1.7;">
+        Merci de rejoindre la communaut\u00e9 Kshare ! Pour activer votre compte et commencer
+        \u00e0 r\u00e9server des paniers casher anti-gaspi \u00e0 prix r\u00e9duit, validez votre adresse email :
+      </p>
+
+      <div style="text-align:center;margin:24px 0;">
+        <a href="${params.confirmationLink}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#3744C8,#5B6EF5);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">
+          \u2709\uFE0F Valider mon email
+        </a>
+      </div>
+
+      <p style="color:#333;line-height:1.7;">
+        <strong>Comment \u00e7a marche ?</strong>
+      </p>
+      <ol style="color:#333;line-height:2;padding-left:20px;">
+        <li>Parcourez les commerces casher autour de vous</li>
+        <li>R\u00e9servez un panier surprise \u00e0 prix r\u00e9duit</li>
+        <li>R\u00e9cup\u00e9rez-le en magasin avec votre QR code</li>
+      </ol>
+
+      <p style="color:#888;font-size:12px;margin-top:24px;line-height:1.6;">
+        Ce lien est valable <strong>24 heures</strong>. Si vous n\u2019avez pas demand\u00e9 la cr\u00e9ation
+        de ce compte, ignorez simplement cet email.
+      </p>
+
+      <p style="color:#888;font-size:13px;margin-top:16px;">L\u2019\u00e9quipe Kshare</p>
+    `),
+  };
+}
+
 export function emailDemandeComplements(
   name: string,
   type: "commerce" | "association",

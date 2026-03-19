@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.types";
+import { notifyNewBasket } from "@/lib/notifications";
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
 type BasketDay = Database["public"]["Enums"]["basket_day"];
@@ -104,6 +105,31 @@ export async function toggleBasketStatus(
     return { success: false, error: "Erreur lors du changement de statut." };
   }
 
+  // Notify favorites when basket is re-published (non-blocking)
+  if (newStatus === "published") {
+    const { data: basketInfo } = await supabase
+      .from("baskets")
+      .select("type, sold_price, is_donation")
+      .eq("id", basketId)
+      .single();
+
+    const { data: commerceInfo } = await supabase
+      .from("commerces")
+      .select("name")
+      .eq("id", commerceId)
+      .single();
+
+    if (basketInfo && commerceInfo) {
+      notifyNewBasket(
+        commerceId,
+        commerceInfo.name,
+        basketInfo.type,
+        basketInfo.sold_price,
+        basketInfo.is_donation ?? false,
+      ).catch(() => {});
+    }
+  }
+
   return { success: true };
 }
 
@@ -124,7 +150,7 @@ export async function publishBasket(
   // Verify the basket is in draft status
   const { data: basket } = await supabase
     .from("baskets")
-    .select("id, status, commerce_id")
+    .select("id, status, commerce_id, type, sold_price, is_donation")
     .eq("id", basketId)
     .single();
 
@@ -155,6 +181,23 @@ export async function publishBasket(
 
   if (error) {
     return { success: false, error: "Erreur lors de la publication." };
+  }
+
+  // Notify clients who favorited this commerce (non-blocking)
+  const { data: commerceInfo } = await supabase
+    .from("commerces")
+    .select("name")
+    .eq("id", commerceId)
+    .single();
+
+  if (commerceInfo && basket) {
+    notifyNewBasket(
+      commerceId,
+      commerceInfo.name,
+      basket.type,
+      basket.sold_price,
+      basket.is_donation ?? false,
+    ).catch(() => {});
   }
 
   return { success: true };
