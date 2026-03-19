@@ -47,6 +47,23 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Check if user has push notifications enabled (skip for transactional like order updates)
+    const isTransactional = ["order_paid", "order_ready", "order_picked_up", "order_no_show"].includes(type);
+    if (!isTransactional) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("notif_push")
+        .eq("id", profileId)
+        .single();
+
+      if (profile?.notif_push === false) {
+        return new Response(
+          JSON.stringify({ sent: 0, message: "User has push notifications disabled" }),
+          { headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Fetch active push tokens for this user
     const { data: tokens, error: tokenError } = await supabase
       .from("push_tokens")
