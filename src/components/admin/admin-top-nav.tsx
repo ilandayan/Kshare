@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { label: "Tableau de bord", href: "/kshare-admin" },
+  { label: "Utilisateurs",    href: "/kshare-admin/utilisateurs" },
   { label: "Commandes",       href: "/kshare-admin/commandes" },
   { label: "Paniers",         href: "/kshare-admin/paniers" },
   { label: "Comptes",         href: "/kshare-admin/comptes" },
