@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PublicNavbar } from "@/components/shared/public-navbar";
 import { SharedFooter } from "@/components/shared/footer";
 import {
@@ -13,6 +14,18 @@ import {
   Smartphone,
   ChevronDown,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "FAQ",
+  description:
+    "Toutes les réponses à vos questions sur Kshare : comment réserver un panier casher, les paiements, le retrait en magasin, les dons solidaires.",
+  openGraph: {
+    title: "FAQ | Kshare",
+    description:
+      "Toutes les réponses à vos questions sur Kshare.",
+    url: "https://k-share.fr/faq",
+  },
+};
 
 interface FaqItem {
   question: string;
@@ -264,9 +277,29 @@ function FaqAccordionItem({ item }: { item: FaqItem }) {
   );
 }
 
+function buildFaqJsonLd() {
+  const allItems = FAQ_SECTIONS.flatMap((s) => s.items);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: allItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer.join(' '),
+      },
+    })),
+  };
+}
+
 export default function FaqPage() {
   return (
     <div className="min-h-screen bg-[#EEF0F8]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqJsonLd()) }}
+      />
       <PublicNavbar />
 
       {/* HERO */}

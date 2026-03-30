@@ -1,6 +1,10 @@
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { DashboardCharts } from "@/components/shop/dashboard-charts";
+
+const DashboardCharts = dynamic(
+  () => import("@/components/shop/dashboard-charts").then((m) => m.DashboardCharts)
+);
 import { TrendingUp, ShoppingBag, Heart, Euro, Star } from "lucide-react";
 
 /* ── Period helpers ────────────────────────────────────────────── */
