@@ -34,6 +34,8 @@ export async function middleware(request: NextRequest) {
   // ── Routes publiques — toujours accessibles ──────────────────
   const publicExact = [
     "/",
+    "/robots.txt",
+    "/sitemap.xml",
     "/notre-mission",
     "/je-suis-client",
     "/contact",
