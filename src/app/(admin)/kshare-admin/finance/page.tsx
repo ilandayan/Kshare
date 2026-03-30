@@ -4,6 +4,35 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, CreditCard, Receipt, Banknote, Clock } from "lucide-react";
 import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 import { ReconcileButton } from "./reconcile-button";
+import { FinancePeriodFilter } from "./finance-period-filter";
+
+function getPeriodStart(period: string): Date {
+  const now = new Date();
+  switch (period) {
+    case "today":
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    case "month":
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    case "3months":
+      return new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    case "6months":
+      return new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    case "12months":
+      return new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    case "year":
+      return new Date(now.getFullYear(), 0, 1);
+    case "total":
+      return new Date(2020, 0, 1);
+    default: {
+      const d = new Date(now);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+  }
+}
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: "Actif",
@@ -27,7 +56,16 @@ type OrderRow = {
   is_donation: boolean;
 };
 
-export default async function FinancePage() {
+export default async function FinancePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
+  const { period: rawPeriod } = await searchParams;
+  const period = rawPeriod ?? "month";
+  const periodStart = getPeriodStart(period);
+  const periodISO = periodStart.toISOString();
+
   const supabase = await createClient();
 
   const [{ data: subscriptions }, { data: paidOrders }, { data: pendingOrders }] = await Promise.all([
@@ -38,12 +76,14 @@ export default async function FinancePage() {
     supabase
       .from("orders")
       .select("total_amount, commission_amount, service_fee_amount, stripe_fee_amount, is_donation" as string)
-      .in("status", ["paid", "ready_for_pickup", "picked_up"]) as unknown as { data: OrderRow[] | null; error: unknown },
+      .in("status", ["paid", "ready_for_pickup", "picked_up"])
+      .gte("created_at", periodISO) as unknown as { data: OrderRow[] | null; error: unknown },
     supabase
       .from("orders")
       .select("id, commerce_id, net_amount, created_at, commerces(name)")
       .eq("status", "picked_up")
       .eq("is_donation", false)
+      .gte("created_at", periodISO)
       .order("created_at", { ascending: false })
       .limit(50),
   ]);
@@ -156,11 +196,14 @@ export default async function FinancePage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Gestion financière</h1>
-        <p className="text-muted-foreground mt-1">
-          Vue scindée : commissions, abonnements, frais de service et frais Stripe
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Gestion financière</h1>
+          <p className="text-muted-foreground mt-1">
+            Vue scindée : commissions, abonnements, frais de service et frais Stripe
+          </p>
+        </div>
+        <FinancePeriodFilter period={period} />
       </div>
 
       {/* 4 KPIs */}

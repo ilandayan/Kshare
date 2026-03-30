@@ -64,25 +64,13 @@ export default async function AdminCommandesPage() {
     };
   });
 
-  const totalCommandes  = orders.length;
-  const revenuTotal     = orders.reduce((s, o) => s + (o.isDonation ? 0 : o.total), 0);
-  const paniersVendus   = orders.reduce((s, o) => s + o.quantity, 0);
-  const dons            = orders.filter((o) => o.isDonation).length;
-
-  const kpis = [
-    { label: "Total Commandes", value: totalCommandes.toString(),       borderColor: "border-l-blue-500",   icon: "ShoppingCart" },
-    { label: "Revenu Total",    value: `${revenuTotal.toFixed(2)}€`,    borderColor: "border-l-green-500",  icon: "Wallet" },
-    { label: "Paniers Vendus",  value: paniersVendus.toString(),         borderColor: "border-l-orange-500", icon: "ShoppingBag" },
-    { label: "Dons (Mitzvah)",  value: dons.toString(),                  borderColor: "border-l-purple-500", icon: "Handshake" },
-  ];
-
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">Commandes</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Toutes les commandes de la plateforme</p>
+        <p className="text-sm text-gray-400 mt-0.5">100 dernières commandes de la plateforme</p>
       </div>
-      <AdminOrdersClient orders={orders} kpis={kpis} />
+      <AdminOrdersClient orders={orders} kpis={[]} />
     </div>
   );
 }
