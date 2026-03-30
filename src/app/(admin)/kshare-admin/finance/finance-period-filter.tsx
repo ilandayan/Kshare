@@ -3,6 +3,8 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
+const LAUNCH_YEAR = 2026;
+
 const PERIODS = [
   { value: "today",    label: "Aujourd'hui" },
   { value: "week",     label: "Cette semaine" },
@@ -14,10 +16,20 @@ const PERIODS = [
   { value: "total",    label: "Total" },
 ] as const;
 
+function getYearOptions(): { value: string; label: string }[] {
+  const currentYear = new Date().getFullYear();
+  const years: { value: string; label: string }[] = [];
+  for (let y = LAUNCH_YEAR; y <= currentYear; y++) {
+    years.push({ value: `y${y}`, label: y.toString() });
+  }
+  return years;
+}
+
 export function FinancePeriodFilter({ period }: { period: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const years = getYearOptions();
 
   const setPeriod = useCallback(
     (value: string) => {
@@ -29,7 +41,7 @@ export function FinancePeriodFilter({ period }: { period: string }) {
   );
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1.5 items-center">
       {PERIODS.map((p) => (
         <button
           key={p.value}
@@ -41,6 +53,24 @@ export function FinancePeriodFilter({ period }: { period: string }) {
           }`}
         >
           {p.label}
+        </button>
+      ))}
+
+      {/* Séparateur */}
+      <div className="w-px h-5 bg-gray-200 mx-1" />
+
+      {/* Années */}
+      {years.map((y) => (
+        <button
+          key={y.value}
+          onClick={() => setPeriod(y.value)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors cursor-pointer ${
+            period === y.value
+              ? "bg-[#3744C8] text-white shadow-sm"
+              : "bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-[#e2e5f0]"
+          }`}
+        >
+          {y.label}
         </button>
       ))}
     </div>
