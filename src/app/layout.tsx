@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     title: 'Kshare - Les paniers casher anti-gaspi',
     description:
       'Achetez des paniers alimentaires casher à prix réduit auprès de commerces partenaires.',
-    images: [{ url: '/icon-192.png', width: 192, height: 192, alt: 'Kshare' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Kshare - Paniers casher anti-gaspi' }],
   },
   twitter: {
     card: 'summary',

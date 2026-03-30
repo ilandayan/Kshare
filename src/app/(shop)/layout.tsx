@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
 import { ShopTopNav } from "@/components/shop/shop-top-nav";
 import { ShopUserMenu } from "@/components/shop/shop-user-menu";
+import { ShopOrdersBadge } from "@/components/shop/shop-orders-badge";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -26,7 +27,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("name, status, contract_signed_at")
+    .select("id, name, status, contract_signed_at")
     .eq("profile_id", user.id)
     .single();
 
@@ -59,7 +60,14 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
               <div className="text-xs text-white/60 leading-tight">Espace Commerçant</div>
             </div>
           </Link>
-          <ShopUserMenu commerceName={commerceName} userInitial={userInitial} />
+          <div className="flex items-center gap-3">
+            {commerce?.id && (
+              <div className="relative">
+                <ShopOrdersBadge commerceId={commerce.id} />
+              </div>
+            )}
+            <ShopUserMenu commerceName={commerceName} userInitial={userInitial} />
+          </div>
         </div>
       </header>
 
