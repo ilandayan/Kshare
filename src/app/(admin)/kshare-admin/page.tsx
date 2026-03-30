@@ -66,7 +66,7 @@ export default async function AdminDashboard({
   // Orders — filtered by commerce if selected
   let ordersQuery = supabase
     .from("orders")
-    .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount")
+    .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount, status")
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
   if (commerce) ordersQuery = ordersQuery.eq("commerce_id", commerce);
@@ -116,6 +116,7 @@ export default async function AdminDashboard({
   const avgPrice      = paniersVendus > 0 ? caGenere / paniersVendus : 0;
   const donCommerce   = allBaskets.filter((b) => b.is_donation).length;
   const donClients    = allOrders.filter((o) => o.is_donation).length;
+  const donsDistribues = allOrders.filter((o) => o.is_donation && o.status === "picked_up").reduce((s, o) => s + (o.quantity ?? 1), 0);
   // Stripe fees estimate: 1.4% + 0.25€ per transaction (European cards)
   const stripeFees    = nonDonationOrders.reduce((s, o) => s + ((o.total_amount ?? 0) * 0.014 + 0.25), 0);
   const revenuKshare  = commission + serviceFees;
@@ -286,13 +287,14 @@ export default async function AdminDashboard({
     { label: "Revenu Kshare",     value: `${revenuKshare.toFixed(2)}€`,  sub: `Commission ${commission.toFixed(2)}€ + Frais ${serviceFees.toFixed(2)}€`, iconBg: "bg-purple-100", iconColor: "text-purple-600", icon: BarChart3 },
     { label: "Frais de service",  value: `${serviceFees.toFixed(2)}€`,   sub: `${nbTransactions} transaction${nbTransactions > 1 ? "s" : ""}`, iconBg: "bg-cyan-100",   iconColor: "text-cyan-600",   icon: CreditCard },
     { label: "Frais Stripe",      value: `${stripeFees.toFixed(2)}€`,    sub: "Estimé : 1.4% + 0.25€/transaction", iconBg: "bg-red-100",    iconColor: "text-red-500",    icon: Receipt },
-    { label: "Revenu net Kshare", value: `${revenuNet.toFixed(2)}€`,     sub: "Revenu Kshare − Frais Stripe",     iconBg: "bg-emerald-100", iconColor: "text-emerald-600", icon: Banknote },
+    { label: "Revenu net Kshare", value: `${revenuNet.toFixed(2)}€`,     sub: `(Commission + Frais service) − Frais Stripe`,     iconBg: "bg-emerald-100", iconColor: "text-emerald-600", icon: Banknote },
     { label: "CA net commerces",  value: `${caNet.toFixed(2)}€`,         sub: undefined,                          iconBg: "bg-blue-100",   iconColor: "text-blue-600",   icon: TrendingUp },
     { label: "Paniers vendus",    value: paniersVendus.toString(),        sub: undefined,                          iconBg: "bg-yellow-100", iconColor: "text-yellow-600", icon: Package },
     { label: "Prix moyen",        value: `${avgPrice.toFixed(2)}€`,      sub: undefined,                          iconBg: "bg-indigo-100", iconColor: "text-indigo-600", icon: ShoppingBag },
     { label: "Commerces actifs",  value: (activeCommerces ?? 0).toString(), sub: undefined,                        iconBg: "bg-orange-100", iconColor: "text-orange-600", icon: Store },
     { label: "Dons commerçants",  value: donCommerce.toString(),          sub: undefined,                          iconBg: "bg-pink-100",   iconColor: "text-pink-500",   icon: Heart },
     { label: "Dons clients",      value: donClients.toString(),           sub: undefined,                          iconBg: "bg-rose-100",   iconColor: "text-rose-500",   icon: Gift },
+    { label: "Dons distribués",  value: donsDistribues.toString(),       sub: "Paniers récupérés par les assos",  iconBg: "bg-teal-100",   iconColor: "text-teal-500",   icon: Package },
     { label: "Favoris total",     value: totalFavorites.toString(),       sub: `${favoritesPerCommerce.size} commerce${favoritesPerCommerce.size > 1 ? "s" : ""} en favoris`, iconBg: "bg-amber-100",  iconColor: "text-amber-500",  icon: Star },
   ];
 

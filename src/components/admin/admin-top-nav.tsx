@@ -4,14 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { label: "Tableau de bord global", href: "/kshare-admin" },
-  { label: "Utilisateurs",           href: "/kshare-admin/utilisateurs" },
-  { label: "Commandes",              href: "/kshare-admin/commandes" },
-  { label: "Paniers",                href: "/kshare-admin/paniers" },
-  { label: "Comptes",                href: "/kshare-admin/comptes" },
-  { label: "Finance",                href: "/kshare-admin/finance" },
-  { label: "Reporting",              href: "/kshare-admin/reporting" },
-  { label: "Support",                href: "/kshare-admin/support" },
+  { label: "Tableau de bord", href: "/kshare-admin" },
+  { label: "Commandes",       href: "/kshare-admin/commandes" },
+  { label: "Paniers",         href: "/kshare-admin/paniers" },
+  { label: "Comptes",         href: "/kshare-admin/comptes" },
+  { label: "Finance",         href: "/kshare-admin/finance" },
+  { label: "Support",         href: "/kshare-admin/support" },
 ];
 
 export function AdminTopNav() {

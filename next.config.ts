@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Redirects pour les onglets admin fusionnés
+  async redirects() {
+    return [
+      { source: "/kshare-admin/utilisateurs", destination: "/kshare-admin/comptes", permanent: true },
+      { source: "/kshare-admin/reporting", destination: "/kshare-admin", permanent: true },
+    ];
+  },
   // Headers de securite
   async headers() {
     return [
