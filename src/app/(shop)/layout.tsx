@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
 import { ShopTopNav } from "@/components/shop/shop-top-nav";
