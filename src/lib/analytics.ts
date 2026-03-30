@@ -10,7 +10,17 @@ export type AnalyticsEvent =
   | "order_paid"
   | "order_picked_up"
   | "donation_made"
-  | "commerce_registered";
+  | "commerce_registered"
+  | "association_registered"
+  | "landing_visit"
+  | "signup_started"
+  | "signup_completed"
+  | "checkout_started"
+  | "checkout_completed"
+  | "basket_viewed"
+  | "favorite_added"
+  | "favorite_removed"
+  | "qr_scanned";
 
 /**
  * Fire-and-forget analytics tracker.

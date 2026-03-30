@@ -112,3 +112,24 @@ export const PAYMENT_RATE_LIMIT: RateLimitConfig = {
   limit: 5,
   windowSeconds: 60,
 };
+
+/**
+ * Set standard rate-limit headers on a Response.
+ * Follows the IETF RateLimit header draft convention.
+ */
+export function setRateLimitHeaders(
+  headers: Headers,
+  result: RateLimitResult,
+  config: RateLimitConfig
+): void {
+  headers.set("X-RateLimit-Limit", String(config.limit));
+  headers.set("X-RateLimit-Remaining", String(result.remaining));
+  headers.set(
+    "X-RateLimit-Reset",
+    String(Math.ceil(result.resetAt / 1000))
+  );
+  if (!result.allowed) {
+    const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
+    headers.set("Retry-After", String(Math.max(retryAfter, 1)));
+  }
+}

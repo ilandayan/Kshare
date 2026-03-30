@@ -1,6 +1,17 @@
-// Kshare Service Worker — enables PWA install prompt + basic caching
-const CACHE_NAME = "kshare-v1";
-const PRECACHE_URLS = ["/icon-192.png", "/icon-512.png", "/apple-icon-180.png"];
+// Kshare Service Worker — enables PWA install prompt + offline support
+const CACHE_NAME = "kshare-v2";
+const PRECACHE_URLS = [
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-icon-180.png",
+  "/",
+  "/notre-mission",
+  "/je-suis-client",
+  "/faq",
+  "/contact",
+  "/cgu",
+  "/confidentialite",
+];
 
 // Install — precache critical assets
 self.addEventListener("install", (event) => {
@@ -43,11 +54,13 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses for static assets
+        // Cache successful responses for static assets + public pages
+        const publicPages = ["/", "/notre-mission", "/je-suis-client", "/faq", "/contact", "/cgu", "/confidentialite"];
         if (
           response.ok &&
           (url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2?|css|js)$/) ||
-            url.pathname === "/manifest.json")
+            url.pathname === "/manifest.json" ||
+            publicPages.includes(url.pathname))
         ) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
