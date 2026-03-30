@@ -24,6 +24,11 @@ function getPeriodStart(period: string): Date {
     case "total":
       return new Date(2020, 0, 1);
     default: {
+      // Année spécifique : "y2026", "y2027", etc.
+      if (period.startsWith("y")) {
+        const year = parseInt(period.slice(1), 10);
+        if (!isNaN(year)) return new Date(year, 0, 1);
+      }
       const d = new Date(now);
       const day = d.getDay();
       const diff = day === 0 ? -6 : 1 - day;
@@ -32,6 +37,14 @@ function getPeriodStart(period: string): Date {
       return d;
     }
   }
+}
+
+function getPeriodEnd(period: string): Date | null {
+  if (period.startsWith("y")) {
+    const year = parseInt(period.slice(1), 10);
+    if (!isNaN(year)) return new Date(year + 1, 0, 1);
+  }
+  return null; // pas de borne supérieure pour les autres périodes
 }
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
@@ -64,28 +77,36 @@ export default async function FinancePage({
   const { period: rawPeriod } = await searchParams;
   const period = rawPeriod ?? "month";
   const periodStart = getPeriodStart(period);
+  const periodEnd = getPeriodEnd(period);
   const periodISO = periodStart.toISOString();
+  const periodEndISO = periodEnd?.toISOString();
 
   const supabase = await createClient();
+
+  // Build queries with optional upper bound for year filters
+  let paidQuery = supabase
+    .from("orders")
+    .select("total_amount, commission_amount, service_fee_amount, stripe_fee_amount, is_donation" as string)
+    .in("status", ["paid", "ready_for_pickup", "picked_up"])
+    .gte("created_at", periodISO);
+  if (periodEndISO) paidQuery = paidQuery.lt("created_at", periodEndISO);
+
+  let pendingQuery = supabase
+    .from("orders")
+    .select("id, commerce_id, net_amount, created_at, commerces(name)")
+    .eq("status", "picked_up")
+    .eq("is_donation", false)
+    .gte("created_at", periodISO);
+  if (periodEndISO) pendingQuery = pendingQuery.lt("created_at", periodEndISO);
+  pendingQuery = pendingQuery.order("created_at", { ascending: false }).limit(50);
 
   const [{ data: subscriptions }, { data: paidOrders }, { data: pendingOrders }] = await Promise.all([
     supabase
       .from("subscriptions")
       .select("*, commerces(name, city, email)")
       .order("created_at", { ascending: false }),
-    supabase
-      .from("orders")
-      .select("total_amount, commission_amount, service_fee_amount, stripe_fee_amount, is_donation" as string)
-      .in("status", ["paid", "ready_for_pickup", "picked_up"])
-      .gte("created_at", periodISO) as unknown as { data: OrderRow[] | null; error: unknown },
-    supabase
-      .from("orders")
-      .select("id, commerce_id, net_amount, created_at, commerces(name)")
-      .eq("status", "picked_up")
-      .eq("is_donation", false)
-      .gte("created_at", periodISO)
-      .order("created_at", { ascending: false })
-      .limit(50),
+    paidQuery as unknown as { data: OrderRow[] | null; error: unknown },
+    pendingQuery,
   ]);
 
   const orders = (paidOrders ?? []) as OrderRow[];

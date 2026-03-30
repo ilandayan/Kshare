@@ -24,6 +24,11 @@ function getPeriodStart(period: string): Date {
     case "total":
       return new Date(2020, 0, 1);
     default: {
+      // Année spécifique : "y2026", "y2027", etc.
+      if (period.startsWith("y")) {
+        const year = parseInt(period.slice(1), 10);
+        if (!isNaN(year)) return new Date(year, 0, 1);
+      }
       const d = new Date(now);
       const day = d.getDay();
       const diff = day === 0 ? -6 : 1 - day;
@@ -32,6 +37,14 @@ function getPeriodStart(period: string): Date {
       return d;
     }
   }
+}
+
+function getPeriodEnd(period: string): Date | null {
+  if (period.startsWith("y")) {
+    const year = parseInt(period.slice(1), 10);
+    if (!isNaN(year)) return new Date(year + 1, 0, 1);
+  }
+  return null;
 }
 
 const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -55,6 +68,7 @@ export default async function AdminDashboard({
 
   const supabase    = await createClient();
   const periodStart = getPeriodStart(period);
+  const periodEnd   = getPeriodEnd(period);
 
   // Fetch validated commerces list for filter
   const { data: commercesList } = await supabase
@@ -63,20 +77,22 @@ export default async function AdminDashboard({
     .eq("status", "validated")
     .order("name");
 
-  // Orders — filtered by commerce if selected
+  // Orders — filtered by commerce and period
   let ordersQuery = supabase
     .from("orders")
     .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount, status")
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
+  if (periodEnd) ordersQuery = ordersQuery.lt("created_at", periodEnd.toISOString());
   if (commerce) ordersQuery = ordersQuery.eq("commerce_id", commerce);
   const { data: orders } = await ordersQuery;
 
-  // Baskets — filtered by commerce if selected
+  // Baskets — filtered by commerce and period
   let basketsQuery = supabase
     .from("baskets")
     .select("id, type, quantity_sold, is_donation, created_at")
     .gte("created_at", periodStart.toISOString());
+  if (periodEnd) basketsQuery = basketsQuery.lt("created_at", periodEnd.toISOString());
   if (commerce) basketsQuery = basketsQuery.eq("commerce_id", commerce);
   const { data: baskets } = await basketsQuery;
 
@@ -123,11 +139,13 @@ export default async function AdminDashboard({
   const revenuNet     = revenuKshare - stripeFees;
 
   // ── Ranking: aggregate ALL orders for the period (no commerce filter) ──
-  const { data: rankingOrders } = await supabase
+  let rankingQuery = supabase
     .from("orders")
     .select("commerce_id, total_amount, commission_amount, quantity")
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
+  if (periodEnd) rankingQuery = rankingQuery.lt("created_at", periodEnd.toISOString());
+  const { data: rankingOrders } = await rankingQuery;
 
   const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number; favoris: number; avgRating: number | null; totalRatings: number }>();
   for (const c of commercesList ?? []) {
