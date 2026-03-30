@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PublicNavbar } from "@/components/shared/public-navbar";
 import { SharedFooter } from "@/components/shared/footer";
 import {
@@ -14,6 +15,16 @@ import {
   FileEdit,
   Landmark,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Conditions Générales d'Utilisation",
+  description:
+    "Consultez les conditions générales d'utilisation de la plateforme Kshare.",
+  openGraph: {
+    title: "CGU | Kshare",
+    url: "https://k-share.fr/cgu",
+  },
+};
 
 const SECTIONS = [
   {

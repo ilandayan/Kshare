@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PublicNavbar } from "@/components/shared/public-navbar";
 import { SharedFooter } from "@/components/shared/footer";
 import {
@@ -13,6 +14,16 @@ import {
   ShieldCheck,
   FileEdit,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Politique de confidentialité",
+  description:
+    "Découvrez comment Kshare collecte, utilise et protège vos données personnelles conformément au RGPD.",
+  openGraph: {
+    title: "Politique de confidentialité | Kshare",
+    url: "https://k-share.fr/confidentialite",
+  },
+};
 
 const SECTIONS = [
   {

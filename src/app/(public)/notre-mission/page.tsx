@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicNavbar } from "@/components/shared/public-navbar";
 import { SharedFooter } from "@/components/shared/footer";
+
+export const metadata: Metadata = {
+  title: "Notre mission",
+  description:
+    "Kshare lutte contre le gaspillage alimentaire dans le monde casher en connectant commerces et consommateurs autour de paniers invendus à prix réduit.",
+  openGraph: {
+    title: "Notre mission | Kshare",
+    description:
+      "Kshare lutte contre le gaspillage alimentaire dans le monde casher.",
+    url: "https://k-share.fr/notre-mission",
+  },
+};
 import {
   Sparkles,
   CheckCircle,

@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { AdminCharts }  from "@/components/admin/admin-charts";
+import dynamic from "next/dynamic";
+
+const AdminCharts = dynamic(
+  () => import("@/components/admin/admin-charts").then((m) => m.AdminCharts)
+);
 import { Euro, TrendingUp, ShoppingBag, Package, BarChart3, Store, Heart, Gift, CreditCard, Banknote, Receipt, Star } from "lucide-react";
 
 function getPeriodStart(period: string): Date {

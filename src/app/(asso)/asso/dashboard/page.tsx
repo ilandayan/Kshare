@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect }     from "next/navigation";
 import { Gift, Heart, ShoppingBag } from "lucide-react";
-import { AssoDashboardCharts } from "@/components/asso/asso-dashboard-charts";
+import dynamic from "next/dynamic";
+
+const AssoDashboardCharts = dynamic(
+  () => import("@/components/asso/asso-dashboard-charts").then((m) => m.AssoDashboardCharts)
+);
 
 const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const MONTHS_FR = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];

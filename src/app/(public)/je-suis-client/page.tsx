@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicNavbar } from "@/components/shared/public-navbar";
 import { SharedFooter } from "@/components/shared/footer";
+
+export const metadata: Metadata = {
+  title: "Je suis client",
+  description:
+    "Téléchargez l'app Kshare et achetez des paniers casher anti-gaspi à prix réduit près de chez vous. Boucheries, boulangeries, traiteurs casher partenaires.",
+  openGraph: {
+    title: "Je suis client | Kshare",
+    description:
+      "Achetez des paniers casher anti-gaspi à prix réduit près de chez vous.",
+    url: "https://k-share.fr/je-suis-client",
+  },
+};
 import {
   Smartphone,
   Tag,

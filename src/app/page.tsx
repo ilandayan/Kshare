@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicNavbar } from "@/components/shared/public-navbar";
 import { SharedFooter } from "@/components/shared/footer";
+
+export const metadata: Metadata = {
+  title: "Kshare - Paniers casher anti-gaspi à prix réduit",
+  description:
+    "Achetez des paniers alimentaires casher à prix réduit auprès de commerces partenaires. Réduisez le gaspillage alimentaire et faites des économies.",
+  openGraph: {
+    title: "Kshare - Paniers casher anti-gaspi à prix réduit",
+    description:
+      "Achetez des paniers alimentaires casher à prix réduit auprès de commerces partenaires.",
+    url: "https://k-share.fr",
+  },
+};
 import {
   ShoppingBag,
   ShoppingCart,
