@@ -26,24 +26,30 @@ export default async function SupportPage() {
     .in("status", ["open", "in_progress"])
     .order("created_at", { ascending: false });
 
-  // Tickets résolus par IA (dernier message sender = "ai")
-  const { data: aiResolvedTickets } = await supabase
+  // Tickets résolus (IA + admin)
+  const { data: resolvedTickets } = await supabase
     .from("support_tickets")
     .select(
-      "id, category, description, status, created_at, updated_at, messages, commerces(name), profiles!support_tickets_client_id_fkey(full_name, email)"
+      "id, category, description, status, created_at, updated_at, resolved_by, messages, commerces(name), profiles!support_tickets_client_id_fkey(full_name, email)"
     )
     .eq("status", "resolved")
-    .order("created_at", { ascending: false })
+    .order("updated_at", { ascending: false })
     .limit(50);
 
-  const aiTickets = (aiResolvedTickets ?? []).filter((t) => {
+  const aiTickets = (resolvedTickets ?? []).filter((t) => {
     const msgs = t.messages as unknown as Array<{ sender: string }> | null;
     return msgs?.some((m) => m.sender === "ai");
+  });
+
+  const adminTickets = (resolvedTickets ?? []).filter((t) => {
+    const msgs = t.messages as unknown as Array<{ sender: string }> | null;
+    return !msgs?.some((m) => m.sender === "ai");
   });
 
   const openCount = tickets?.filter((t) => t.status === "open").length ?? 0;
   const inProgressCount = tickets?.filter((t) => t.status === "in_progress").length ?? 0;
   const aiResolvedCount = aiTickets.length;
+  const adminResolvedCount = adminTickets.length;
 
   return (
     <div className="p-8">
@@ -64,6 +70,12 @@ export default async function SupportPage() {
           <span className="w-2 h-2 rounded-full bg-blue-500" />
           <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
             {inProgressCount} en cours
+          </span>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+          <span className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="text-sm font-medium text-green-700 dark:text-green-300">
+            {adminResolvedCount} résolu{adminResolvedCount !== 1 ? "s" : ""} par admin
           </span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-violet-50 dark:bg-violet-950 rounded-lg border border-violet-200 dark:border-violet-800">
@@ -118,6 +130,37 @@ export default async function SupportPage() {
           <CardContent className="p-0">
             <SupportTicketList
               tickets={aiTickets.map((t) => ({
+                id: t.id,
+                category: t.category,
+                description: t.description,
+                status: t.status as "open" | "in_progress" | "resolved",
+                createdAt: t.created_at,
+                messages: t.messages as unknown as Array<{ role: string; content: string; created_at: string }>,
+                commerceName:
+                  (t.commerces as { name: string } | null)?.name ?? null,
+                clientName:
+                  (t.profiles as { full_name: string | null; email: string | null } | null)?.full_name ??
+                  (t.profiles as { full_name: string | null; email: string | null } | null)?.email ??
+                  null,
+              }))}
+              statusLabels={TICKET_STATUS_LABELS}
+              statusColors={TICKET_STATUS_COLORS}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {/* Tickets résolus par admin */}
+      {adminTickets.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              Résolus par admin
+              <Badge variant="secondary" className="text-xs">{adminTickets.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <SupportTicketList
+              tickets={adminTickets.map((t) => ({
                 id: t.id,
                 category: t.category,
                 description: t.description,
