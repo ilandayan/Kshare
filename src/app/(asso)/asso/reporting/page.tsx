@@ -77,11 +77,6 @@ export default async function ReportingAssoPage({
       </div>
       <p className="text-gray-500 mb-8 ml-12">Impact de votre association sur la plateforme Kshare</p>
 
-      {/* Period selector */}
-      <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-4 mb-6">
-        <AssoReportingPeriodFilter period={period} />
-      </div>
-
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
         {[
@@ -99,6 +94,11 @@ export default async function ReportingAssoPage({
             <div className={`text-3xl font-bold ${kpi.valueColor}`}>{kpi.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* Period selector */}
+      <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-4 mb-6">
+        <AssoReportingPeriodFilter period={period} />
       </div>
 
       {/* Impact card */}
