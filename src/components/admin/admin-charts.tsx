@@ -28,9 +28,7 @@ interface AdminChartsProps {
   ratingsRanking?: RankingEntry[];
 }
 
-const LAUNCH_YEAR = 2026;
-
-const BASE_PERIODS = [
+const PERIODS = [
   { value: "today",    label: "Aujourd'hui" },
   { value: "week",     label: "Cette semaine" },
   { value: "month",    label: "Ce mois" },
@@ -40,17 +38,6 @@ const BASE_PERIODS = [
   { value: "year",     label: "Cette année" },
   { value: "total",    label: "Total" },
 ];
-
-function getPeriodOptions() {
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [];
-  for (let y = LAUNCH_YEAR; y <= currentYear; y++) {
-    yearOptions.push({ value: `y${y}`, label: `${y}` });
-  }
-  return [...BASE_PERIODS, ...yearOptions];
-}
-
-const PERIODS = getPeriodOptions();
 
 function AdminFilters({ period, commerce, commercesList }: { period: string; commerce: string; commercesList: { id: string; name: string }[] }) {
   const router       = useRouter();
