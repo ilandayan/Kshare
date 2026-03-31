@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/kshare-admin/reporting", destination: "/kshare-admin", permanent: true },
+      { source: "/shop/statistiques", destination: "/shop/dashboard", permanent: true },
     ];
   },
   // Headers de securite
