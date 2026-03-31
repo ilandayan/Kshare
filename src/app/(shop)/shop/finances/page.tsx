@@ -91,11 +91,7 @@ export default async function FinancesPage({
 
   return (
     <div>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Finances</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Suivi de vos revenus et reversements</p>
-        </div>
+      <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-4 mb-6">
         <ShopFinancePeriodFilter period={period} />
       </div>
       <FinanceDashboard
