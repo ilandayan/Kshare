@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, TrendingUp, ArrowDownRight, Calendar } from "lucide-react";
@@ -19,7 +20,19 @@ interface FinanceDashboardProps {
   nextPayoutDate: string;
   plan: string;
   commissionRate: number;
+  period: string;
 }
+
+const PERIODS = [
+  { value: "today",    label: "Aujourd'hui" },
+  { value: "week",     label: "Cette semaine" },
+  { value: "month",    label: "Ce mois" },
+  { value: "3months",  label: "3 derniers mois" },
+  { value: "6months",  label: "6 derniers mois" },
+  { value: "12months", label: "12 derniers mois" },
+  { value: "year",     label: "Cette année" },
+  { value: "total",    label: "Total" },
+];
 
 function formatEUR(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -34,7 +47,18 @@ export function FinanceDashboard({
   nextPayoutDate,
   plan,
   commissionRate,
+  period,
 }: FinanceDashboardProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  function handlePeriodChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("period", value);
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -107,6 +131,20 @@ export function FinanceDashboard({
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Period selector */}
+      <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-4">
+        <span className="text-sm text-gray-500 font-medium">Période :</span>
+        <select
+          value={period}
+          onChange={(e) => handlePeriodChange(e.target.value)}
+          className="text-sm font-medium text-gray-800 bg-[#f8f9fc] border border-[#e2e5f0] rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3744C8]/25 cursor-pointer"
+        >
+          {PERIODS.map((p) => (
+            <option key={p.value} value={p.value}>{p.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Summary breakdown */}

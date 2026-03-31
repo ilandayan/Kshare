@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCommerceLedgerSummary, getCommerceBalance } from "@/lib/stripe/ledger";
 import { FinanceDashboard } from "@/components/shop/finance-dashboard";
-import { ShopFinancePeriodFilter } from "./finance-period-filter";
 
 function getPeriodStart(period: string): Date {
   const now = new Date();
@@ -91,15 +90,13 @@ export default async function FinancesPage({
 
   return (
     <div>
-      <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-4 mb-6">
-        <ShopFinancePeriodFilter period={period} />
-      </div>
       <FinanceDashboard
         balance={balance}
         summary={summary}
         nextPayoutDate={nextPayoutFormatted}
         plan={commerce.subscription_plan ?? "starter"}
         commissionRate={commerce.commission_rate ?? 18}
+        period={period}
       />
     </div>
   );
