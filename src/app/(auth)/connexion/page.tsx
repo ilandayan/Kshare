@@ -15,7 +15,6 @@ import { KshareLogo } from "@/components/shared/kshare-logo";
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
   password: z.string().min(1, "Mot de passe requis"),
-  rememberMe: z.boolean().optional(),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -208,16 +207,8 @@ function ConnexionContent() {
                 )}
               </div>
 
-              {/* Remember me + forgot password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-[#e2e5f0] accent-[#3744C8]"
-                    {...register("rememberMe")}
-                  />
-                  <span className="text-sm text-gray-500">Se souvenir de moi</span>
-                </label>
+              {/* Forgot password */}
+              <div className="flex items-center justify-end">
                 <Link
                   href="/mot-de-passe-oublie"
                   className="text-sm text-[#3744C8] hover:underline"
