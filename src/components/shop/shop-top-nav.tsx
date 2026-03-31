@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, ClipboardList, BarChart3, Wallet, ScanLine } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, ClipboardList, Wallet, ScanLine } from "lucide-react";
 
 const TABS = [
   { label: "Tableau de bord",  href: "/shop/dashboard",       icon: LayoutDashboard },
@@ -10,7 +10,6 @@ const TABS = [
   { label: "Commandes",         href: "/shop/paniers/orders",  icon: ClipboardList },
   { label: "Scanner retrait",   href: "/shop/scan",            icon: ScanLine },
   { label: "Finances",          href: "/shop/finances",        icon: Wallet },
-  { label: "Statistiques",     href: "/shop/statistiques",    icon: BarChart3 },
 ] as const;
 
 export function ShopTopNav() {
