@@ -2,8 +2,6 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-const LAUNCH_YEAR = 2026;
-
 const BASE_PERIODS = [
   { value: "today",    label: "Aujourd'hui" },
   { value: "week",     label: "Cette semaine" },
@@ -15,16 +13,7 @@ const BASE_PERIODS = [
   { value: "total",    label: "Total" },
 ];
 
-function getPeriodOptions() {
-  const currentYear = new Date().getFullYear();
-  const years = [];
-  for (let y = LAUNCH_YEAR; y <= currentYear; y++) {
-    years.push({ value: `y${y}`, label: `${y}` });
-  }
-  return [...BASE_PERIODS, ...years];
-}
-
-const PERIODS = getPeriodOptions();
+const PERIODS = BASE_PERIODS;
 
 export function ShopFinancePeriodFilter({ period }: { period: string }) {
   const router = useRouter();
