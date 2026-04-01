@@ -102,9 +102,9 @@ export default function HomePage() {
             ].map((chip) => (
               <span
                 key={chip.label}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-sm font-medium ${chip.cls}`}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-base font-semibold ${chip.cls}`}
               >
-                <chip.icon className="h-3.5 w-3.5" />
+                <chip.icon className="h-4.5 w-4.5" />
                 {chip.label}
               </span>
             ))}
@@ -154,9 +154,6 @@ export default function HomePage() {
             <div className="anim-hidden animate-fade-in-up delay-100 bg-white rounded-2xl border border-[#e2e5f0]/60 card-elevated overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-orange-400 to-red-500" />
               <div className="p-8">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center mb-6">
-                  <TrendingDown className="h-5 w-5 text-red-500" />
-                </div>
                 <h3 className="font-display text-xl font-bold text-gray-900 mb-3">Le problème</h3>
                 <p className="text-gray-500 text-sm mb-5 leading-relaxed">
                   Énormément de produits alimentaires casher finissent à la poubelle chaque année en France.
@@ -180,9 +177,6 @@ export default function HomePage() {
             <div className="anim-hidden animate-fade-in-up delay-200 bg-white rounded-2xl border border-[#e2e5f0]/60 card-elevated overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
               <div className="p-8">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-6">
-                  <Sparkles className="h-5 w-5 text-emerald-600" />
-                </div>
                 <h3 className="font-display text-xl font-bold text-gray-900 mb-3">Notre solution</h3>
                 <p className="text-gray-500 text-sm mb-5 leading-relaxed">
                   Kshare connecte tous les acteurs pour transformer le gaspillage en solidarité.
