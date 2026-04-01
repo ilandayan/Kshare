@@ -126,9 +126,7 @@ export default function HomePage() {
                 key={stat.label}
                 className={`anim-hidden animate-scale-in ${stat.delay} bg-white rounded-2xl p-6 text-center card-elevated border border-[#e2e5f0]/60 group`}
               >
-                <div className="w-10 h-10 rounded-xl bg-[#3744C8]/10 flex items-center justify-center mx-auto mb-3">
-                  <stat.icon className="h-5 w-5 text-[#3744C8] transition-transform group-hover:scale-110" />
-                </div>
+                <stat.icon className="h-6 w-6 text-[#3744C8] mx-auto mb-3 transition-transform group-hover:scale-110" />
                 <div className="font-display text-3xl font-bold mb-1 bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] bg-clip-text text-transparent">
                   {stat.value}
                 </div>
