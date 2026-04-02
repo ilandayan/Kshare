@@ -112,9 +112,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─────────────── STATS ─────────────── */}
-      <section className="pb-20 bg-[#DDE2F2]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ─────────────── STATS + PROBLÈME / SOLUTION ─────────────── */}
+      <section id="mission" className="py-16 bg-[#DDE2F2]">
+        {/* Stats */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: ShoppingBag, value: "1000+", label: "Paniers sauvés",  delay: "delay-100" },
@@ -135,10 +136,8 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
 
-      {/* ─────────────── PROBLÈME / SOLUTION ─────────────── */}
-      <section id="mission" className="py-16">
+        {/* Problème / Solution */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section divider */}
           <div className="flex items-center gap-3 mb-8">
@@ -200,7 +199,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── UNE PLATEFORME POUR TOUS ─────────────── */}
-      <section className="py-16 bg-[#DDE2F2]">
+      <section className="py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -287,7 +286,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
-      <section className="py-16">
+      <section className="py-16 bg-[#DDE2F2]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -324,7 +323,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── APP MOBILE ─────────────── */}
-      <section className="py-16 bg-[#DDE2F2]" id="clients">
+      <section className="py-16" id="clients">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#e2e5f0]/60">
             <div className="grid md:grid-cols-2 gap-0">
@@ -448,7 +447,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="py-16">
+      <section className="py-16 bg-[#DDE2F2]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden bg-gradient-to-br from-[#3744C8] via-[#2B38B8] to-[#1E2A9E]">
             <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />
