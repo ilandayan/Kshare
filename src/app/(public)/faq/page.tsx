@@ -326,7 +326,7 @@ export default function FaqPage() {
       </section>
 
       {/* CONTENT */}
-      <section className="py-24 md:py-40 bg-[#F0F2FA]">
+      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           {FAQ_SECTIONS.map((section) => (
             <div
