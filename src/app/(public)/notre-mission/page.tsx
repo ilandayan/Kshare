@@ -65,7 +65,7 @@ export default function NotreMissionPage() {
       <section className="py-24 md:py-40 bg-[#F0F2FA]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
               Les problèmes que nous résolvons
             </h2>
             <p className="text-gray-500">Chaque acteur fait face à des défis spécifiques</p>
@@ -161,7 +161,7 @@ export default function NotreMissionPage() {
                   <CheckCircle className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-display text-2xl md:text-3xl font-bold text-gray-900 mb-2">Notre solution</h2>
+                  <h2 className="font-display text-2xl md:text-3xl font-bold text-[#3744C8] mb-2">Notre solution</h2>
                   <p className="text-gray-500 leading-relaxed">
                     Kshare crée un pont entre tous ces acteurs via une plateforme unique et intuitive
                   </p>
