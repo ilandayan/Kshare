@@ -62,7 +62,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── PROBLÈMES (3 colonnes) ─────────────── */}
-      <section className="py-32 md:py-48 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -151,7 +151,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── NOTRE SOLUTION ─────────────── */}
-      <section className="py-32 md:py-48">
+      <section className="py-24 md:py-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="anim-hidden animate-fade-in-up bg-white rounded-3xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
             <div className="h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-[#3744C8]" />
@@ -205,7 +205,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA FONCTIONNE (CLIENTS) ─────────────── */}
-      <section className="py-32 md:py-48 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -239,7 +239,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
-      <section className="py-32 md:py-48">
+      <section className="py-24 md:py-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -268,7 +268,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── LES AVANTAGES POUR CHACUN ─────────────── */}
-      <section className="py-32 md:py-48 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -354,7 +354,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── FEATURES ─────────────── */}
-      <section className="py-32 md:py-48">
+      <section className="py-24 md:py-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
@@ -386,7 +386,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="py-32 md:py-48 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden"
