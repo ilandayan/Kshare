@@ -251,7 +251,7 @@ export default function ContactPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative py-16 text-center overflow-hidden">
+      <section className="relative py-24 md:py-40 text-center overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-60 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
@@ -267,7 +267,7 @@ export default function ContactPage() {
       </section>
 
       {/* ─────────────── FORM + COORDS ─────────────── */}
-      <section className="pb-20">
+      <section className="py-24 md:py-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-[1fr_360px] gap-6 items-start">
             {/* Form card */}
