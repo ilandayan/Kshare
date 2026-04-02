@@ -184,7 +184,7 @@ const SECTIONS = [
 
 export default function CguPage() {
   return (
-    <div className="min-h-screen bg-[#EEF0F8]">
+    <div className="min-h-screen bg-white">
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
@@ -211,7 +211,7 @@ export default function CguPage() {
       </section>
 
       {/* ─────────────── CONTENT ─────────────── */}
-      <section className="pb-20 bg-[#DDE2F2]">
+      <section className="pb-20 bg-[#F0F2FA]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="anim-hidden animate-fade-in-up bg-white rounded-3xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
             <div className="h-1.5 bg-gradient-to-r from-[#3744C8] via-[#5B6EF5] to-[#3744C8]" />

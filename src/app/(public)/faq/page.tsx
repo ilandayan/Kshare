@@ -295,7 +295,7 @@ function buildFaqJsonLd() {
 
 export default function FaqPage() {
   return (
-    <div className="min-h-screen bg-[#EEF0F8]">
+    <div className="min-h-screen bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqJsonLd()) }}
@@ -326,7 +326,7 @@ export default function FaqPage() {
       </section>
 
       {/* CONTENT */}
-      <section className="pb-20 bg-[#DDE2F2]">
+      <section className="pb-20 bg-[#F0F2FA]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           {FAQ_SECTIONS.map((section) => (
             <div
