@@ -113,7 +113,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── STATS + PROBLÈME / SOLUTION ─────────────── */}
-      <section id="mission" className="py-20 bg-[#F0F2FA]">
+      <section id="mission" className="py-24 md:py-40 bg-[#F0F2FA]">
         {/* Stats */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -199,7 +199,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── UNE PLATEFORME POUR TOUS ─────────────── */}
-      <section className="py-20">
+      <section className="py-24 md:py-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -286,7 +286,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
-      <section className="py-20 bg-[#F0F2FA]">
+      <section className="py-24 md:py-40 bg-[#F0F2FA]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -323,7 +323,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── APP MOBILE ─────────────── */}
-      <section className="py-20" id="clients">
+      <section className="py-24 md:py-40" id="clients">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#e2e5f0]/60">
             <div className="grid md:grid-cols-2 gap-0">
@@ -447,7 +447,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="py-20 bg-[#F0F2FA]">
+      <section className="py-24 md:py-40 bg-[#F0F2FA]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden bg-gradient-to-br from-[#3744C8] via-[#2B38B8] to-[#1E2A9E]">
             <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />
