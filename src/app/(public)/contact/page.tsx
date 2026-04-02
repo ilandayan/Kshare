@@ -250,12 +250,12 @@ export default function ContactPage() {
     <div className="min-h-screen bg-white">
       <PublicNavbar />
 
-      {/* ─────────────── HERO ─────────────── */}
-      <section className="relative pt-16 pb-10 md:pt-24 md:pb-12 text-center overflow-hidden">
+      {/* ─────────────── CONTACT ─────────────── */}
+      <section className="relative py-24 md:py-40 overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-60 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
-        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-14">
           <h1 className="anim-hidden animate-fade-in-up text-4xl md:text-5xl font-bold text-[#3744C8] mb-5">
             Contactez-nous
           </h1>
@@ -264,10 +264,6 @@ export default function ContactPage() {
             accompagner dans votre démarche solidaire.
           </p>
         </div>
-      </section>
-
-      {/* ─────────────── FORM + COORDS ─────────────── */}
-      <section className="pb-24 md:pb-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-[1fr_360px] gap-6 items-start">
             {/* Form card */}
