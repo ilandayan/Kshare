@@ -258,7 +258,7 @@ export default function ConfidentialitePage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative py-16 md:py-24 text-center overflow-hidden">
+      <section className="relative py-24 md:py-40 text-center overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-60 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
@@ -281,7 +281,7 @@ export default function ConfidentialitePage() {
       </section>
 
       {/* ─────────────── CONTENT ─────────────── */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="anim-hidden animate-fade-in-up bg-white rounded-3xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
             <div className="h-1.5 bg-gradient-to-r from-[#3744C8] via-[#5B6EF5] to-[#3744C8]" />
