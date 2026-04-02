@@ -80,7 +80,7 @@ export default async function AdminDashboard({
   // Orders — filtered by commerce and period
   let ordersQuery = supabase
     .from("orders")
-    .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount, status")
+    .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount, stripe_fee_amount, status")
     .in("status", ["paid", "ready_for_pickup", "picked_up"])
     .gte("created_at", periodStart.toISOString());
   if (periodEnd) ordersQuery = ordersQuery.lt("created_at", periodEnd.toISOString());
@@ -133,8 +133,9 @@ export default async function AdminDashboard({
   const donCommerce   = allBaskets.filter((b) => b.is_donation).length;
   const donClients    = allOrders.filter((o) => o.is_donation).length;
   const donsDistribues = allOrders.filter((o) => o.is_donation && o.status === "picked_up").reduce((s, o) => s + (o.quantity ?? 1), 0);
-  // Stripe fees estimate: 1.4% + 0.25€ per transaction (European cards)
-  const stripeFees    = nonDonationOrders.reduce((s, o) => s + ((o.total_amount ?? 0) * 0.014 + 0.25), 0);
+  // Stripe fees: use real recorded fees, fallback to estimate for orders without reconciled fees
+  const stripeFees    = allOrders.reduce((s, o) => s + (o.stripe_fee_amount ?? 0), 0);
+  const ordersWithoutFee = allOrders.filter((o) => !o.stripe_fee_amount && !o.is_donation).length;
   const revenuKshare  = commission + serviceFees;
   const revenuNet     = revenuKshare - stripeFees;
 
@@ -304,7 +305,7 @@ export default async function AdminDashboard({
     { label: "CA généré",         value: `${caGenere.toFixed(2)}€`,      sub: undefined,                          iconBg: "bg-green-100",  iconColor: "text-green-600",  icon: Euro },
     { label: "Revenu Kshare",     value: `${revenuKshare.toFixed(2)}€`,  sub: `Commission ${commission.toFixed(2)}€ + Frais ${serviceFees.toFixed(2)}€`, iconBg: "bg-purple-100", iconColor: "text-purple-600", icon: BarChart3 },
     { label: "Frais de service",  value: `${serviceFees.toFixed(2)}€`,   sub: `${nbTransactions} transaction${nbTransactions > 1 ? "s" : ""}`, iconBg: "bg-cyan-100",   iconColor: "text-cyan-600",   icon: CreditCard },
-    { label: "Frais Stripe",      value: `${stripeFees.toFixed(2)}€`,    sub: "Estimé : 1.4% + 0.25€/transaction", iconBg: "bg-red-100",    iconColor: "text-red-500",    icon: Receipt },
+    { label: "Frais Stripe réels", value: `${stripeFees.toFixed(2)}€`,    sub: ordersWithoutFee > 0 ? `${ordersWithoutFee} commande(s) sans frais réconciliés` : "Tous les frais sont réconciliés", iconBg: "bg-red-100",    iconColor: "text-red-500",    icon: Receipt },
     { label: "Revenu net Kshare", value: `${revenuNet.toFixed(2)}€`,     sub: `(Commission + Frais service) − Frais Stripe`,     iconBg: "bg-emerald-100", iconColor: "text-emerald-600", icon: Banknote },
     { label: "CA net commerces",  value: `${caNet.toFixed(2)}€`,         sub: undefined,                          iconBg: "bg-blue-100",   iconColor: "text-blue-600",   icon: TrendingUp },
     { label: "Paniers vendus",    value: paniersVendus.toString(),        sub: undefined,                          iconBg: "bg-yellow-100", iconColor: "text-yellow-600", icon: Package },
