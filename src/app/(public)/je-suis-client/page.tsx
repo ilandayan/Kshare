@@ -40,7 +40,7 @@ export default function JeSuisClientPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className="relative py-24 md:py-40 overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[500px] opacity-50 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
@@ -180,7 +180,7 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── POURQUOI UTILISER KSHARE ? ─────────────── */}
-      <section className="py-16 bg-[#F0F2FA]">
+      <section className="py-24 md:py-40 bg-[#F0F2FA]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -216,7 +216,7 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
-      <section className="py-16">
+      <section className="py-24 md:py-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -250,7 +250,7 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
-      <section className="py-16 bg-[#F0F2FA]">
+      <section className="py-24 md:py-40 bg-[#F0F2FA]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e2e5f0]/60 p-10">
             <div className="text-center mb-8">
@@ -283,7 +283,7 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── CTA APP MOBILE ─────────────── */}
-      <section className="py-16">
+      <section className="py-24 md:py-40">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden"
