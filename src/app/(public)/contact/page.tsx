@@ -247,7 +247,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#EEF0F8]">
+    <div className="min-h-screen bg-white">
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}

@@ -38,7 +38,7 @@ import {
 
 export default function NotreMissionPage() {
   return (
-    <div className="min-h-screen bg-[#EEF0F8]">
+    <div className="min-h-screen bg-white">
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
@@ -62,7 +62,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── PROBLÈMES (3 colonnes) ─────────────── */}
-      <section className="pb-20 bg-[#DDE2F2]">
+      <section className="pb-20 bg-[#F0F2FA]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-3">
@@ -205,7 +205,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA FONCTIONNE (CLIENTS) ─────────────── */}
-      <section className="py-16 bg-[#DDE2F2]">
+      <section className="py-16 bg-[#F0F2FA]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -268,7 +268,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── LES AVANTAGES POUR CHACUN ─────────────── */}
-      <section className="py-16 bg-[#DDE2F2]">
+      <section className="py-16 bg-[#F0F2FA]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -386,7 +386,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="py-16 bg-[#DDE2F2]">
+      <section className="py-16 bg-[#F0F2FA]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden"
