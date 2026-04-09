@@ -219,21 +219,33 @@ export default function NotreMissionPage() {
             <p className="text-white/60">Un processus simple pour les clients</p>
           </div>
 
+          {/* Step circles row */}
+          <div className="hidden md:flex items-center justify-between max-w-3xl mx-auto mb-6 px-8">
+            {[1, 2, 3, 4].map((step, i) => (
+              <div key={step} className="flex items-center flex-1 last:flex-none">
+                <div className="w-10 h-10 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold shadow-md shrink-0">
+                  {step}
+                </div>
+                {i < 3 && (
+                  <div className="flex-1 h-px border-t-2 border-dashed border-white/30 mx-2" />
+                )}
+              </div>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { step: "1", title: "Trouvez",           desc: "Parcourez les paniers casher disponibles près de chez vous via l'app",  delay: "delay-100" },
               { step: "2", title: "Réservez",           desc: "Choisissez vos paniers à prix réduit et payez en toute sécurité",       delay: "delay-200" },
               { step: "3", title: "Récupérez",          desc: "Présentez votre QR code en magasin et récupérez votre panier",           delay: "delay-300" },
               { step: "4", title: "Offrez ou savourez", desc: "Profitez de vos produits ou faites un don à une association (tsedaka)",  delay: "delay-400" },
-            ].map((item, i) => (
-              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
-                <div className="w-10 h-10 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold mb-5 shadow-md z-10">
+            ].map((item) => (
+              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} flex flex-col`}>
+                {/* Mobile-only step number */}
+                <div className="md:hidden w-10 h-10 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold shadow-md mx-auto mb-4">
                   {item.step}
                 </div>
-                {i < 3 && (
-                  <div className="hidden md:block absolute top-5 left-[calc(50%+20px)] right-0 h-px border-t-2 border-dashed border-white/30" />
-                )}
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/15 w-full">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/15 w-full flex-1 flex flex-col justify-center">
                   <div className="font-display font-semibold text-white mb-2">{item.title}</div>
                   <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
                 </div>
