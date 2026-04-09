@@ -62,35 +62,37 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── PROBLÈMES (3 colonnes) ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
               Les problèmes que nous résolvons
             </h2>
-            <p className="text-gray-500">Chaque acteur fait face à des défis spécifiques</p>
+            <p className="text-white/60">Chaque acteur fait face à des défis spécifiques</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* 1. Problème commerçants — BLEU */}
-            <div className="anim-hidden animate-fade-in-up delay-100 bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
-              <div className="h-1 bg-gradient-to-r from-blue-400 to-[#3744C8]" />
+            <div className="anim-hidden animate-fade-in-up delay-100 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-300" />
               <div className="p-7">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+                <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center mb-5">
                   <Store className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-bold text-gray-900 mb-3">Pour les commerçants</h3>
-                <ul className="space-y-2.5 text-sm text-gray-500 leading-relaxed">
+                <h3 className="font-display text-lg font-bold text-white mb-3">Pour les commerçants</h3>
+                <ul className="space-y-2.5 text-sm text-white/70 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-[#3744C8] shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Des invendus quotidiens qui finissent à la poubelle
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-[#3744C8] shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Des pertes financières récurrentes et du gaspillage
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-[#3744C8] shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Peu de canaux pour écouler les surplus rapidement
                   </li>
                 </ul>
@@ -98,24 +100,24 @@ export default function NotreMissionPage() {
             </div>
 
             {/* 2. Problème associations — VIOLET/ROSE */}
-            <div className="anim-hidden animate-fade-in-up delay-200 bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
-              <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-500" />
+            <div className="anim-hidden animate-fade-in-up delay-200 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400" />
               <div className="p-7">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+                <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center mb-5">
                   <Heart className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-bold text-gray-900 mb-3">Pour les associations</h3>
-                <ul className="space-y-2.5 text-sm text-gray-500 leading-relaxed">
+                <h3 className="font-display text-lg font-bold text-white mb-3">Pour les associations</h3>
+                <ul className="space-y-2.5 text-sm text-white/70 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Accès limité aux produits casher pour les familles dans le besoin
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Budget limité et approvisionnement irrégulier
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Pas de plateforme dédiée pour centraliser les dons
                   </li>
                 </ul>
@@ -123,24 +125,24 @@ export default function NotreMissionPage() {
             </div>
 
             {/* 3. Problème clients — VERT */}
-            <div className="anim-hidden animate-fade-in-up delay-300 bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
-              <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="anim-hidden animate-fade-in-up delay-300 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
               <div className="p-7">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+                <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center mb-5">
                   <ShoppingCart className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-bold text-gray-900 mb-3">Pour les clients</h3>
-                <ul className="space-y-2.5 text-sm text-gray-500 leading-relaxed">
+                <h3 className="font-display text-lg font-bold text-white mb-3">Pour les clients</h3>
+                <ul className="space-y-2.5 text-sm text-white/70 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Le casher est souvent cher et peu accessible
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Peu de diversité dans les options à prix réduit
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
                     Difficile de trouver des bons plans casher à proximité
                   </li>
                 </ul>
@@ -151,7 +153,8 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── NOTRE SOLUTION ─────────────── */}
-      <section className="py-24 md:py-40">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="anim-hidden animate-fade-in-up bg-white rounded-3xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
             <div className="h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-[#3744C8]" />
@@ -205,13 +208,15 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA FONCTIONNE (CLIENTS) ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute bottom-10 right-10 w-48 h-48 rounded-full bg-white/5" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
               Comment ça fonctionne ?
             </h2>
-            <p className="text-gray-500">Un processus simple pour les clients</p>
+            <p className="text-white/60">Un processus simple pour les clients</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -222,15 +227,15 @@ export default function NotreMissionPage() {
               { step: "4", title: "Offrez ou savourez", desc: "Profitez de vos produits ou faites un don à une association (tsedaka)",  delay: "delay-400" },
             ].map((item, i) => (
               <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] text-white flex items-center justify-center text-sm font-display font-bold mb-5 shadow-md z-10">
+                <div className="w-10 h-10 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold mb-5 shadow-md z-10">
                   {item.step}
                 </div>
                 {i < 3 && (
-                  <div className="hidden md:block absolute top-5 left-[calc(50%+20px)] right-0 h-px border-t-2 border-dashed border-[#3744C8]/30" />
+                  <div className="hidden md:block absolute top-5 left-[calc(50%+20px)] right-0 h-px border-t-2 border-dashed border-white/30" />
                 )}
-                <div className="bg-white rounded-2xl p-5 text-center border border-[#e2e5f0]/60 w-full card-elevated">
-                  <div className="font-display font-semibold text-gray-900 mb-2">{item.title}</div>
-                  <div className="text-xs text-gray-500 leading-relaxed">{item.desc}</div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/15 w-full">
+                  <div className="font-display font-semibold text-white mb-2">{item.title}</div>
+                  <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -239,7 +244,8 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
-      <section className="py-24 md:py-40">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -268,24 +274,26 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── LES AVANTAGES POUR CHACUN ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
               Les avantages pour chacun
             </h2>
-            <p className="text-gray-500">Un impact positif pour tous les acteurs de Kshare</p>
+            <p className="text-white/60">Un impact positif pour tous les acteurs de Kshare</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* 1. Commerçants — BLEU */}
-            <div className="anim-hidden animate-fade-in-up delay-100 bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
-              <div className="h-1 bg-gradient-to-r from-blue-400 to-[#3744C8]" />
+            <div className="anim-hidden animate-fade-in-up delay-100 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-300" />
               <div className="p-8">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] flex items-center justify-center mb-5 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center mb-5">
                   <Store className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-bold text-gray-900 mb-4">Pour les commerçants</h3>
+                <h3 className="font-display text-lg font-bold text-white mb-4">Pour les commerçants</h3>
                 <ul className="space-y-3">
                   {[
                     "Transformez vos invendus en revenus au lieu de les jeter",
@@ -293,8 +301,8 @@ export default function NotreMissionPage() {
                     "Faites don de vos paniers invendus aux associations",
                     "Suivi des ventes, statistiques et reporting en temps réel",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
-                      <CheckCircle className="h-4 w-4 text-[#3744C8] shrink-0 mt-0.5" />
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-white/70">
+                      <CheckCircle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
                       {item}
                     </li>
                   ))}
@@ -303,13 +311,13 @@ export default function NotreMissionPage() {
             </div>
 
             {/* 2. Associations — VIOLET/ROSE */}
-            <div className="anim-hidden animate-fade-in-up delay-200 bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
-              <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-500" />
+            <div className="anim-hidden animate-fade-in-up delay-200 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400" />
               <div className="p-8">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-5 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center mb-5">
                   <Heart className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-bold text-gray-900 mb-4">Pour les associations</h3>
+                <h3 className="font-display text-lg font-bold text-white mb-4">Pour les associations</h3>
                 <ul className="space-y-3">
                   {[
                     "Recevez des paniers casher offerts par les clients et les commerçants",
@@ -317,8 +325,8 @@ export default function NotreMissionPage() {
                     "Réservation simple et suivi des collectes en ligne",
                     "Reporting détaillé de vos actions solidaires",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
-                      <CheckCircle className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-white/70">
+                      <CheckCircle className="h-4 w-4 text-purple-300 shrink-0 mt-0.5" />
                       {item}
                     </li>
                   ))}
@@ -327,13 +335,13 @@ export default function NotreMissionPage() {
             </div>
 
             {/* 3. Clients — VERT */}
-            <div className="anim-hidden animate-fade-in-up delay-300 bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
-              <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="anim-hidden animate-fade-in-up delay-300 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
               <div className="p-8">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-5 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center mb-5">
                   <ShoppingCart className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-bold text-gray-900 mb-4">Pour les clients</h3>
+                <h3 className="font-display text-lg font-bold text-white mb-4">Pour les clients</h3>
                 <ul className="space-y-3">
                   {[
                     "Économies garanties : jusqu'à -70% sur des produits casher",
@@ -341,8 +349,8 @@ export default function NotreMissionPage() {
                     "Géolocalisation pour trouver les paniers les plus proches",
                     "Faites une mitzvah en offrant un panier à une association",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
-                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-white/70">
+                      <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
                       {item}
                     </li>
                   ))}
@@ -354,7 +362,8 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── FEATURES ─────────────── */}
-      <section className="py-24 md:py-40">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
@@ -386,7 +395,8 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden"

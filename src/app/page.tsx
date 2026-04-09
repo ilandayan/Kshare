@@ -113,9 +113,13 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── STATS + PROBLÈME / SOLUTION ─────────────── */}
-      <section id="mission" className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section id="mission" className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
+
         {/* Stats */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: ShoppingBag, value: "1000+", label: "Paniers sauvés",  delay: "delay-100" },
@@ -125,36 +129,36 @@ export default function HomePage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className={`anim-hidden animate-scale-in ${stat.delay} bg-white rounded-2xl p-6 text-center card-elevated border border-[#e2e5f0]/60 group`}
+                className={`anim-hidden animate-scale-in ${stat.delay} bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/15 group`}
               >
-                <stat.icon className="h-6 w-6 text-[#3744C8] mx-auto mb-3 transition-transform group-hover:scale-110" />
-                <div className="font-display text-3xl font-bold mb-1 bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] bg-clip-text text-transparent">
+                <stat.icon className="h-6 w-6 text-white/80 mx-auto mb-3 transition-transform group-hover:scale-110" />
+                <div className="font-display text-3xl font-bold mb-1 text-white">
                   {stat.value}
                 </div>
-                <div className="text-sm text-gray-500">{stat.label}</div>
+                <div className="text-sm text-white/60">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Problème / Solution */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section divider */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#e2e5f0]" />
-            <span className="text-xs font-semibold tracking-widest uppercase text-gray-400">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
+            <span className="text-xs font-semibold tracking-widest uppercase text-white/50">
               Le défi que nous relevons
             </span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#e2e5f0]" />
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Le problème */}
-            <div className="anim-hidden animate-fade-in-up delay-100 bg-white rounded-2xl border border-[#e2e5f0]/60 card-elevated overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-orange-400 to-red-500" />
+            <div className="anim-hidden animate-fade-in-up delay-100 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-orange-400 to-red-400" />
               <div className="p-8">
-                <h3 className="font-display text-xl font-bold text-gray-900 mb-3">Le problème</h3>
-                <p className="text-gray-500 text-sm mb-5 leading-relaxed">
+                <h3 className="font-display text-xl font-bold text-white mb-3">Le problème</h3>
+                <p className="text-white/60 text-sm mb-5 leading-relaxed">
                   Énormément de produits alimentaires casher finissent à la poubelle chaque année en France.
                 </p>
                 <ul className="space-y-2.5">
@@ -163,7 +167,7 @@ export default function HomePage() {
                     "Familles dans le besoin sans accès",
                     "Manger casher devient un luxe",
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-2.5 text-sm text-gray-600">
+                    <li key={item} className="flex items-center gap-2.5 text-sm text-white/70">
                       <span className="shrink-0 text-xs leading-none">❌</span>
                       {item}
                     </li>
@@ -173,11 +177,11 @@ export default function HomePage() {
             </div>
 
             {/* Notre solution */}
-            <div className="anim-hidden animate-fade-in-up delay-200 bg-white rounded-2xl border border-[#e2e5f0]/60 card-elevated overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="anim-hidden animate-fade-in-up delay-200 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
               <div className="p-8">
-                <h3 className="font-display text-xl font-bold text-gray-900 mb-3">Notre solution</h3>
-                <p className="text-gray-500 text-sm mb-5 leading-relaxed">
+                <h3 className="font-display text-xl font-bold text-white mb-3">Notre solution</h3>
+                <p className="text-white/60 text-sm mb-5 leading-relaxed">
                   Kshare connecte tous les acteurs pour transformer le gaspillage en solidarité.
                 </p>
                 <ul className="space-y-2.5">
@@ -186,8 +190,8 @@ export default function HomePage() {
                     "Accès facilité pour les associations",
                     "Prix réduits pour les clients",
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-2.5 text-sm text-gray-600">
-                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <li key={item} className="flex items-center gap-2.5 text-sm text-white/70">
+                      <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
                       {item}
                     </li>
                   ))}
@@ -199,7 +203,8 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── UNE PLATEFORME POUR TOUS ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-white to-[#FAFBFF]">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -286,13 +291,17 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#F4F5FB] to-[#E8ECF8]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute top-10 right-10 w-48 h-48 rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute bottom-10 left-10 w-64 h-64 rounded-full bg-white/5" />
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
               Comment ça marche ?
             </h2>
-            <p className="text-gray-500">Un processus simple et efficace en 4 étapes</p>
+            <p className="text-white/60">Un processus simple et efficace en 4 étapes</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
@@ -303,17 +312,17 @@ export default function HomePage() {
               { step: "4", icon: Heart,       title: "Distribution", desc: "Les associations distribuent aux bénéficiaires de la communauté", delay: "delay-400" },
             ].map((item, i) => (
               <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] text-white flex items-center justify-center text-sm font-display font-bold z-10 shadow-sm">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold z-10 shadow-md">
                   {item.step}
                 </div>
-                <div className="bg-white rounded-2xl p-6 pt-8 text-center border border-[#e2e5f0]/60 w-full mt-4 card-elevated">
-                  <item.icon className="h-8 w-8 text-[#3744C8] mx-auto mb-3" />
-                  <div className="font-display font-semibold text-gray-900 mb-2">{item.title}</div>
-                  <div className="text-xs text-gray-500 leading-relaxed">{item.desc}</div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 pt-8 text-center border border-white/15 w-full mt-4">
+                  <item.icon className="h-8 w-8 text-white/80 mx-auto mb-3" />
+                  <div className="font-display font-semibold text-white mb-2">{item.title}</div>
+                  <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
                 </div>
                 {i < 3 && (
                   <div className="hidden md:flex absolute top-1/2 -right-3 z-20">
-                    <ArrowRight className="h-5 w-5 text-[#3744C8]/40" />
+                    <ArrowRight className="h-5 w-5 text-white/40" />
                   </div>
                 )}
               </div>
@@ -323,7 +332,8 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── APP MOBILE ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#FAFBFF] to-white" id="clients">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden" id="clients">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#e2e5f0]/60">
             <div className="grid md:grid-cols-2 gap-0">
@@ -447,7 +457,8 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] opacity-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden bg-gradient-to-br from-[#3744C8] via-[#2B38B8] to-[#1E2A9E]">
             <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />

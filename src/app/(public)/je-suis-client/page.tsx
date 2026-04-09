@@ -180,34 +180,36 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── POURQUOI UTILISER KSHARE ? ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
               Pourquoi utiliser Kshare ?
             </h2>
-            <p className="text-gray-500">Des avantages concrets pour vous et pour la planète</p>
+            <p className="text-white/60">Des avantages concrets pour vous et pour la planète</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
-              { icon: Tag,      topBar: "from-emerald-400 to-green-500", title: "Prix réduits",      desc: "Économisez jusqu'à -70% sur des produits casher de qualité",           delay: "delay-100" },
-              { icon: Heart,    topBar: "from-pink-400 to-red-500",      title: "Action solidaire",  desc: "Chaque achat contribue à réduire le gaspillage alimentaire",           delay: "delay-200" },
-              { icon: Clock,    topBar: "from-blue-400 to-indigo-500",   title: "Commande rapide",   desc: "Réservez vos paniers en quelques clics depuis votre mobile",           delay: "delay-300" },
-              { icon: ShoppingBag, topBar: "from-purple-400 to-violet-500", title: "Large choix",   desc: "Paniers Bassari, Halavi, Parvé, Mix et spécial Shabbat",               delay: "delay-100" },
-              { icon: Star,     topBar: "from-amber-400 to-orange-500",  title: "Cacherout garantie", desc: "Tous les produits sont certifiés et contrôlés",                      delay: "delay-200" },
-              { icon: Bell,     topBar: "from-teal-400 to-cyan-500",     title: "Simple et efficace", desc: "Notifications en temps réel pour les nouveaux paniers disponibles",  delay: "delay-300" },
+              { icon: Tag,      topBar: "from-emerald-400 to-green-400", title: "Prix réduits",      desc: "Économisez jusqu'à -70% sur des produits casher de qualité",           delay: "delay-100" },
+              { icon: Heart,    topBar: "from-pink-400 to-red-400",      title: "Action solidaire",  desc: "Chaque achat contribue à réduire le gaspillage alimentaire",           delay: "delay-200" },
+              { icon: Clock,    topBar: "from-blue-400 to-indigo-400",   title: "Commande rapide",   desc: "Réservez vos paniers en quelques clics depuis votre mobile",           delay: "delay-300" },
+              { icon: ShoppingBag, topBar: "from-purple-400 to-violet-400", title: "Large choix",   desc: "Paniers Bassari, Halavi, Parvé, Mix et spécial Shabbat",               delay: "delay-100" },
+              { icon: Star,     topBar: "from-amber-400 to-orange-400",  title: "Cacherout garantie", desc: "Tous les produits sont certifiés et contrôlés",                      delay: "delay-200" },
+              { icon: Bell,     topBar: "from-teal-400 to-cyan-400",     title: "Simple et efficace", desc: "Notifications en temps réel pour les nouveaux paniers disponibles",  delay: "delay-300" },
             ].map((card) => (
               <div
                 key={card.title}
-                className={`anim-hidden animate-fade-in-up ${card.delay} bg-white rounded-2xl border border-[#e2e5f0]/60 overflow-hidden card-elevated`}
+                className={`anim-hidden animate-fade-in-up ${card.delay} bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden`}
               >
                 <div className={`h-1 bg-gradient-to-r ${card.topBar}`} />
                 <div className="p-6">
-                  <div className="w-11 h-11 bg-[#3744C8] rounded-xl flex items-center justify-center mb-4 shadow-sm">
+                  <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center mb-4">
                     <card.icon className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="font-display font-bold text-gray-900 mb-1.5">{card.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
+                  <h3 className="font-display font-bold text-white mb-1.5">{card.title}</h3>
+                  <p className="text-sm text-white/60 leading-relaxed">{card.desc}</p>
                 </div>
               </div>
             ))}
@@ -216,7 +218,8 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
-      <section className="py-24 md:py-40">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -250,7 +253,8 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
-      <section className="py-24 md:py-40 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e2e5f0]/60 p-10">
             <div className="text-center mb-8">
@@ -283,7 +287,8 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── CTA APP MOBILE ─────────────── */}
-      <section className="py-24 md:py-40">
+      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] opacity-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden"
