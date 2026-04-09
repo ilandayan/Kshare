@@ -84,15 +84,15 @@ export default function NotreMissionPage() {
                 <h3 className="font-display text-lg font-bold text-white mb-3">Pour les commerçants</h3>
                 <ul className="space-y-2.5 text-sm text-white/70 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Des invendus quotidiens qui finissent à la poubelle
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Des pertes financières récurrentes et du gaspillage
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Peu de canaux pour écouler les surplus rapidement
                   </li>
                 </ul>
@@ -109,15 +109,15 @@ export default function NotreMissionPage() {
                 <h3 className="font-display text-lg font-bold text-white mb-3">Pour les associations</h3>
                 <ul className="space-y-2.5 text-sm text-white/70 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Accès limité aux produits casher pour les familles dans le besoin
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Budget limité et approvisionnement irrégulier
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Pas de plateforme dédiée pour centraliser les dons
                   </li>
                 </ul>
@@ -134,15 +134,15 @@ export default function NotreMissionPage() {
                 <h3 className="font-display text-lg font-bold text-white mb-3">Pour les clients</h3>
                 <ul className="space-y-2.5 text-sm text-white/70 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Le casher est souvent cher et peu accessible
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Peu de diversité dans les options à prix réduit
                   </li>
                   <li className="flex items-start gap-2">
-                    <X className="h-4 w-4 text-white/50 shrink-0 mt-0.5" />
+                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     Difficile de trouver des bons plans casher à proximité
                   </li>
                 </ul>
