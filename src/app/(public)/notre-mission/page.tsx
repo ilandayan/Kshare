@@ -62,7 +62,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── PROBLÈMES (3 colonnes) ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -208,7 +208,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA FONCTIONNE (CLIENTS) ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute bottom-10 right-10 w-48 h-48 rounded-full bg-white/5" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -286,7 +286,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── LES AVANTAGES POUR CHACUN ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -407,7 +407,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div

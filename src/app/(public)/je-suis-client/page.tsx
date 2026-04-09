@@ -180,7 +180,7 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── POURQUOI UTILISER KSHARE ? ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -253,7 +253,7 @@ export default function JeSuisClientPage() {
       </section>
 
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #4B5BE2 0%, #3744C8 50%, #2B38B8 100%)" }}>
+      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e2e5f0]/60 p-10">
