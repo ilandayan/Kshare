@@ -227,21 +227,33 @@ export default function JeSuisClientPage() {
             </h2>
             <p className="text-gray-500">4 étapes simples pour sauver des paniers</p>
           </div>
+          {/* Step circles row */}
+          <div className="hidden md:flex items-center justify-between max-w-3xl mx-auto mb-6 px-8">
+            {[1, 2, 3, 4].map((step, i) => (
+              <div key={step} className="flex items-center flex-1 last:flex-none">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] text-white flex items-center justify-center text-sm font-display font-bold shadow-md shrink-0">
+                  {step}
+                </div>
+                {i < 3 && (
+                  <div className="flex-1 h-px border-t-2 border-dashed border-[#3744C8]/30 mx-2" />
+                )}
+              </div>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { step: "1", icon: Smartphone, title: "Téléchargez l'app",      desc: "Installez gratuitement l'application mobile Kshare",              delay: "delay-100" },
               { step: "2", icon: Zap,        title: "Créez votre compte",     desc: "Inscrivez-vous en quelques secondes avec votre email",             delay: "delay-200" },
               { step: "3", icon: MapPin,     title: "Choisissez vos paniers", desc: "Parcourez les paniers disponibles près de chez vous",              delay: "delay-300" },
               { step: "4", icon: CheckCircle,title: "Récupérez et savourez",  desc: "Retirez vos paniers aux horaires indiqués avec votre QR code",     delay: "delay-400" },
-            ].map((item, i) => (
-              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] text-white flex items-center justify-center text-sm font-display font-bold mb-5 shadow-md z-10">
+            ].map((item) => (
+              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} flex flex-col`}>
+                {/* Mobile-only step number */}
+                <div className="md:hidden w-10 h-10 rounded-full bg-gradient-to-br from-[#3744C8] to-[#5B6EF5] text-white flex items-center justify-center text-sm font-display font-bold shadow-md mx-auto mb-4">
                   {item.step}
                 </div>
-                {i < 3 && (
-                  <div className="hidden md:block absolute top-5 left-[calc(50%+20px)] right-0 h-px border-t-2 border-dashed border-[#3744C8]/30" />
-                )}
-                <div className="bg-white rounded-2xl p-5 text-center border border-[#e2e5f0]/60 w-full card-elevated">
+                <div className="bg-white rounded-2xl p-5 text-center border border-[#e2e5f0]/60 w-full flex-1 card-elevated">
                   <item.icon className="h-6 w-6 text-[#3744C8] mx-auto mb-3" />
                   <div className="font-display font-semibold text-gray-900 mb-2 text-sm">{item.title}</div>
                   <div className="text-xs text-gray-500 leading-relaxed">{item.desc}</div>
