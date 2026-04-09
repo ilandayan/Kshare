@@ -304,13 +304,13 @@ export default function HomePage() {
             <p className="text-white/60">Un processus simple et efficace en 4 étapes</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] md:items-center gap-y-4 md:gap-x-0">
             {[
               { step: "1", icon: Store,       title: "Création",     desc: "Le commerçant crée des paniers invendus sur la plateforme",      delay: "delay-100" },
               { step: "2", icon: ShoppingBag, title: "Réservation",  desc: "Clients et associations réservent les paniers disponibles",      delay: "delay-200" },
               { step: "3", icon: CheckCircle, title: "Retrait",      desc: "Récupération des paniers aux horaires indiqués avec QR code",    delay: "delay-300" },
               { step: "4", icon: Heart,       title: "Distribution", desc: "Les associations distribuent aux bénéficiaires de la communauté", delay: "delay-400" },
-            ].map((item, i) => (
+            ].flatMap((item, i) => [
               <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold z-10 shadow-md">
                   {item.step}
@@ -320,13 +320,13 @@ export default function HomePage() {
                   <div className="font-display font-semibold text-white mb-2">{item.title}</div>
                   <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
                 </div>
-                {i < 3 && (
-                  <div className="hidden md:flex absolute top-1/2 -right-3 z-20">
-                    <ArrowRight className="h-5 w-5 text-white/40" />
-                  </div>
-                )}
-              </div>
-            ))}
+              </div>,
+              i < 3 ? (
+                <div key={`arrow-${i}`} className="hidden md:flex items-center justify-center px-2">
+                  <ArrowRight className="h-5 w-5 text-white/40" />
+                </div>
+              ) : null,
+            ])}
           </div>
         </div>
       </section>
