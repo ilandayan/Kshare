@@ -245,9 +245,9 @@ export default function NotreMissionPage() {
                 <div className="md:hidden w-10 h-10 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold shadow-md mx-auto mb-4">
                   {item.step}
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/15 w-full flex-1 flex flex-col justify-center">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/15 w-full flex-1 flex flex-col">
                   <div className="font-display font-semibold text-white mb-2">{item.title}</div>
-                  <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
+                  <div className="text-xs text-white/60 leading-relaxed flex-1">{item.desc}</div>
                 </div>
               </div>
             ))}
