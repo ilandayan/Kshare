@@ -246,7 +246,7 @@ export default function NotreMissionPage() {
                   {item.step}
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/15 w-full flex-1 flex flex-col">
-                  <div className="font-display font-semibold text-white mb-2 md:min-h-[3rem] flex items-center justify-center">{item.title}</div>
+                  <div className="font-display font-semibold text-white mb-2 md:whitespace-nowrap">{item.title}</div>
                   <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
                 </div>
               </div>
