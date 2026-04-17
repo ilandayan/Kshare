@@ -160,6 +160,18 @@ export async function POST(request: NextRequest) {
       console.error("[contact] Insert error:", insertError.message);
     }
 
+    // ── Lookup client_id par email (si utilisateur connu) ───────
+
+    let clientId: string | null = null;
+    {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      if (profile?.id) clientId = profile.id;
+    }
+
     // ── Triage IA (non-bloquant, en parallèle avec l'accusé) ───
 
     const triagePromise = triageTicket({
@@ -167,6 +179,7 @@ export async function POST(request: NextRequest) {
       subject,
       message,
       name,
+      clientId,
     });
 
     // ── Accusé de réception adapté → expéditeur ─────────────────
@@ -215,7 +228,7 @@ export async function POST(request: NextRequest) {
         html: aiResponseHtml,
       });
 
-      // Mettre à jour le ticket en base avec la réponse IA + statut
+      // Mettre à jour le ticket en base avec la réponse IA + statut + metrics
       if (!insertError) {
         await supabase
           .from("support_tickets")
@@ -225,14 +238,65 @@ export async function POST(request: NextRequest) {
               ...initialMessages,
               {
                 sender: "ai",
-                name: "Kshare IA",
+                name: "Kira (IA Kshare)",
                 text: triage.autoResponse,
                 date: new Date().toISOString(),
               },
             ],
+            metadata: {
+              ticket_ref: ticketRef,
+              space: space ?? "client",
+              sender_first_name: firstName?.trim(),
+              sender_last_name: lastName?.trim(),
+              sender_name: name,
+              sender_email: email,
+              sender_phone: phone?.trim() || undefined,
+              company_name: isPro ? companyName?.trim() : undefined,
+              company_type: isPro ? companyType : undefined,
+              original_subject: subject,
+              // Métriques IA
+              ai_auto_resolved: true,
+              ai_language: triage.language,
+              ai_refined_category: triage.refinedCategory,
+              ai_urgency: triage.urgency,
+              ai_tokens_input: triage.usage.inputTokens,
+              ai_tokens_cached: triage.usage.cachedInputTokens,
+              ai_tokens_output: triage.usage.outputTokens,
+              ai_orders_consulted: triage.contextUsed.ordersConsulted,
+              ai_had_user_context: triage.contextUsed.hasUserContext,
+            },
           })
           .like("description", `%${ticketRef}%`);
       }
+    } else if (triage && !insertError) {
+      // Même si non auto-résolu, on stocke les métriques IA pour analyse
+      await supabase
+        .from("support_tickets")
+        .update({
+          metadata: {
+            ticket_ref: ticketRef,
+            space: space ?? "client",
+            sender_first_name: firstName?.trim(),
+            sender_last_name: lastName?.trim(),
+            sender_name: name,
+            sender_email: email,
+            sender_phone: phone?.trim() || undefined,
+            company_name: isPro ? companyName?.trim() : undefined,
+            company_type: isPro ? companyType : undefined,
+            original_subject: subject,
+            ai_auto_resolved: false,
+            ai_language: triage.language,
+            ai_refined_category: triage.refinedCategory,
+            ai_urgency: triage.urgency,
+            ai_admin_summary: triage.adminSummary,
+            ai_tokens_input: triage.usage.inputTokens,
+            ai_tokens_cached: triage.usage.cachedInputTokens,
+            ai_tokens_output: triage.usage.outputTokens,
+            ai_orders_consulted: triage.contextUsed.ordersConsulted,
+            ai_had_user_context: triage.contextUsed.hasUserContext,
+          },
+        })
+        .like("description", `%${ticketRef}%`);
     }
 
     // ── Notification admin → contact@k-share.fr ─────────────────

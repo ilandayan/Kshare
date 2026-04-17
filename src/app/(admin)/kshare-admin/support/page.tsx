@@ -51,12 +51,102 @@ export default async function SupportPage() {
   const aiResolvedCount = aiTickets.length;
   const adminResolvedCount = adminTickets.length;
 
+  // ── Métriques IA (depuis metadata) ─────────────────────────────
+  const { data: aiMetricsData } = await supabase
+    .from("support_tickets")
+    .select("metadata")
+    .not("metadata->ai_language", "is", null);
+
+  type AiMeta = {
+    ai_auto_resolved?: boolean;
+    ai_language?: "fr" | "en" | "he" | "es";
+    ai_urgency?: 1 | 2 | 3;
+    ai_tokens_input?: number;
+    ai_tokens_cached?: number;
+    ai_tokens_output?: number;
+    ai_had_user_context?: boolean;
+  };
+
+  const aiMetrics = (aiMetricsData ?? [])
+    .map((t) => t.metadata as AiMeta | null)
+    .filter((m): m is AiMeta => !!m && m.ai_language !== undefined);
+
+  const totalAiRequests = aiMetrics.length;
+  const autoResolvedTotal = aiMetrics.filter((m) => m.ai_auto_resolved).length;
+  const autoResolveRate = totalAiRequests > 0
+    ? Math.round((autoResolvedTotal / totalAiRequests) * 100)
+    : 0;
+
+  const langCounts: Record<string, number> = { fr: 0, en: 0, he: 0, es: 0 };
+  for (const m of aiMetrics) {
+    if (m.ai_language) langCounts[m.ai_language] = (langCounts[m.ai_language] ?? 0) + 1;
+  }
+
+  // Coût estimé Haiku 4.5 : $1/MTok input, $0.1/MTok cached, $5/MTok output (~)
+  const totalInputTokens = aiMetrics.reduce((s, m) => s + (m.ai_tokens_input ?? 0), 0);
+  const totalCachedTokens = aiMetrics.reduce((s, m) => s + (m.ai_tokens_cached ?? 0), 0);
+  const totalOutputTokens = aiMetrics.reduce((s, m) => s + (m.ai_tokens_output ?? 0), 0);
+  const estimatedCostUsd =
+    (totalInputTokens / 1_000_000) * 1 +
+    (totalCachedTokens / 1_000_000) * 0.1 +
+    (totalOutputTokens / 1_000_000) * 5;
+  const estimatedCostEur = estimatedCostUsd * 0.92; // approx conversion
+
   return (
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Support tickets</h1>
         <p className="text-muted-foreground mt-1">Gérez les demandes d&apos;assistance</p>
       </div>
+
+      {/* ── Métriques IA ── */}
+      {totalAiRequests > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              🤖 Métriques assistant IA (Kira)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Requêtes totales</div>
+                <div className="text-2xl font-bold">{totalAiRequests}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Taux auto-résolution</div>
+                <div className="text-2xl font-bold text-emerald-600">{autoResolveRate}%</div>
+                <div className="text-xs text-muted-foreground">{autoResolvedTotal}/{totalAiRequests}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Langues</div>
+                <div className="text-sm flex flex-wrap gap-1 mt-1">
+                  {langCounts.fr > 0 && <Badge variant="secondary" className="text-xs">🇫🇷 {langCounts.fr}</Badge>}
+                  {langCounts.en > 0 && <Badge variant="secondary" className="text-xs">🇬🇧 {langCounts.en}</Badge>}
+                  {langCounts.he > 0 && <Badge variant="secondary" className="text-xs">🇮🇱 {langCounts.he}</Badge>}
+                  {langCounts.es > 0 && <Badge variant="secondary" className="text-xs">🇪🇸 {langCounts.es}</Badge>}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Tokens consommés</div>
+                <div className="text-sm font-semibold">
+                  {(totalInputTokens + totalCachedTokens + totalOutputTokens).toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  cache: {totalCachedTokens > 0 ? Math.round((totalCachedTokens / (totalInputTokens + totalCachedTokens)) * 100) : 0}%
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Coût estimé</div>
+                <div className="text-2xl font-bold text-blue-600">{estimatedCostEur.toFixed(3)}€</div>
+                <div className="text-xs text-muted-foreground">
+                  {totalAiRequests > 0 ? (estimatedCostEur / totalAiRequests * 1000).toFixed(2) : 0}€/1k req
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats rapides */}
       <div className="flex gap-4 mb-8">
