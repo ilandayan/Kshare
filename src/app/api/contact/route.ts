@@ -135,9 +135,22 @@ export async function POST(request: NextRequest) {
       },
     ];
 
+    // ── Lookup client_id par email (si utilisateur connu) ───────
+
+    let clientId: string | null = null;
+    {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      if (profile?.id) clientId = profile.id;
+    }
+
     const { error: insertError } = await supabase
       .from("support_tickets")
       .insert({
+        client_id: clientId,
         category: safeCategory,
         description: `[${categoryLabel}] ${subject} — ${ticketRef}`,
         status: "open",
@@ -158,18 +171,6 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error("[contact] Insert error:", insertError.message);
-    }
-
-    // ── Lookup client_id par email (si utilisateur connu) ───────
-
-    let clientId: string | null = null;
-    {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-      if (profile?.id) clientId = profile.id;
     }
 
     // ── Triage IA (non-bloquant, en parallèle avec l'accusé) ───
