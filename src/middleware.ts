@@ -42,6 +42,7 @@ export async function middleware(request: NextRequest) {
     "/cgu",
     "/faq",
     "/confidentialite",
+    "/suppression-compte",
     "/connexion",
     "/inscription-commercant",
     "/inscription-association",
