@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail, buildAdminReplyEmail } from "@/lib/resend";
 import type { Database } from "@/types/database.types";
 
 type Json = Database["public"]["Tables"]["support_tickets"]["Row"]["messages"];
@@ -39,10 +40,10 @@ export async function replyToTicket(
 
   const { supabase, user } = ctx;
 
-  // Fetch existing messages from DB (never trust client-provided data)
+  // Fetch le ticket complet pour récupérer les infos destinataire
   const { data: ticket } = await supabase
     .from("support_tickets")
-    .select("messages")
+    .select("id, messages, metadata, description")
     .eq("id", ticketId)
     .single();
 
@@ -50,11 +51,18 @@ export async function replyToTicket(
 
   const existingMessages = (ticket.messages ?? []) as Array<Record<string, unknown>>;
 
+  const trimmedContent = content.trim();
+  const now = new Date().toISOString();
+
   const newMessage = {
     role: "admin",
+    sender: "admin",
+    name: "Équipe Kshare",
     author_id: user.id,
-    content: content.trim(),
-    created_at: new Date().toISOString(),
+    content: trimmedContent,
+    text: trimmedContent,
+    created_at: now,
+    date: now,
   };
 
   const updatedMessages = [...existingMessages, newMessage] as unknown as Json;
@@ -64,12 +72,46 @@ export async function replyToTicket(
     .update({
       messages: updatedMessages,
       status: "in_progress",
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     })
     .eq("id", ticketId);
 
   if (error) {
     return { success: false, error: "Erreur lors de l'envoi de la réponse." };
+  }
+
+  // ── Envoyer un email au client avec la réponse admin ──
+  try {
+    const meta = (ticket.metadata ?? {}) as {
+      ticket_ref?: string;
+      sender_email?: string;
+      sender_first_name?: string;
+      sender_name?: string;
+      original_subject?: string;
+    };
+
+    const clientEmail = meta.sender_email;
+    const ticketRef = meta.ticket_ref ?? `#${ticket.id.slice(0, 8).toUpperCase()}`;
+
+    if (clientEmail) {
+      const clientName = meta.sender_first_name || meta.sender_name || "Bonjour";
+      const email = buildAdminReplyEmail({
+        clientName,
+        adminMessage: trimmedContent,
+        ticketRef,
+        originalSubject: meta.original_subject,
+      });
+
+      await sendEmail({
+        to: clientEmail,
+        subject: email.subject,
+        html: email.html,
+        replyTo: "contact@k-share.fr",
+      });
+    }
+  } catch (emailErr) {
+    // Non-bloquant : on ne veut pas faire échouer la réponse si l'email plante
+    console.error("[support] Admin reply email failed:", emailErr);
   }
 
   revalidatePath("/kshare-admin/support");

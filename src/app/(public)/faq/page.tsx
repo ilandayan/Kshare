@@ -123,6 +123,12 @@ const FAQ_SECTIONS: FaqSection[] = [
           "Kshare facilite la transaction et pr\u00e9l\u00e8ve uniquement une commission de service. Le commer\u00e7ant reste le vendeur l\u00e9gal et responsable des produits propos\u00e9s.",
         ],
       },
+      {
+        question: "Y a-t-il des frais en plus du prix du panier ?",
+        answer: [
+          "Oui, un l\u00e9ger frais de service de 1,5\u202f% + 0,79\u202f\u20ac par commande est ajout\u00e9 au prix du panier. Ce frais couvre le traitement du paiement, la s\u00e9curisation de la transaction et le bon fonctionnement de la plateforme. Il est affich\u00e9 clairement au moment du paiement, avant validation.",
+        ],
+      },
     ],
   },
   {
@@ -132,7 +138,8 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Comment r\u00e9cup\u00e9rer mon panier ?",
         answer: [
-          "Apr\u00e8s votre commande, un QR code unique est g\u00e9n\u00e9r\u00e9 dans l\u2019application (onglet \u00ab Mes paniers \u00bb). Pr\u00e9sentez-vous au commerce pendant le cr\u00e9neau de retrait indiqu\u00e9 et montrez votre QR code au commer\u00e7ant. Une fois votre panier r\u00e9cup\u00e9r\u00e9, confirmez la r\u00e9ception directement dans l\u2019application pour finaliser la transaction.",
+          "Apr\u00e8s votre commande, un QR code unique est g\u00e9n\u00e9r\u00e9 dans l\u2019application (onglet \u00ab Mes paniers \u00bb). Pr\u00e9sentez-vous au commerce pendant le cr\u00e9neau de retrait indiqu\u00e9 et montrez votre QR code au commer\u00e7ant.",
+          "\u00c9tape importante : une fois le panier remis, vous devez \u00ab glisser \u00bb le bouton de validation dans l\u2019application devant le commer\u00e7ant pour confirmer la bonne r\u00e9ception. Cette \u00e9tape finalise la transaction et d\u00e9clenche le versement au commer\u00e7ant.",
         ],
       },
       {
@@ -232,7 +239,9 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Comment supprimer mon compte ?",
         answer: [
-          "Vous pouvez demander la suppression de votre compte en nous contactant \u00e0 contact@k-share.fr. Votre compte et vos donn\u00e9es personnelles seront supprim\u00e9s conform\u00e9ment \u00e0 notre politique de confidentialit\u00e9.",
+          "Deux possibilit\u00e9s : depuis l\u2019application mobile, allez dans Profil, descendez en bas de page et appuyez sur le bouton rouge \u00ab Supprimer mon compte \u00bb, puis confirmez dans la fen\u00eatre qui s\u2019affiche.",
+          "Sinon, vous pouvez retrouver la proc\u00e9dure d\u00e9taill\u00e9e sur k-share.fr/suppression-compte, ou nous \u00e9crire \u00e0 contact@k-share.fr en indiquant l\u2019email associ\u00e9 \u00e0 votre compte. Votre demande est trait\u00e9e sous 7 jours ouvr\u00e9s.",
+          "Certaines donn\u00e9es comme les factures sont conserv\u00e9es 10 ans conform\u00e9ment \u00e0 l\u2019obligation fiscale fran\u00e7aise.",
         ],
       },
     ],
@@ -250,7 +259,8 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Comment contacter le support ?",
         answer: [
-          "Vous pouvez nous contacter par email \u00e0 contact@k-share.fr. Notre \u00e9quipe vous r\u00e9pondra dans les meilleurs d\u00e9lais.",
+          "Plusieurs moyens \u00e0 votre disposition : via le formulaire de contact sur k-share.fr/contact, par email \u00e0 contact@k-share.fr, ou directement depuis l\u2019application (Profil \u2192 Aide et support).",
+          "Notre assistante IA (Kira) vous r\u00e9pond souvent instantan\u00e9ment pour les questions courantes. Les demandes plus complexes sont prises en charge par notre \u00e9quipe, g\u00e9n\u00e9ralement dans les 24 heures ouvr\u00e9es.",
         ],
       },
     ],

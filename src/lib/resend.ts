@@ -485,6 +485,47 @@ export function buildAdminNotification(params: {
   };
 }
 
+/**
+ * Email envoyé au client lorsqu'un admin répond à son ticket.
+ * Le client peut répondre par retour de mail — replyTo = contact@k-share.fr.
+ */
+export function buildAdminReplyEmail(params: {
+  clientName: string;
+  adminMessage: string;
+  ticketRef: string;
+  originalSubject?: string;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.clientName);
+  const safeMessage = escapeHtml(params.adminMessage);
+  const safeTicketRef = escapeHtml(params.ticketRef);
+  const safeOriginalSubject = params.originalSubject ? escapeHtml(params.originalSubject) : "votre demande";
+
+  return {
+    subject: `Re: ${safeOriginalSubject} — ${safeTicketRef}`,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${safeName},</h2>
+
+      <p style="color:#333;line-height:1.7;margin:0 0 16px;">
+        Notre équipe a répondu à votre demande <strong>${safeTicketRef}</strong> :
+      </p>
+
+      <div style="background:#f8f9fc;border-left:4px solid #3744C8;border-radius:8px;padding:16px 20px;margin:16px 0;">
+        <p style="margin:0;font-size:15px;color:#111;line-height:1.7;white-space:pre-wrap;">${safeMessage}</p>
+      </div>
+
+      <p style="color:#333;line-height:1.7;margin:16px 0;">
+        Si vous avez besoin de précisions ou souhaitez poursuivre la conversation, il vous suffit
+        de <strong>répondre à cet email</strong> et notre équipe vous répondra.
+      </p>
+
+      <p style="color:#888;font-size:13px;margin-top:24px;">
+        Réf. ${safeTicketRef}<br/>
+        L'équipe Kshare
+      </p>
+    `),
+  };
+}
+
 // ── Templates métier (réexportées depuis l'ancien email.ts) ──────
 
 export function emailCompteValide(

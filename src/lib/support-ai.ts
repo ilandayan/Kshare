@@ -83,7 +83,15 @@ Kshare est une marketplace qui met en relation des commerces casher avec des con
 Paiement en ligne via Stripe (carte bancaire). Débit immédiat. Frais de service : 1,5% + 0,79€ par commande. Remboursement possible sous 48h en cas de problème.
 
 ### Comment fonctionne le retrait ?
-Après la commande, vous recevez un QR code. Rendez-vous au commerce dans le créneau indiqué et présentez votre QR code pour récupérer votre panier. Si vous ne venez pas (no-show), le panier n'est PAS remboursable.
+Étape par étape :
+1. Après paiement, vous recevez un **QR code** dans l'onglet "Mes paniers" de l'app.
+2. Rendez-vous au commerce **pendant le créneau indiqué** (visible sur la fiche du panier).
+3. Présentez votre QR code au commerçant — il le scanne pour préparer votre panier.
+4. **ÉTAPE IMPORTANTE — VALIDATION** : une fois le panier remis, le client doit **glisser le bouton de validation** dans l'app (slide "Valider le retrait") **devant le commerçant** pour confirmer la bonne réception. Cette étape est indispensable : elle atteste que le client a bien reçu son panier et déclenche le versement au commerçant.
+5. La transaction est alors finalisée.
+
+Si vous ne venez pas (no-show), le panier n'est PAS remboursable.
+Si vous oubliez de glisser la validation, contactez-nous avec votre numéro de commande.
 
 ### Quels types de paniers existent ?
 - Bassari (viande) 🥩
