@@ -311,11 +311,11 @@ export default function HomePage() {
               { step: "3", icon: CheckCircle, title: "Retrait",      desc: "Récupération des paniers aux horaires indiqués avec QR code",    delay: "delay-300" },
               { step: "4", icon: Heart,       title: "Distribution", desc: "Les associations distribuent aux bénéficiaires de la communauté", delay: "delay-400" },
             ].flatMap((item, i) => [
-              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center`}>
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold z-10 shadow-md">
+              <div key={item.step} className={`anim-hidden animate-fade-in-up ${item.delay} relative flex flex-col items-center pt-5`}>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white text-[#3744C8] flex items-center justify-center text-sm font-display font-bold z-10 shadow-md">
                   {item.step}
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 pt-8 text-center border border-white/15 w-full mt-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 pt-8 text-center border border-white/15 w-full mt-5">
                   <item.icon className="h-8 w-8 text-white/80 mx-auto mb-3" />
                   <div className="font-display font-semibold text-white mb-2">{item.title}</div>
                   <div className="text-xs text-white/60 leading-relaxed">{item.desc}</div>
