@@ -428,75 +428,74 @@ async function buildUserContext(clientId: string, currentEmail: string): Promise
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Historique de tickets support de ce client (30 derniers jours)
+    // Historique tickets : 90 jours pour remboursement, 30 jours pour activité
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentTickets } = await supabase
+
+    const { data: ticketsLast90d } = await supabase
       .from("support_tickets")
       .select("id, category, description, status, created_at, metadata")
       .or(`client_id.eq.${clientId},metadata->>sender_email.eq.${currentEmail}`)
-      .gte("created_at", thirtyDaysAgo)
+      .gte("created_at", ninetyDaysAgo)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(30);
 
-    // Remboursements passés
+    // Remboursements passés (tout historique)
     const { data: refundedOrders } = await supabase
       .from("orders")
       .select("id, total_amount, status, created_at")
       .eq("client_id", clientId)
       .eq("status", "refunded");
 
-    // No-show (paniers payés mais non récupérés)
-    const { data: noShowOrders } = await supabase
-      .from("orders")
-      .select("id, created_at")
-      .eq("client_id", clientId)
-      .eq("status", "no_show");
-
     // ── Détection des patterns suspects ─────────────────────
     const riskFlags: string[] = [];
 
+    // Règle 1 : 3+ demandes de remboursement en 90 jours
     const refundKeywords = /rembours|refund|annul|cancel|reimburs/i;
-    const recentRefundRequests = (recentTickets ?? []).filter(
+    const refundRequests90d = (ticketsLast90d ?? []).filter(
       (t) => refundKeywords.test(t.description) || refundKeywords.test(t.category)
     );
-
-    if (recentRefundRequests.length >= 3) {
+    if (refundRequests90d.length >= 3) {
       riskFlags.push(
-        `🚨 ABUS POTENTIEL : ${recentRefundRequests.length} demandes de remboursement/annulation en 30 jours`
+        `🚨 ABUS POTENTIEL — Règle franchie : 3+ demandes de remboursement/annulation en 90 jours (${refundRequests90d.length} détectées)`
       );
-    } else if (recentRefundRequests.length === 2) {
+    } else if (refundRequests90d.length === 2) {
       riskFlags.push(
-        `⚠️ À surveiller : ${recentRefundRequests.length} demandes de remboursement récentes`
+        `⚠️ À SURVEILLER — Signal faible : 2 demandes de remboursement/annulation en 90 jours (seuil d'alerte : 3)`
       );
     }
 
+    // Règle 2 : 3+ commandes déjà remboursées (signal fort)
     if ((refundedOrders?.length ?? 0) >= 3) {
       riskFlags.push(
-        `🚨 ${refundedOrders?.length} commandes déjà remboursées dans l'historique`
+        `🚨 SIGNAL FORT — Règle franchie : 3+ commandes déjà remboursées dans l'historique (${refundedOrders?.length} détectées). Ce client a déjà obtenu plusieurs remboursements par le passé.`
       );
     }
 
-    if ((noShowOrders?.length ?? 0) >= 3) {
-      riskFlags.push(
-        `⚠️ ${noShowOrders?.length} no-show (paniers non récupérés) dans l'historique`
-      );
-    }
-
-    if ((recentTickets?.length ?? 0) >= 5) {
-      riskFlags.push(
-        `⚠️ Client très actif côté support : ${recentTickets?.length} tickets en 30 jours`
-      );
-    }
-
-    // Compte récent + demande de remboursement = signal faible
+    // Règle 3 : compte créé <7 jours + demande de remboursement → suspect
     const accountAgeDays = profile.created_at
       ? (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
       : 999;
-    if (accountAgeDays < 7 && recentRefundRequests.length >= 1) {
+    const hasVeryRecentRefundTicket = refundRequests90d.some(
+      (t) => new Date(t.created_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
+    );
+    if (accountAgeDays < 7 && hasVeryRecentRefundTicket) {
       riskFlags.push(
-        `⚠️ Compte créé il y a ${Math.round(accountAgeDays)} jours avec demande de remboursement`
+        `⚠️ COMPTE SUSPECT — Règle franchie : compte créé il y a moins de 7 jours (${Math.round(accountAgeDays)} jours) AVEC demande de remboursement/annulation récente. Possible création de compte pour abus.`
       );
     }
+
+    // Règle 4 : 3+ tickets en 30 jours (client très actif)
+    const ticketsLast30d = (ticketsLast90d ?? []).filter(
+      (t) => new Date(t.created_at).toISOString() >= thirtyDaysAgo
+    );
+    if (ticketsLast30d.length >= 3) {
+      riskFlags.push(
+        `⚠️ CLIENT TRÈS ACTIF — Règle franchie : 3+ tickets support en 30 jours (${ticketsLast30d.length} détectés). À vérifier si usage normal ou sollicitations excessives.`
+      );
+    }
+
+    // Note : pas de règle no-show (politique Kshare = pas de remboursement en cas de no-show).
 
     // ── Construction du texte de contexte ────────────────────
     const ordersText = (recentOrders ?? [])
@@ -506,7 +505,7 @@ async function buildUserContext(clientId: string, currentEmail: string): Promise
       })
       .join("\n");
 
-    const ticketsText = (recentTickets ?? [])
+    const ticketsText = (ticketsLast90d ?? [])
       .slice(0, 5)
       .map(
         (t) =>
@@ -524,13 +523,13 @@ async function buildUserContext(clientId: string, currentEmail: string): Promise
 - Inscrit depuis : ${profile.created_at} (${Math.round(accountAgeDays)} jours)
 - Commandes totales (10 dernières) : ${recentOrders?.length ?? 0}
 - Remboursements historiques : ${refundedOrders?.length ?? 0}
-- No-show historiques : ${noShowOrders?.length ?? 0}
-- Tickets support 30j : ${recentTickets?.length ?? 0}
+- Tickets support 30j : ${ticketsLast30d.length}
+- Tickets support 90j : ${ticketsLast90d?.length ?? 0}
 ${riskSection}
 ## Commandes récentes (10 dernières)
 ${ordersText || "Aucune commande."}
 
-## Tickets récents (30 jours — 5 derniers affichés)
+## Tickets récents (90 jours — 5 derniers affichés)
 ${ticketsText || "Aucun ticket récent."}`;
 
     return { text, riskFlags };

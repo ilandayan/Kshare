@@ -380,6 +380,8 @@ export function buildAdminNotification(params: {
   phone?: string;
   companyName?: string;
   companyType?: "commerce" | "association";
+  /** Signaux de risque détectés sur le compte utilisateur (ex: abus, fraude) */
+  riskFlags?: string[];
 }): { subject: string; html: string } {
   // Sanitize all user-supplied values for HTML injection prevention
   const safeName = escapeHtml(params.name);
@@ -411,6 +413,23 @@ export function buildAdminNotification(params: {
     `
     : "";
 
+  // Bloc alerte signaux de risque (abus, fraude, patterns suspects)
+  const riskBlock = params.riskFlags && params.riskFlags.length > 0
+    ? `
+      <div style="background:#fef2f2;border-radius:8px;padding:16px;margin:16px 0;border:2px solid #ef4444;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.5px;">
+          🚨 Signaux de risque détectés sur ce compte
+        </p>
+        <ul style="margin:0;padding-left:20px;font-size:14px;color:#7f1d1d;line-height:1.8;">
+          ${params.riskFlags.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}
+        </ul>
+        <p style="margin:12px 0 0;font-size:12px;color:#991b1b;font-weight:600;font-style:italic;">
+          💡 À examiner attentivement avant toute action commerciale (remboursement, avoir, geste).
+        </p>
+      </div>
+    `
+    : "";
+
   // Lignes pro optionnelles
   const proRows = isPro
     ? `
@@ -422,8 +441,10 @@ export function buildAdminNotification(params: {
     ? `<tr><td style="padding:8px 0;color:#888;width:120px;vertical-align:top;">Téléphone</td><td style="padding:8px 0;color:#333;font-weight:500;">${safePhone}</td></tr>`
     : "";
 
+  const riskPrefix = params.riskFlags && params.riskFlags.length > 0 ? "🚨 " : "";
+
   return {
-    subject: `[Support Kshare] ${safeTicketRef} — ${spaceLabel} — ${params.categoryLabel}`,
+    subject: `${riskPrefix}[Support Kshare] ${safeTicketRef} — ${spaceLabel} — ${params.categoryLabel}`,
     html: wrapHtml(`
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${urgencyColor};"></span>
@@ -448,6 +469,8 @@ export function buildAdminNotification(params: {
           <td style="padding:8px 0;color:#333;font-weight:500;">${safeSubject}</td>
         </tr>
       </table>
+
+      ${riskBlock}
 
       <div style="background:#f8f9fc;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #e2e5f0;">
         <p style="margin:0;font-size:14px;color:#333;line-height:1.7;white-space:pre-wrap;">${safeMessage}</p>

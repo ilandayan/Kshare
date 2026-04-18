@@ -21,7 +21,7 @@ export default async function SupportPage() {
   const { data: tickets } = await supabase
     .from("support_tickets")
     .select(
-      "id, category, description, status, created_at, updated_at, messages, commerces(name), profiles!support_tickets_client_id_fkey(full_name, email)"
+      "id, category, description, status, created_at, updated_at, messages, metadata, commerces(name), profiles!support_tickets_client_id_fkey(full_name, email)"
     )
     .in("status", ["open", "in_progress"])
     .order("created_at", { ascending: false });
@@ -195,20 +195,26 @@ export default async function SupportPage() {
             </div>
           ) : (
             <SupportTicketList
-              tickets={tickets.map((t) => ({
-                id: t.id,
-                category: t.category,
-                description: t.description,
-                status: t.status as "open" | "in_progress" | "resolved",
-                createdAt: t.created_at,
-                messages: t.messages as unknown as Array<{ role: string; content: string; created_at: string }>,
-                commerceName:
-                  (t.commerces as { name: string } | null)?.name ?? null,
-                clientName:
-                  (t.profiles as { full_name: string | null; email: string | null } | null)?.full_name ??
-                  (t.profiles as { full_name: string | null; email: string | null } | null)?.email ??
-                  null,
-              }))}
+              tickets={tickets.map((t) => {
+                const meta = t.metadata as { ai_risk_flags?: string[]; ai_admin_summary?: string; ai_auto_resolved?: boolean } | null;
+                return {
+                  id: t.id,
+                  category: t.category,
+                  description: t.description,
+                  status: t.status as "open" | "in_progress" | "resolved",
+                  createdAt: t.created_at,
+                  messages: t.messages as unknown as Array<{ role: string; content: string; created_at: string }>,
+                  commerceName:
+                    (t.commerces as { name: string } | null)?.name ?? null,
+                  clientName:
+                    (t.profiles as { full_name: string | null; email: string | null } | null)?.full_name ??
+                    (t.profiles as { full_name: string | null; email: string | null } | null)?.email ??
+                    null,
+                  riskFlags: meta?.ai_risk_flags ?? [],
+                  aiSummary: meta?.ai_admin_summary,
+                  aiAutoResolved: meta?.ai_auto_resolved,
+                };
+              })}
               statusLabels={TICKET_STATUS_LABELS}
               statusColors={TICKET_STATUS_COLORS}
             />

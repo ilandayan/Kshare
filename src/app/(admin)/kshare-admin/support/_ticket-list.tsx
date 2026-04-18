@@ -34,6 +34,9 @@ type Ticket = {
   messages: TicketMessage[];
   commerceName: string | null;
   clientName: string | null;
+  riskFlags?: string[];
+  aiSummary?: string;
+  aiAutoResolved?: boolean;
 };
 
 interface SupportTicketListProps {
@@ -191,6 +194,43 @@ export default function SupportTicketList({
 
               {/* Description initiale */}
               <div className="flex-1 overflow-y-auto space-y-4">
+                {/* ── Bloc risk flags (si présents) ── */}
+                {selectedTicket.riskFlags && selectedTicket.riskFlags.length > 0 && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950/40 border-2 border-red-500 rounded-lg">
+                    <p className="text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400 mb-2">
+                      🚨 Signaux de risque détectés sur ce compte
+                    </p>
+                    <ul className="space-y-1 text-sm text-red-900 dark:text-red-200">
+                      {selectedTicket.riskFlags.map((flag, i) => (
+                        <li key={i} className="flex items-start gap-1.5">
+                          <span>•</span>
+                          <span>{flag}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-3 text-xs italic text-red-700 dark:text-red-300">
+                      💡 À examiner attentivement avant toute action commerciale (remboursement, avoir, geste).
+                    </p>
+                  </div>
+                )}
+
+                {/* ── Analyse IA (résumé admin) ── */}
+                {selectedTicket.aiSummary && (
+                  <div className="p-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-lg text-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400 mb-1">
+                      🤖 Analyse de Kira
+                    </p>
+                    <p className="text-violet-900 dark:text-violet-200 whitespace-pre-wrap">
+                      {selectedTicket.aiSummary}
+                    </p>
+                    {selectedTicket.aiAutoResolved && (
+                      <p className="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        ✅ Kira a déjà répondu automatiquement au client
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="p-4 bg-muted/50 rounded-lg text-sm">
                   <p className="text-xs text-muted-foreground mb-1 font-medium">
                     {selectedTicket.commerceName ?? selectedTicket.clientName ?? "Utilisateur"} •{" "}

@@ -318,6 +318,7 @@ export async function POST(request: NextRequest) {
       phone: phone?.trim(),
       companyName: isPro ? companyName?.trim() : undefined,
       companyType: isPro ? (space as "commerce" | "association") : undefined,
+      riskFlags: triage?.riskFlags ?? [],
     });
 
     await notifyAdmin({
