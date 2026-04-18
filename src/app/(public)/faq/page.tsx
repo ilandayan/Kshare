@@ -124,9 +124,9 @@ const FAQ_SECTIONS: FaqSection[] = [
         ],
       },
       {
-        question: "Y a-t-il des frais en plus du prix du panier ?",
+        question: "Le prix affich\u00e9 est-il le prix final ?",
         answer: [
-          "Oui, un l\u00e9ger frais de service de 1,5\u202f% + 0,79\u202f\u20ac par commande est ajout\u00e9 au prix du panier. Ce frais couvre le traitement du paiement, la s\u00e9curisation de la transaction et le bon fonctionnement de la plateforme. Il est affich\u00e9 clairement au moment du paiement, avant validation.",
+          "Un petit frais de service est ajout\u00e9 au prix du panier pour couvrir le traitement s\u00e9curis\u00e9 du paiement et le fonctionnement de la plateforme. Le montant total (panier + frais) est toujours affich\u00e9 clairement au moment du paiement, avant toute validation. Aucun frais cach\u00e9.",
         ],
       },
     ],
