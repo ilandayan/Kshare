@@ -992,6 +992,66 @@ export type Database = {
           },
         ]
       }
+      support_ai_learnings: {
+        Row: {
+          active: boolean
+          admin_response: string
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          language: string
+          source_ticket_id: string | null
+          tags: string[] | null
+          updated_at: string
+          usage_count: number
+          user_question: string
+        }
+        Insert: {
+          active?: boolean
+          admin_response: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          source_ticket_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          usage_count?: number
+          user_question: string
+        }
+        Update: {
+          active?: boolean
+          admin_response?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          source_ticket_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          usage_count?: number
+          user_question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ai_learnings_source_ticket_id_fkey"
+            columns: ["source_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ai_learnings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       support_tickets: {
         Row: {
           category: string

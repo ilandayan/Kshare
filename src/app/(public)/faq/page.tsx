@@ -123,12 +123,6 @@ const FAQ_SECTIONS: FaqSection[] = [
           "Kshare facilite la transaction et pr\u00e9l\u00e8ve uniquement une commission de service. Le commer\u00e7ant reste le vendeur l\u00e9gal et responsable des produits propos\u00e9s.",
         ],
       },
-      {
-        question: "Le prix affich\u00e9 est-il le prix final ?",
-        answer: [
-          "Un petit frais de service est ajout\u00e9 au prix du panier pour couvrir le traitement s\u00e9curis\u00e9 du paiement et le fonctionnement de la plateforme. Le montant total (panier + frais) est toujours affich\u00e9 clairement au moment du paiement, avant toute validation. Aucun frais cach\u00e9.",
-        ],
-      },
     ],
   },
   {

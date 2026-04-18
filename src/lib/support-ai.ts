@@ -261,23 +261,23 @@ const TOOLS: Anthropic.Tool[] = [
 
 // ── Implémentation des tools ─────────────────────────────────────
 
+interface OrderStatusData {
+  id: string;
+  status: string;
+  total_amount: number | null;
+  quantity: number | null;
+  pickup_date: string | null;
+  pickup_start: string | null;
+  pickup_end: string | null;
+  created_at: string;
+  baskets?: { type: string | null; commerces?: { name: string | null } | null } | null;
+}
+
 async function execGetOrderStatus(orderRef: string): Promise<string> {
   try {
     const supabase = createAdminClient();
 
-    // Essayer d'abord par ticket_ref dans le metadata des tickets,
-    // sinon par UUID direct dans orders
-    let order: {
-      id: string;
-      status: string;
-      total_amount: number | null;
-      quantity: number | null;
-      pickup_date: string | null;
-      pickup_start: string | null;
-      pickup_end: string | null;
-      created_at: string;
-      baskets?: { type: string | null; commerces?: { name: string | null } | null } | null;
-    } | null = null;
+    let order: OrderStatusData | null = null;
 
     // UUID direct ?
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderRef)) {
@@ -288,7 +288,7 @@ async function execGetOrderStatus(orderRef: string): Promise<string> {
         )
         .eq("id", orderRef)
         .maybeSingle();
-      order = data as typeof order;
+      order = (data as unknown as OrderStatusData | null) ?? null;
     }
 
     if (!order) {
@@ -392,23 +392,17 @@ async function incrementLearningUsage(learningIds: string[]): Promise<void> {
   try {
     const supabase = createAdminClient();
     for (const id of learningIds) {
-      await supabase.rpc("increment_learning_usage", { learning_id: id }).then(
-        () => {},
-        async () => {
-          // Fallback si la RPC n'existe pas : update direct
-          const { data } = await supabase
-            .from("support_ai_learnings")
-            .select("usage_count")
-            .eq("id", id)
-            .maybeSingle();
-          if (data) {
-            await supabase
-              .from("support_ai_learnings")
-              .update({ usage_count: (data.usage_count ?? 0) + 1 })
-              .eq("id", id);
-          }
-        }
-      );
+      const { data } = await supabase
+        .from("support_ai_learnings")
+        .select("usage_count")
+        .eq("id", id)
+        .maybeSingle();
+      if (data) {
+        await supabase
+          .from("support_ai_learnings")
+          .update({ usage_count: (data.usage_count ?? 0) + 1 })
+          .eq("id", id);
+      }
     }
   } catch (err) {
     console.error("[support-ai] incrementLearningUsage error:", err);
