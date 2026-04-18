@@ -179,6 +179,7 @@ export async function POST(request: NextRequest) {
       subject,
       message,
       name,
+      email,
       clientId,
     });
 
@@ -264,6 +265,8 @@ export async function POST(request: NextRequest) {
               ai_tokens_output: triage.usage.outputTokens,
               ai_orders_consulted: triage.contextUsed.ordersConsulted,
               ai_had_user_context: triage.contextUsed.hasUserContext,
+              ai_learnings_used: triage.contextUsed.learningsUsed,
+              ai_risk_flags: triage.riskFlags,
             },
           })
           .like("description", `%${ticketRef}%`);

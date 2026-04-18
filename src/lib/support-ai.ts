@@ -41,6 +41,8 @@ export interface TriageResult {
   autoResponse: string | null;
   /** Résumé pour l'admin (toujours en français) */
   adminSummary: string;
+  /** Signaux de risque détectés sur le compte utilisateur */
+  riskFlags: string[];
   /** Tokens consommés (pour monitoring des coûts) */
   usage: {
     inputTokens: number;
@@ -51,6 +53,7 @@ export interface TriageResult {
   contextUsed: {
     hasUserContext: boolean;
     ordersConsulted: string[];
+    learningsUsed: string[];
   };
 }
 
@@ -59,6 +62,8 @@ export interface TriageParams {
   subject: string;
   message: string;
   name: string;
+  /** Email utilisé pour détecter les patterns même si non connecté */
+  email: string;
   /** Si fourni, l'IA a accès au contexte utilisateur (commandes récentes, rôle) */
   clientId?: string | null;
   /** Historique de conversation pour un ticket existant (multi-tour) */
@@ -192,6 +197,23 @@ Tu as accès à l'outil get_order_status(order_ref) pour vérifier le statut d'u
    - 3 = bloquant ou litige (remboursement, commerce fermé, bug bloquant, demande financière)
 8. **adminSummary** : TOUJOURS en français, 1-2 phrases factuelles pour l'admin
 
+## Signaux de risque (SI présents dans le contexte utilisateur)
+
+Si le contexte utilisateur contient des "⚠️" ou "🚨" (signaux de risque : demandes de remboursement répétées, no-show multiples, compte très récent avec plainte, etc.) :
+
+- canAutoResolve = false OBLIGATOIREMENT
+- urgency = 3
+- adminSummary DOIT mentionner explicitement les signaux détectés
+- autoResponse = null
+- L'admin doit traiter manuellement ce cas pour éviter l'abus
+
+Exemples de patterns suspects :
+- 3+ demandes de remboursement en 30 jours
+- 3+ commandes déjà remboursées
+- 3+ no-show
+- Compte créé il y a <7 jours + demande de remboursement
+- 5+ tickets en 30 jours
+
 ## Format de réponse JSON
 
 {
@@ -200,7 +222,7 @@ Tu as accès à l'outil get_order_status(order_ref) pour vérifier le statut d'u
   "urgency": 1 | 2 | 3,
   "canAutoResolve": true | false,
   "autoResponse": "string dans la langue détectée, ou null",
-  "adminSummary": "string en français"
+  "adminSummary": "string en français (inclure les signaux de risque si présents)"
 }`;
 
 // ── Tool definitions ─────────────────────────────────────────────
@@ -279,9 +301,112 @@ async function execGetOrderStatus(orderRef: string): Promise<string> {
   }
 }
 
-// ── Contexte utilisateur ─────────────────────────────────────────
+// ── Learnings (RAG depuis résolutions admin) ─────────────────────
 
-async function buildUserContext(clientId: string): Promise<string | null> {
+/**
+ * Récupère les apprentissages pertinents pour la requête actuelle.
+ * Matching simple par catégorie + keywords (pas besoin d'embeddings pour commencer).
+ * Retourne les 5 learnings les plus pertinents à injecter dans le prompt.
+ */
+async function fetchRelevantLearnings(params: {
+  category: SupportCategory;
+  message: string;
+  subject: string;
+}): Promise<Array<{ question: string; response: string; language: string; id: string }>> {
+  try {
+    const supabase = createAdminClient();
+
+    // Extraire les mots-clés significatifs (mots de 4+ lettres, en minuscules)
+    const text = `${params.subject} ${params.message}`.toLowerCase();
+    const keywords = Array.from(
+      new Set(
+        text
+          .replace(/[^\p{L}\p{N}\s]/gu, " ")
+          .split(/\s+/)
+          .filter((w) => w.length >= 4)
+      )
+    ).slice(0, 10);
+
+    // 1. Learnings de la même catégorie (priorité)
+    const { data: sameCat } = await supabase
+      .from("support_ai_learnings")
+      .select("id, user_question, admin_response, language, tags, usage_count")
+      .eq("category", params.category)
+      .eq("active", true)
+      .order("usage_count", { ascending: false })
+      .limit(5);
+
+    // 2. Learnings qui matchent par tags/keywords (toutes catégories)
+    const { data: byKeywords } =
+      keywords.length > 0
+        ? await supabase
+            .from("support_ai_learnings")
+            .select("id, user_question, admin_response, language, tags, usage_count")
+            .eq("active", true)
+            .neq("category", params.category)
+            .overlaps("tags", keywords)
+            .order("usage_count", { ascending: false })
+            .limit(5)
+        : { data: [] };
+
+    // Dédupliquer et limiter à 5 au total
+    const allLearnings = [...(sameCat ?? []), ...(byKeywords ?? [])];
+    const seen = new Set<string>();
+    const deduped = allLearnings.filter((l) => {
+      if (seen.has(l.id)) return false;
+      seen.add(l.id);
+      return true;
+    });
+
+    return deduped.slice(0, 5).map((l) => ({
+      id: l.id,
+      question: l.user_question,
+      response: l.admin_response,
+      language: l.language,
+    }));
+  } catch (err) {
+    console.error("[support-ai] fetchRelevantLearnings error:", err);
+    return [];
+  }
+}
+
+/**
+ * Incrémente le compteur d'usage d'un learning (appelé quand l'IA l'a utilisé).
+ */
+async function incrementLearningUsage(learningIds: string[]): Promise<void> {
+  if (learningIds.length === 0) return;
+  try {
+    const supabase = createAdminClient();
+    for (const id of learningIds) {
+      await supabase.rpc("increment_learning_usage", { learning_id: id }).then(
+        () => {},
+        async () => {
+          // Fallback si la RPC n'existe pas : update direct
+          const { data } = await supabase
+            .from("support_ai_learnings")
+            .select("usage_count")
+            .eq("id", id)
+            .maybeSingle();
+          if (data) {
+            await supabase
+              .from("support_ai_learnings")
+              .update({ usage_count: (data.usage_count ?? 0) + 1 })
+              .eq("id", id);
+          }
+        }
+      );
+    }
+  } catch (err) {
+    console.error("[support-ai] incrementLearningUsage error:", err);
+  }
+}
+
+// ── Contexte utilisateur + détection de patterns suspects ────────
+
+async function buildUserContext(clientId: string, currentEmail: string): Promise<{
+  text: string;
+  riskFlags: string[];
+} | null> {
   try {
     const supabase = createAdminClient();
 
@@ -293,6 +418,7 @@ async function buildUserContext(clientId: string): Promise<string | null> {
 
     if (!profile) return null;
 
+    // Commandes récentes
     const { data: recentOrders } = await supabase
       .from("orders")
       .select(
@@ -300,8 +426,79 @@ async function buildUserContext(clientId: string): Promise<string | null> {
       )
       .eq("client_id", clientId)
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(10);
 
+    // Historique de tickets support de ce client (30 derniers jours)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentTickets } = await supabase
+      .from("support_tickets")
+      .select("id, category, description, status, created_at, metadata")
+      .or(`client_id.eq.${clientId},metadata->>sender_email.eq.${currentEmail}`)
+      .gte("created_at", thirtyDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    // Remboursements passés
+    const { data: refundedOrders } = await supabase
+      .from("orders")
+      .select("id, total_amount, status, created_at")
+      .eq("client_id", clientId)
+      .eq("status", "refunded");
+
+    // No-show (paniers payés mais non récupérés)
+    const { data: noShowOrders } = await supabase
+      .from("orders")
+      .select("id, created_at")
+      .eq("client_id", clientId)
+      .eq("status", "no_show");
+
+    // ── Détection des patterns suspects ─────────────────────
+    const riskFlags: string[] = [];
+
+    const refundKeywords = /rembours|refund|annul|cancel|reimburs/i;
+    const recentRefundRequests = (recentTickets ?? []).filter(
+      (t) => refundKeywords.test(t.description) || refundKeywords.test(t.category)
+    );
+
+    if (recentRefundRequests.length >= 3) {
+      riskFlags.push(
+        `🚨 ABUS POTENTIEL : ${recentRefundRequests.length} demandes de remboursement/annulation en 30 jours`
+      );
+    } else if (recentRefundRequests.length === 2) {
+      riskFlags.push(
+        `⚠️ À surveiller : ${recentRefundRequests.length} demandes de remboursement récentes`
+      );
+    }
+
+    if ((refundedOrders?.length ?? 0) >= 3) {
+      riskFlags.push(
+        `🚨 ${refundedOrders?.length} commandes déjà remboursées dans l'historique`
+      );
+    }
+
+    if ((noShowOrders?.length ?? 0) >= 3) {
+      riskFlags.push(
+        `⚠️ ${noShowOrders?.length} no-show (paniers non récupérés) dans l'historique`
+      );
+    }
+
+    if ((recentTickets?.length ?? 0) >= 5) {
+      riskFlags.push(
+        `⚠️ Client très actif côté support : ${recentTickets?.length} tickets en 30 jours`
+      );
+    }
+
+    // Compte récent + demande de remboursement = signal faible
+    const accountAgeDays = profile.created_at
+      ? (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      : 999;
+    if (accountAgeDays < 7 && recentRefundRequests.length >= 1) {
+      riskFlags.push(
+        `⚠️ Compte créé il y a ${Math.round(accountAgeDays)} jours avec demande de remboursement`
+      );
+    }
+
+    // ── Construction du texte de contexte ────────────────────
     const ordersText = (recentOrders ?? [])
       .map((o) => {
         const b = o.baskets as { type?: string; commerces?: { name?: string } } | null;
@@ -309,13 +506,34 @@ async function buildUserContext(clientId: string): Promise<string | null> {
       })
       .join("\n");
 
-    return `## Contexte utilisateur
+    const ticketsText = (recentTickets ?? [])
+      .slice(0, 5)
+      .map(
+        (t) =>
+          `- ${new Date(t.created_at).toLocaleDateString("fr-FR")} | ${t.category} | ${t.status} | ${t.description.slice(0, 80)}`
+      )
+      .join("\n");
+
+    const riskSection = riskFlags.length > 0
+      ? `\n## ⚠️ Signaux de risque détectés\n${riskFlags.map((f) => `- ${f}`).join("\n")}\n`
+      : "";
+
+    const text = `## Contexte utilisateur
 - Nom : ${profile.full_name ?? "non renseigné"}
 - Rôle : ${profile.role ?? "client"}
-- Inscrit depuis : ${profile.created_at}
+- Inscrit depuis : ${profile.created_at} (${Math.round(accountAgeDays)} jours)
+- Commandes totales (10 dernières) : ${recentOrders?.length ?? 0}
+- Remboursements historiques : ${refundedOrders?.length ?? 0}
+- No-show historiques : ${noShowOrders?.length ?? 0}
+- Tickets support 30j : ${recentTickets?.length ?? 0}
+${riskSection}
+## Commandes récentes (10 dernières)
+${ordersText || "Aucune commande."}
 
-## Commandes récentes (5 dernières)
-${ordersText || "Aucune commande."}`;
+## Tickets récents (30 jours — 5 derniers affichés)
+${ticketsText || "Aucun ticket récent."}`;
+
+    return { text, riskFlags };
   } catch (err) {
     console.error("[support-ai] buildUserContext error:", err);
     return null;
@@ -360,17 +578,44 @@ export async function triageTicket(params: TriageParams): Promise<TriageResult |
   if (!anthropic) return null;
 
   try {
-    // 1. Enrichissement : contexte utilisateur si connecté
-    const userContext = params.clientId ? await buildUserContext(params.clientId) : null;
+    // 1. Enrichissement : contexte utilisateur + risk flags
+    const userContextData = params.clientId
+      ? await buildUserContext(params.clientId, params.email)
+      : null;
+    const riskFlags = userContextData?.riskFlags ?? [];
 
-    // 2. Construction du message utilisateur
+    // 2. Enrichissement : learnings pertinents (apprentissages admin)
+    const learnings = await fetchRelevantLearnings({
+      category: params.category,
+      message: params.message,
+      subject: params.subject,
+    });
+
+    const learningsText = learnings.length > 0
+      ? `\n## 📚 Résolutions passées similaires (apprises depuis les réponses admin)
+Utilise ces cas comme INSPIRATION pour ta réponse si applicable :
+
+${learnings
+  .map(
+    (l, i) => `### Cas ${i + 1} (langue: ${l.language})
+Question utilisateur : "${l.question}"
+Réponse admin validée : "${l.response}"`
+  )
+  .join("\n\n")}
+
+Adapte le ton et la réponse à la question actuelle. Ne copie jamais mot pour mot.`
+      : "";
+
+    // 3. Construction du message utilisateur
     const userMessageParts = [
       `Catégorie choisie : ${params.category}`,
       `Nom : ${params.name}`,
+      `Email : ${params.email}`,
       `Sujet : ${params.subject}`,
       `Message : ${params.message}`,
     ];
-    if (userContext) userMessageParts.push("", userContext);
+    if (userContextData) userMessageParts.push("", userContextData.text);
+    if (learningsText) userMessageParts.push("", learningsText);
     const initialUserMessage = userMessageParts.join("\n");
 
     // 3. Messages (avec historique si fourni)
@@ -485,6 +730,11 @@ export async function triageTicket(params: TriageParams): Promise<TriageResult |
       ? (parsed.urgency as 1 | 2 | 3)
       : 1;
 
+    // Incrémenter l'usage des learnings utilisés (non-bloquant)
+    if (learnings.length > 0 && parsed.canAutoResolve === true) {
+      void incrementLearningUsage(learnings.map((l) => l.id));
+    }
+
     return {
       language,
       refinedCategory,
@@ -492,14 +742,16 @@ export async function triageTicket(params: TriageParams): Promise<TriageResult |
       canAutoResolve: parsed.canAutoResolve === true,
       autoResponse: parsed.canAutoResolve ? (parsed.autoResponse ?? null) : null,
       adminSummary: parsed.adminSummary ?? "Pas d'analyse disponible.",
+      riskFlags,
       usage: {
         inputTokens: totalInputTokens,
         cachedInputTokens: totalCachedTokens,
         outputTokens: totalOutputTokens,
       },
       contextUsed: {
-        hasUserContext: !!userContext,
+        hasUserContext: !!userContextData,
         ordersConsulted,
+        learningsUsed: learnings.map((l) => l.id),
       },
     };
   } catch (err) {

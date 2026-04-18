@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find '/c/Users/ilan.dayan/Documents/Documents perso/CLAUDE/Kshare/kshare/src/app' -name *profile* -o -name *settings* -o -name *edit*)",
+      "Bash(find '/c/Users/ilan.dayan/Documents/Documents perso/CLAUDE/Kshare/kshare/supabase' -name *.sql)",
+      "Bash(find '/c/Users/ilan.dayan/Documents/Documents perso/CLAUDE/Kshare/kshare/src/app' -path *\\\\\\(shop\\\\\\)* -type f -name *.tsx)",
+      "Bash(ls -la \"/c/Users/ilan.dayan/Documents/Documents perso/CLAUDE/Kshare/kshare/src/app/\\\\\\(shop\\\\\\)\")",
+      "Bash(grep -l \"create_bucket\\\\|INSERT INTO buckets\\\\|storage\\\\|s3\" C:Usersilan.dayanDocumentsDocuments persoCLAUDEKshareksharesupabasemigrations/*.sql)"
+    ]
+  }
+}

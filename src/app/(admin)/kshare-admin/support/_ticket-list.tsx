@@ -15,7 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { replyToTicket, resolveTicket } from "./_actions";
+import { replyToTicket, resolveTicket, teachKira } from "./_actions";
+import { Brain } from "lucide-react";
 
 type TicketMessage = {
   role: string;
@@ -51,6 +52,7 @@ export default function SupportTicketList({
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [teaching, setTeaching] = useState(false);
 
   async function handleReply() {
     if (!selectedTicket || !replyText.trim()) return;
@@ -73,6 +75,31 @@ export default function SupportTicketList({
       toast.error("Erreur inattendue.");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleTeachKira() {
+    if (!selectedTicket || !replyText.trim()) {
+      toast.error("Rédige d'abord ta réponse, elle servira d'exemple à Kira.");
+      return;
+    }
+    setTeaching(true);
+    try {
+      const result = await teachKira({
+        ticketId: selectedTicket.id,
+        userQuestion: selectedTicket.description,
+        adminResponse: replyText.trim(),
+        category: selectedTicket.category,
+      });
+      if (result.success) {
+        toast.success("🧠 Kira a appris ce cas ! Elle l'utilisera pour les futures demandes similaires.");
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Erreur inattendue.");
+    } finally {
+      setTeaching(false);
     }
   }
 
@@ -209,7 +236,7 @@ export default function SupportTicketList({
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       onClick={handleReply}
                       disabled={sending || !replyText.trim()}
@@ -217,6 +244,20 @@ export default function SupportTicketList({
                     >
                       {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Envoyer la réponse
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleTeachKira}
+                      disabled={teaching || !replyText.trim()}
+                      className="gap-2"
+                      title="Ajouter ce cas aux apprentissages de Kira"
+                    >
+                      {teaching ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Brain className="h-4 w-4 text-violet-500" />
+                      )}
+                      Enseigner à Kira
                     </Button>
                     <Button
                       variant="outline"
