@@ -31,27 +31,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // ── Redirections d'anciens alias / URLs avec accent ──────────
-  // Normalisation : on retire les accents et on compare sur une version ASCII
-  const normalizedPath = pathname
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // retire les diacritiques combinants
-    .toLowerCase();
-
-  const aliasRedirects: Record<string, string> = {
-    "/confidentialite": "/confidentialite", // idempotent (garde la route)
-    "/politique-confidentialite": "/confidentialite",
-    "/mentions-legales": "/cgu",
-  };
-
-  // Si le pathname normalisé correspond à un alias ET que le pathname original diffère
-  // (ex: /confidentialité → après normalisation = /confidentialite → redirect)
-  const aliasTarget = aliasRedirects[normalizedPath];
-  if (aliasTarget && pathname !== aliasTarget) {
-    const url = request.nextUrl.clone();
-    url.pathname = aliasTarget;
-    return NextResponse.redirect(url, 308);
-  }
+  // Note : les redirections d'alias (ex: /confidentialité → /confidentialite)
+  // sont gérées dans next.config.ts (redirects()) — plus fiable que le middleware.
 
   // ── Routes publiques — toujours accessibles ──────────────────
   const publicExact = [

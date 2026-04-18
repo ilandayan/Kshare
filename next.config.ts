@@ -2,11 +2,18 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  // Redirects pour les onglets admin fusionnés
+  // Redirects pour les onglets admin fusionnés + alias d'URL avec accent
   async redirects() {
     return [
       { source: "/kshare-admin/reporting", destination: "/kshare-admin", permanent: true },
       { source: "/shop/statistiques", destination: "/shop/dashboard", permanent: true },
+      // Alias avec accent / anciens chemins → redirection 301 permanente
+      { source: "/confidentialit%C3%A9", destination: "/confidentialite", permanent: true },
+      { source: "/confidentialité", destination: "/confidentialite", permanent: true },
+      { source: "/politique-confidentialite", destination: "/confidentialite", permanent: true },
+      { source: "/politique-de-confidentialite", destination: "/confidentialite", permanent: true },
+      { source: "/privacy", destination: "/confidentialite", permanent: true },
+      { source: "/mentions-legales", destination: "/cgu", permanent: true },
     ];
   },
   // Headers de securite
