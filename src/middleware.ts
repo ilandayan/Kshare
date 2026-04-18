@@ -31,6 +31,18 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // ── Redirections d'anciens alias / URLs avec accent ──────────
+  const aliasRedirects: Record<string, string> = {
+    "/confidentialité": "/confidentialite",
+    "/politique-confidentialite": "/confidentialite",
+    "/mentions-legales": "/cgu",
+  };
+  if (aliasRedirects[pathname]) {
+    const url = request.nextUrl.clone();
+    url.pathname = aliasRedirects[pathname];
+    return NextResponse.redirect(url, 308);
+  }
+
   // ── Routes publiques — toujours accessibles ──────────────────
   const publicExact = [
     "/",
