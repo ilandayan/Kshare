@@ -11,6 +11,7 @@ const TABS = [
   { label: "Comptes",         href: "/kshare-admin/comptes" },
   { label: "Finance",         href: "/kshare-admin/finance" },
   { label: "Support",         href: "/kshare-admin/support" },
+  { label: "Prospects",       href: "/kshare-admin/prospects" },
 ];
 
 export function AdminTopNav() {

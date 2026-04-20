@@ -10,6 +10,7 @@ import { useState } from "react";
 const NAV_LINKS = [
   { label: "Accueil", href: "/" },
   { label: "Notre mission", href: "/notre-mission" },
+  { label: "Je suis commerçant", href: "/je-suis-commercant" },
   { label: "Je suis client", href: "/je-suis-client" },
   { label: "Contact", href: "/contact" },
 ];

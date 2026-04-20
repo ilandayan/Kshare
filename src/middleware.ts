@@ -40,6 +40,8 @@ export async function middleware(request: NextRequest) {
     "/robots.txt",
     "/sitemap.xml",
     "/notre-mission",
+    "/je-suis-commercant",
+    "/je-suis-commercant/demande-infos",
     "/je-suis-client",
     "/contact",
     "/cgu",
@@ -57,6 +59,7 @@ export async function middleware(request: NextRequest) {
   const publicPrefixes = [
     "/api/",           // Toutes les routes API (protégées par leur propre logique)
     "/notre-mission/",
+    "/je-suis-commercant/",
     "/je-suis-client/",
     "/contact/",
     "/connexion/",

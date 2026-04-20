@@ -718,6 +718,69 @@ export type Database = {
           },
         ]
       }
+      prospects: {
+        Row: {
+          admin_notes: string | null
+          city: string
+          commerce_type: string
+          company_name: string
+          contacted_at: string | null
+          converted_at: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          message: string | null
+          phone: string | null
+          plan_interest: string | null
+          postal_code: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          city: string
+          commerce_type: string
+          company_name: string
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          message?: string | null
+          phone?: string | null
+          plan_interest?: string | null
+          postal_code?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          city?: string
+          commerce_type?: string
+          company_name?: string
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          message?: string | null
+          phone?: string | null
+          plan_interest?: string | null
+          postal_code?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount: number
