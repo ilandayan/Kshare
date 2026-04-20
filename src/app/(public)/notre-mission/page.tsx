@@ -42,7 +42,7 @@ export default function NotreMissionPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative min-h-[calc(100svh-92px)] flex items-center py-12 text-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center py-20 text-center overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-60 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
