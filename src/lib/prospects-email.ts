@@ -205,10 +205,10 @@ export function buildProspectWelcomeEmail(params: {
       <!-- SOLIDARITY -->
       <tr>
         <td class="section" style="padding:32px;">
-          <div style="background:#f0fdf4;border:1px solid #BBF7D0;border-radius:12px;padding:24px;">
-            <h3 style="font-size:17px;font-weight:700;color:#166534;margin:0 0 10px;">&#10084;&#65039; Un engagement solidaire</h3>
-            <p style="font-size:14px;color:#15803D;margin:0 0 8px;line-height:1.6;">Au-delà de la vente, Kshare vous permet de <strong>donner vos invendus</strong> à des associations partenaires directement depuis votre espace commerce.</p>
-            <p style="font-size:14px;color:#15803D;margin:0;line-height:1.6;">Un geste de <strong>tsedaka</strong> concret, facilité par la technologie : une <strong>mitzvah</strong> au quotidien.</p>
+          <div style="background:#faf5ff;border:1px solid #E9D5FF;border-radius:12px;padding:24px;">
+            <h3 style="font-size:17px;font-weight:700;color:#6B21A8;margin:0 0 10px;">&#10084;&#65039; Un engagement solidaire</h3>
+            <p style="font-size:14px;color:#7E22CE;margin:0 0 8px;line-height:1.6;">Au-delà de la vente, Kshare vous permet de <strong>donner vos invendus</strong> à des associations partenaires directement depuis votre espace commerce.</p>
+            <p style="font-size:14px;color:#7E22CE;margin:0;line-height:1.6;">Un geste de <strong>tsedaka</strong> concret, facilité par la technologie : une <strong>mitzvah</strong> au quotidien.</p>
           </div>
         </td>
       </tr>

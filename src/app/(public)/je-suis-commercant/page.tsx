@@ -64,12 +64,16 @@ export default function JeSuisCommercantPage() {
             <Button
               size="lg"
               variant="outline"
-              className="border-2 border-[#3744C8] text-[#3744C8] hover:bg-[#3744C8]/5 px-8 h-12 rounded-xl font-display font-semibold cursor-pointer"
+              className="group relative overflow-hidden border-2 border-[#3744C8] text-[#3744C8] hover:text-white px-8 h-12 rounded-xl font-display font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg bg-white"
               asChild
             >
               <Link href="/je-suis-commercant/demande-infos">
-                <Mail className="mr-2 h-4 w-4" />
-                Recevoir plus d&apos;infos
+                <span className="absolute inset-0 bg-gradient-to-r from-[#3744C8] to-[#5B6EF5] translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-300 ease-out" />
+                <span className="relative flex items-center">
+                  <Mail className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+                  Recevoir plus d&apos;infos
+                  <span className="ml-2 inline-flex h-2 w-2 rounded-full bg-[#3744C8] group-hover:bg-white animate-ping-slow opacity-75" aria-hidden="true" />
+                </span>
               </Link>
             </Button>
             <Button
@@ -102,7 +106,7 @@ export default function JeSuisCommercantPage() {
               Pourquoi rejoindre Kshare ?
             </h2>
             <p className="text-white/60 max-w-lg mx-auto">
-              Une solution pensée pour les commerces casher, du boucher au traiteur
+              4 bénéfices concrets pour votre commerce au quotidien
             </p>
           </div>
 
@@ -111,22 +115,22 @@ export default function JeSuisCommercantPage() {
               {
                 icon: Wallet,
                 title: "Revenus additionnels",
-                desc: "Vos invendus deviennent du CA. Chaque panier vendu est un revenu que vous n'auriez pas eu.",
+                desc: "Vos invendus deviennent du chiffre d'affaires.",
               },
               {
                 icon: Users,
                 title: "Nouveaux clients",
-                desc: "Visible sur l'app Kshare, votre commerce attire des clients qui ne vous connaissaient pas.",
+                desc: "Gagnez en visibilité auprès de clients de votre quartier.",
               },
               {
                 icon: Zap,
                 title: "Simple et rapide",
-                desc: "Publiez un panier en quelques secondes. Les clients réservent et paient en ligne.",
+                desc: "Publiez un panier en quelques secondes.",
               },
               {
                 icon: BarChart3,
                 title: "Suivi en temps réel",
-                desc: "Tableau de bord avec ventes, taux de réservation, statistiques détaillées.",
+                desc: "Suivez vos ventes et votre performance.",
               },
             ].map((item, i) => (
               <div
@@ -228,21 +232,21 @@ export default function JeSuisCommercantPage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl border border-emerald-200/60 p-8 md:p-12 card-elevated">
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl border border-purple-200/60 p-8 md:p-12 card-elevated">
             <div className="flex items-start gap-5 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
                 <Heart className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h2 className="font-display text-2xl md:text-3xl font-bold text-emerald-800 mb-2">
+                <h2 className="font-display text-2xl md:text-3xl font-bold text-purple-800 mb-2">
                   Un engagement solidaire
                 </h2>
-                <p className="text-emerald-700 leading-relaxed">
+                <p className="text-purple-700 leading-relaxed">
                   Au-delà de la vente, Kshare vous permet de <strong>donner vos invendus</strong> à des associations partenaires directement depuis votre espace commerce.
                 </p>
               </div>
             </div>
-            <p className="text-sm text-emerald-700/80 leading-relaxed ml-0 md:ml-[76px]">
+            <p className="text-sm text-purple-700/80 leading-relaxed ml-0 md:ml-[76px]">
               Un geste de <strong>tsedaka</strong> concret et simplifié : en quelques clics, vos produits invendus trouvent une seconde vie auprès de ceux qui en ont le plus besoin. Une <strong>mitzvah</strong> au quotidien, facilitée par la technologie.
             </p>
           </div>

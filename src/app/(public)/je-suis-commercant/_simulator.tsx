@@ -248,8 +248,6 @@ export default function Simulator() {
       )}
 
       <p className="text-xs text-gray-400 text-center mt-6 leading-relaxed">
-        * Estimation à titre indicatif. Les frais Stripe (~1,4 % + 0,25 €/transaction) sont facturés séparément.
-        <br />
         Reversement hebdomadaire sur votre compte bancaire chaque mardi.
       </p>
     </div>
