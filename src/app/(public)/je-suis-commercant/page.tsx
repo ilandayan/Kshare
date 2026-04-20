@@ -40,7 +40,7 @@ export default function JeSuisCommercantPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative pt-10 pb-24 md:pt-16 md:pb-40 text-center overflow-hidden">
+      <section className="relative min-h-[calc(100svh-92px)] flex items-center py-12 text-center overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-70 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.18]" />
 
@@ -95,7 +95,7 @@ export default function JeSuisCommercantPage() {
       </section>
 
       {/* ─────────────── AVANTAGES ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
+      <section className="relative min-h-screen flex items-center py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
@@ -149,7 +149,7 @@ export default function JeSuisCommercantPage() {
       </section>
 
       {/* ─────────────── SIMULATEUR ─────────────── */}
-      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+      <section className="relative min-h-screen flex items-center py-20 bg-white overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -171,7 +171,7 @@ export default function JeSuisCommercantPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
-      <section className="relative py-24 md:py-40 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
+      <section className="relative min-h-screen flex items-center py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -228,7 +228,7 @@ export default function JeSuisCommercantPage() {
       </section>
 
       {/* ─────────────── ENGAGEMENT SOLIDAIRE ─────────────── */}
-      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+      <section className="relative min-h-screen flex items-center py-20 bg-white overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -254,7 +254,7 @@ export default function JeSuisCommercantPage() {
       </section>
 
       {/* ─────────────── CTA FINAL ─────────────── */}
-      <section className="relative py-24 md:py-40 bg-white overflow-hidden">
+      <section className="relative min-h-screen flex items-center py-20 bg-white overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] opacity-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
 
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
