@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: "Notre mission", href: "/notre-mission" },
   { label: "Je suis commerçant", href: "/je-suis-commercant" },
   { label: "Je suis client", href: "/je-suis-client" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ];
 
