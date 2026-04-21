@@ -61,6 +61,8 @@ export function SharedFooter({ variant = "full" }: SharedFooterProps) {
                 { label: "Accueil", href: "/" },
                 { label: "Notre mission", href: "/notre-mission" },
                 { label: "Je suis client", href: "/je-suis-client" },
+                { label: "Je suis commerçant", href: "/je-suis-commercant" },
+                { label: "FAQ", href: "/faq" },
                 { label: "Contact", href: "/contact" },
               ].map((l) => (
                 <li key={l.label}>
@@ -141,6 +143,7 @@ export function SharedFooter({ variant = "full" }: SharedFooterProps) {
           <div className="flex items-center gap-5">
             <Link href="/cgu" className="hover:text-white transition-colors">CGU</Link>
             <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link href="/suppression-compte" className="hover:text-white transition-colors">Suppression de compte</Link>
             <a
               href="mailto:contact@k-share.fr"
               className="flex items-center gap-1.5 hover:text-white transition-colors"
