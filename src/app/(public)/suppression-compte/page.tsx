@@ -211,7 +211,7 @@ export default function SuppressionComptePage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }

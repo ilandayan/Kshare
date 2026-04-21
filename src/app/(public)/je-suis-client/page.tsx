@@ -353,7 +353,7 @@ export default function JeSuisClientPage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }

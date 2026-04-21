@@ -379,7 +379,7 @@ export default function ConfidentialitePage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }

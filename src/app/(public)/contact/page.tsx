@@ -703,7 +703,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }

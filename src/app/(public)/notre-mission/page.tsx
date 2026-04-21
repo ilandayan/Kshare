@@ -462,7 +462,7 @@ export default function NotreMissionPage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }

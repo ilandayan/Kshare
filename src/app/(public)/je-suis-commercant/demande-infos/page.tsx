@@ -67,7 +67,7 @@ export default function DemandeInfosPage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }

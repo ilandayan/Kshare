@@ -298,7 +298,7 @@ export default function JeSuisCommercantPage() {
         </div>
       </section>
 
-      <SharedFooter variant="minimal" />
+      <SharedFooter variant="full" />
     </div>
   );
 }
