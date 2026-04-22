@@ -236,12 +236,62 @@ h1, h2, h3, h4, h5, h6 {
 /* Cards with consistent modern shadows */
 .card-elevated {
   box-shadow: 0 1px 3px rgba(30, 41, 59, 0.04), 0 4px 12px rgba(30, 41, 59, 0.06);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
 }
 
 .card-elevated:hover {
-  box-shadow: 0 2px 6px rgba(30, 41, 59, 0.06), 0 8px 24px rgba(30, 41, 59, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(55, 68, 200, 0.08), 0 12px 32px rgba(55, 68, 200, 0.12);
+  transform: translateY(-4px) scale(1.005);
+  border-color: rgba(55, 68, 200, 0.15);
+}
+
+/* ── Button dynamic effects ────────────────────────────────────────────────── */
+
+/* Lift + shadow on hover for primary CTAs */
+.btn-dynamic {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(55, 68, 200, 0.15);
+}
+
+.btn-dynamic:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(55, 68, 200, 0.3);
+}
+
+.btn-dynamic:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 6px rgba(55, 68, 200, 0.2);
+}
+
+/* Shimmer sweep effect on hover (for hero CTAs) */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.25) 45%, rgba(255, 255, 255, 0.25) 55%, transparent 80%);
+  transform: translateX(-100%);
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.btn-shimmer:hover::before {
+  transform: translateX(100%);
+}
+
+/* Clickable card — adds subtle pointer feedback */
+.card-clickable {
+  cursor: pointer;
+}
+
+.card-clickable:active {
+  transform: translateY(-1px) scale(0.998);
+  transition-duration: 0.1s;
 }
 
 /* Respect reduced motion */
@@ -256,5 +306,12 @@ h1, h2, h3, h4, h5, h6 {
   }
   .anim-hidden {
     opacity: 1;
+  }
+  .card-elevated:hover,
+  .btn-dynamic:hover {
+    transform: none;
+  }
+  .btn-shimmer::before {
+    display: none;
   }
 }
