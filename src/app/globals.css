@@ -117,16 +117,9 @@
   outline-color: var(--ring);
 }
 
-/* ── Fluid root font-size ─────────────────────────────────────────────────────
-   Everything using rem (text, spacing, sizing) scales proportionally
-   with the viewport width. Keeps the same visual ratio across all screens.
-
-   Formula: 14px at 360px viewport → 18px at 1920px+ viewport
-   Smooth linear scaling via clamp() — no jumps between breakpoints.
+/* ── Root font-size — fixe à 16px pour éviter les titres énormes ────────────
+   (Une version fluide a été testée mais rendait les H1 trop gros sur desktop)
 ─────────────────────────────────────────────────────────────────────────── */
-html {
-  font-size: clamp(14px, calc(0.75rem + 0.35vw), 18px);
-}
 
 body {
   background-color: var(--background);
