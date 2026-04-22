@@ -10,8 +10,8 @@ import { useState } from "react";
 const NAV_LINKS = [
   { label: "Accueil", href: "/" },
   { label: "Notre mission", href: "/notre-mission" },
-  { label: "Je suis commerçant", href: "/je-suis-commercant" },
-  { label: "Je suis client", href: "/je-suis-client" },
+  { label: "Commerçants", href: "/je-suis-commercant" },
+  { label: "Clients", href: "/je-suis-client" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ];
@@ -21,8 +21,8 @@ export function PublicNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-3 z-50 mx-3 sm:mx-5 md:mx-8 bg-white/80 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-lg shadow-gray-200/50">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
+    <header className="sticky top-3 z-50 mx-3 sm:mx-5 md:mx-6 bg-white/80 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-lg shadow-gray-200/50">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6">
         <div className="flex items-center justify-between h-[68px]">
 
           {/* Logo */}
@@ -31,14 +31,14 @@ export function PublicNavbar() {
           </Link>
 
           {/* Center nav — desktop */}
-          <nav className="hidden md:flex items-center gap-1.5">
+          <nav className="hidden md:flex items-center gap-0.5">
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative px-4 py-2 text-[13px] font-semibold rounded-lg transition-all duration-150 ${
+                  className={`relative px-3 py-2 text-[13px] font-semibold rounded-lg transition-all duration-150 ${
                     isActive
                       ? "text-[#3744C8] bg-blue-50"
                       : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
