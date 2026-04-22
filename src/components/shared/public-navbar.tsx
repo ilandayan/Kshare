@@ -38,7 +38,7 @@ export function PublicNavbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative px-3 py-2 text-[13px] font-semibold rounded-lg transition-all duration-150 ${
+                  className={`relative px-3 py-2 text-[0.8125rem] font-semibold rounded-lg transition-all duration-150 ${
                     isActive
                       ? "text-[#3744C8] bg-blue-50"
                       : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
@@ -57,7 +57,7 @@ export function PublicNavbar() {
           <div className="hidden md:flex items-center gap-2.5">
             <Button
               size="sm"
-              className="bg-gradient-to-r from-[#3744C8] to-[#5B6EF5] hover:from-[#2E3AB0] hover:to-[#4B5BE2] text-white shadow-sm gap-1.5 text-[13px] font-semibold rounded-lg cursor-pointer border-0 px-4 py-2"
+              className="bg-gradient-to-r from-[#3744C8] to-[#5B6EF5] hover:from-[#2E3AB0] hover:to-[#4B5BE2] text-white shadow-sm gap-1.5 text-[0.8125rem] font-semibold rounded-lg cursor-pointer border-0 px-4 py-2"
               asChild
             >
               <Link href="/connexion?role=commerce">
@@ -67,7 +67,7 @@ export function PublicNavbar() {
             </Button>
             <Button
               size="sm"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-sm gap-1.5 text-[13px] font-semibold rounded-lg cursor-pointer border-0 px-4 py-2"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-sm gap-1.5 text-[0.8125rem] font-semibold rounded-lg cursor-pointer border-0 px-4 py-2"
               asChild
             >
               <Link href="/connexion?role=association">
