@@ -30,7 +30,7 @@ export default function SuppressionComptePage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative min-h-screen flex items-center py-20 text-center overflow-hidden">
+      <section className="relative min-h-dvh flex items-center py-20 text-center overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-60 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
@@ -49,7 +49,7 @@ export default function SuppressionComptePage() {
       </section>
 
       {/* ─────────────── MÉTHODE 1 — DEPUIS L'APP ─────────────── */}
-      <section className="min-h-screen flex items-center py-20 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="min-h-dvh flex items-center py-20 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -88,7 +88,7 @@ export default function SuppressionComptePage() {
       </section>
 
       {/* ─────────────── MÉTHODE 2 — PAR EMAIL ─────────────── */}
-      <section className="min-h-screen flex items-center py-20">
+      <section className="min-h-dvh flex items-center py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -134,7 +134,7 @@ export default function SuppressionComptePage() {
       </section>
 
       {/* ─────────────── DONNÉES SUPPRIMÉES ─────────────── */}
-      <section className="min-h-screen flex items-center py-20 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
+      <section className="min-h-dvh flex items-center py-20 bg-gradient-to-b from-[#E8ECF8] to-[#F4F5FB]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#3744C8] mb-3">
@@ -186,7 +186,7 @@ export default function SuppressionComptePage() {
       </section>
 
       {/* ─────────────── CTA ─────────────── */}
-      <section className="min-h-screen flex items-center py-20">
+      <section className="min-h-dvh flex items-center py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-3xl p-12 text-center text-white shadow-xl overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #1E2A9E 100%)" }}>
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />

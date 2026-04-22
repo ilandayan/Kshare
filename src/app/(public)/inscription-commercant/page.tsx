@@ -94,7 +94,7 @@ export default function InscriptionCommercantPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+      <div className="min-h-dvh flex items-center justify-center bg-muted/30 px-4">
         <Card className="w-full max-w-md shadow-lg text-center">
           <CardContent className="pt-10 pb-10">
             <CheckCircle2 className="mx-auto h-14 w-14 text-green-500 mb-4" />
@@ -115,7 +115,7 @@ export default function InscriptionCommercantPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+    <div className="min-h-dvh flex items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-2xl shadow-lg">
         <CardHeader className="text-center">
           <Link href="/" className="mb-2 block"><KshareLogo size={32} /></Link>
