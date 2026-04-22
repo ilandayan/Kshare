@@ -42,7 +42,7 @@ export default function NotreMissionPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 text-center overflow-hidden">
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 text-center overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-60 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
@@ -62,7 +62,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── PROBLÈMES (3 colonnes) ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -153,7 +153,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── NOTRE SOLUTION ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 bg-white overflow-hidden">
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 bg-white overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="anim-hidden animate-fade-in-up bg-white rounded-3xl border border-[#e2e5f0]/60 overflow-hidden card-elevated">
@@ -208,7 +208,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── COMMENT ÇA FONCTIONNE (CLIENTS) ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute bottom-10 right-10 w-48 h-48 rounded-full bg-white/5" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -256,7 +256,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── TYPES DE PANIERS ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 bg-white overflow-hidden">
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 bg-white overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -286,7 +286,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── LES AVANTAGES POUR CHACUN ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -374,7 +374,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── FEATURES ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 bg-white overflow-hidden">
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 bg-white overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] opacity-50 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#c8cef5_0%,transparent_70%)]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -407,7 +407,7 @@ export default function NotreMissionPage() {
       </section>
 
       {/* ─────────────── CTA BANNER ─────────────── */}
-      <section className="relative min-h-dvh flex items-center py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
+      <section className="relative min-h-dvh flex items-center py-12 md:py-16 overflow-hidden" style={{ background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 50%, #1E2A9E 100%)" }}>
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
