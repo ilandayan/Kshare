@@ -117,6 +117,17 @@
   outline-color: var(--ring);
 }
 
+/* ── Fluid root font-size ─────────────────────────────────────────────────────
+   Everything using rem (text, spacing, sizing) scales proportionally
+   with the viewport width. Keeps the same visual ratio across all screens.
+
+   Formula: 14px at 360px viewport → 18px at 1920px+ viewport
+   Smooth linear scaling via clamp() — no jumps between breakpoints.
+─────────────────────────────────────────────────────────────────────────── */
+html {
+  font-size: clamp(14px, calc(0.75rem + 0.35vw), 18px);
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
