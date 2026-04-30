@@ -74,9 +74,11 @@ export async function POST(request: NextRequest) {
 
     // ── Validation ──────────────────────────────────────────────
 
-    if (!firstName?.trim() || !lastName?.trim()) {
+    // firstName est requis (lastName optionnel — certains users mobiles
+    // n'ont qu'un full_name sans séparation prénom/nom)
+    if (!firstName?.trim()) {
       return NextResponse.json(
-        { error: "Le nom et le prénom sont requis." },
+        { error: "Le prénom est requis." },
         { status: 400 }
       );
     }
