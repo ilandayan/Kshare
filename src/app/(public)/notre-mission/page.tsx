@@ -356,7 +356,7 @@ export default function NotreMissionPage() {
                 <h3 className="font-display text-lg font-bold text-white mb-4">Pour les clients</h3>
                 <ul className="space-y-3">
                   {[
-                    "Économies garanties : jusqu'à -70% sur des produits casher",
+                    "Économies garanties : -40 à -70 % sur des produits casher",
                     "100% casher certifié avec cacherout vérifiée",
                     "Géolocalisation pour trouver les paniers les plus proches",
                     "Faites une mitzvah en offrant un panier à une association",
@@ -380,7 +380,7 @@ export default function NotreMissionPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { icon: BadgePercent, bg: "bg-emerald-500", title: "Prix réduits pour les clients", delay: "delay-100",
-                desc: "Des paniers casher jusqu'à -70% : boucherie, boulangerie, traiteur, produits laitiers et bien plus" },
+                desc: "Des paniers casher -40 à -70 % : boucherie, boulangerie, traiteur, produits laitiers et bien plus" },
               { icon: Leaf,   bg: "bg-green-500",  title: "Impact environnemental", delay: "delay-200",
                 desc: "Chaque panier sauvé réduit le gaspillage alimentaire et notre empreinte écologique" },
               { icon: Smartphone, bg: "bg-blue-500", title: "App mobile intuitive", delay: "delay-300",

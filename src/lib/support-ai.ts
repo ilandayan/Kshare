@@ -77,7 +77,7 @@ const KSHARE_FAQ = `
 ## FAQ Kshare
 
 ### Qu'est-ce que Kshare ?
-Kshare est une marketplace qui met en relation des commerces casher avec des consommateurs. Les commerces proposent des paniers d'invendus ou proches de la date limite à prix réduit (-30% à -70%). Modèle similaire à Too Good To Go, spécialisé casher.
+Kshare est une marketplace qui met en relation des commerces casher avec des consommateurs. Les commerces proposent des paniers d'invendus ou proches de la date limite à prix réduit (-40 % à -70 %). Modèle similaire à Too Good To Go, spécialisé casher.
 
 ### Comment fonctionne le paiement ?
 Paiement en ligne via Stripe (carte bancaire). Débit immédiat. Frais de service : 1,5% + 0,79€ par commande. Remboursement possible sous 48h en cas de problème.

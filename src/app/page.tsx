@@ -244,7 +244,7 @@ export default function HomePage() {
                 topBar: "from-emerald-400 to-teal-500",
                 title: "Pour les clients",
                 desc: "Achetez des paniers de qualité à prix réduits via l'application mobile",
-                features: ["Économies jusqu'à -70%", "Produits casher certifiés", "Acte solidaire"],
+                features: ["Économies -40 à -70 %", "Produits casher certifiés", "Acte solidaire"],
                 href: "/je-suis-client",
                 delay: "delay-300",
               },
@@ -352,7 +352,7 @@ export default function HomePage() {
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
-                    { icon: TrendingDown, label: "Économies jusqu'à -70%",     color: "text-emerald-600", bg: "bg-emerald-50" },
+                    { icon: TrendingDown, label: "Économies -40 à -70 %",     color: "text-emerald-600", bg: "bg-emerald-50" },
                     { icon: Leaf,         label: "Produits casher certifiés",   color: "text-blue-600",    bg: "bg-blue-50" },
                     { icon: Heart,        label: "Notifications en temps réel", color: "text-purple-600",  bg: "bg-purple-50" },
                   ].map((f) => (
