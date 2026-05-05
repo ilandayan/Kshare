@@ -67,7 +67,8 @@ export default function HomePage() {
 
           <p className="anim-hidden animate-fade-in-up delay-200 text-lg text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
             Rejoignez une communauté engagée dans la lutte contre le gaspillage alimentaire.
-            Connectez commerçants, clients et associations pour donner une seconde vie aux paniers invendus.
+            Connectez commerçants, clients et associations pour donner une seconde vie aux paniers invendus,
+            à des tarifs allant de <span className="font-semibold text-[#3744C8]">-40 % à -70 %</span>.
           </p>
 
           <div className="anim-hidden animate-fade-in-up delay-300 flex flex-col sm:flex-row gap-4 justify-center">

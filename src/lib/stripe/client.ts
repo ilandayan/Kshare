@@ -6,6 +6,7 @@ import {
   DONATION_SERVICE_FEE_FIXED,
   BASKET_MIN_PRICE,
   BASKET_MIN_DISCOUNT,
+  BASKET_MAX_DISCOUNT,
   type SubscriptionPlanId,
 } from "@/lib/constants";
 
@@ -74,6 +75,11 @@ export function validateBasketPrice(
   const maxSoldPrice = originalPrice * (1 - BASKET_MIN_DISCOUNT);
   if (soldPrice > maxSoldPrice) {
     return `La réduction doit être d'au moins ${BASKET_MIN_DISCOUNT * 100}%. Prix maximum : ${maxSoldPrice.toFixed(2)} €.`;
+  }
+
+  const minSoldPrice = originalPrice * (1 - BASKET_MAX_DISCOUNT);
+  if (soldPrice < minSoldPrice) {
+    return `La réduction ne peut pas dépasser ${BASKET_MAX_DISCOUNT * 100}%. Prix minimum : ${minSoldPrice.toFixed(2)} €.`;
   }
 
   return null;

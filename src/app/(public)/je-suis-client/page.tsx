@@ -192,7 +192,7 @@ export default function JeSuisClientPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
-              { icon: Tag,      topBar: "from-emerald-400 to-green-400", title: "Prix réduits",      desc: "Économisez jusqu'à -70% sur des produits casher de qualité",           delay: "delay-100" },
+              { icon: Tag,      topBar: "from-emerald-400 to-green-400", title: "Prix réduits",      desc: "Économisez de -40 % à -70 % sur des produits casher de qualité",           delay: "delay-100" },
               { icon: Heart,    topBar: "from-pink-400 to-red-400",      title: "Action solidaire",  desc: "Chaque achat contribue à réduire le gaspillage alimentaire",           delay: "delay-200" },
               { icon: Clock,    topBar: "from-blue-400 to-indigo-400",   title: "Commande rapide",   desc: "Réservez vos paniers en quelques clics depuis votre mobile",           delay: "delay-300" },
               { icon: ShoppingBag, topBar: "from-purple-400 to-violet-400", title: "Large choix",   desc: "Paniers Bassari, Halavi, Parvé, Mix et spécial Shabbat",               delay: "delay-100" },

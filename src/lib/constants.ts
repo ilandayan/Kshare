@@ -24,6 +24,7 @@ export const DONATION_SERVICE_FEE_FIXED = 0.25; // EUR — frais réels Stripe p
 // ── Basket Constraints ───────────────────────────────────────
 export const BASKET_MIN_PRICE = 5; // EUR minimum sold_price
 export const BASKET_MIN_DISCOUNT = 0.40; // 40% minimum discount
+export const BASKET_MAX_DISCOUNT = 0.70; // 70% maximum discount
 
 // ── Payout Schedule ──────────────────────────────────────────
 export const PAYOUT_WEEKLY_ANCHOR = "tuesday" as const;

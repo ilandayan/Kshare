@@ -50,8 +50,12 @@ const schema = z
     message: "Le prix de vente doit être inférieur au prix original",
     path: ["soldPrice"],
   })
-  .refine((data) => data.soldPrice <= data.originalPrice * 0.8, {
-    message: "La réduction doit être d'au moins 20 %",
+  .refine((data) => data.soldPrice <= data.originalPrice * 0.6, {
+    message: "La réduction doit être d'au moins 40 %",
+    path: ["soldPrice"],
+  })
+  .refine((data) => data.soldPrice >= data.originalPrice * 0.3, {
+    message: "La réduction ne peut pas dépasser 70 %",
     path: ["soldPrice"],
   })
   .refine((data) => data.pickupEnd > data.pickupStart, {
@@ -243,16 +247,17 @@ export function NouveauPanierForm({ allowedTypes }: NouveauPanierFormProps) {
               <div className="pb-0.5">
                 {reduction !== null ? (
                   <div className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-semibold ${
-                    reduction >= 20
+                    reduction >= 40 && reduction <= 70
                       ? "bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200"
                       : "bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200"
                   }`}>
                     -{reduction}% de réduction
-                    {reduction < 20 && <span className="ml-1 text-xs font-normal">(min. 20 %)</span>}
+                    {reduction < 40 && <span className="ml-1 text-xs font-normal">(min. 40 %)</span>}
+                    {reduction > 70 && <span className="ml-1 text-xs font-normal">(max. 70 %)</span>}
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground">
-                    Réduction min. 20 %
+                    Réduction entre 40 % et 70 %
                   </div>
                 )}
               </div>

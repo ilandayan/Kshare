@@ -192,7 +192,7 @@ export default function JeSuisCommercantPage() {
               {
                 step: "2",
                 title: "Publiez vos paniers",
-                desc: "Choisissez le type (Bassari, Halavi, Parvé, Shabbat, Mix), le prix, le créneau de retrait. En quelques clics.",
+                desc: "Choisissez le type (Bassari, Halavi, Parvé, Shabbat, Mix), une décote entre -40 % et -70 %, le créneau de retrait. En quelques clics.",
               },
               {
                 step: "3",
