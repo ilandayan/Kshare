@@ -38,11 +38,10 @@ export const ADMIN_URL = "/kshare-admin";
 export const SUPPORT_EMAIL = "contact@k-share.fr";
 
 // ── App Store / Google Play URLs ────────────────────────────
-// Google Play : Android — package app.kshare.fr (en cours d'examen Google Play)
+// Google Play : Android — package app.kshare.fr (publié 2 mai 2026)
 export const GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=app.kshare.fr";
-// App Store : iOS — version 1.0.8 (en attente de validation DSA Apple)
-// TODO : remplacer 0000000000 par le vrai Apple ID dès l'approbation
-export const APP_STORE_URL = "https://apps.apple.com/fr/app/kshare/id0000000000";
+// App Store : iOS — bundle com.kshare.app, Apple ID 6760791755
+export const APP_STORE_URL = "https://apps.apple.com/fr/app/kshare/id6760791755";
 
 export const BASKET_TYPES = [
   {
