@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KshareLogo } from "@/components/shared/kshare-logo";
 import { Store, Heart } from "lucide-react";
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from "@/lib/constants";
 
 interface SharedFooterProps {
   variant?: "full" | "minimal";
@@ -110,7 +111,9 @@ export function SharedFooter({ variant = "full" }: SharedFooterProps) {
             <div className="space-y-2">
               {/* App Store */}
               <Link
-                href="#"
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 transition-colors"
               >
                 <svg className="h-5 w-5 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -123,7 +126,9 @@ export function SharedFooter({ variant = "full" }: SharedFooterProps) {
               </Link>
               {/* Google Play */}
               <Link
-                href="#"
+                href={GOOGLE_PLAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 transition-colors"
               >
                 <svg className="h-5 w-5 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

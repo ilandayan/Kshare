@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     url: "https://k-share.fr",
   },
 };
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from "@/lib/constants";
 import {
   ShoppingBag,
   ShoppingCart,
@@ -366,7 +367,9 @@ export default function HomePage() {
                 </ul>
                 <div className="flex flex-col sm:flex-row gap-2.5">
                   <Link
-                    href="#"
+                    href={APP_STORE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-3 bg-gray-900 hover:bg-gray-800 rounded-xl px-4 py-2.5 transition-colors cursor-pointer"
                   >
                     <svg className="h-5 w-5 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -378,7 +381,9 @@ export default function HomePage() {
                     </div>
                   </Link>
                   <Link
-                    href="#"
+                    href={GOOGLE_PLAY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-3 bg-gray-900 hover:bg-gray-800 rounded-xl px-4 py-2.5 transition-colors cursor-pointer"
                   >
                     <svg className="h-5 w-5 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
