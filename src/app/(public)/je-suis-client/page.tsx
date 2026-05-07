@@ -40,7 +40,7 @@ export default function JeSuisClientPage() {
       <PublicNavbar />
 
       {/* ─────────────── HERO ─────────────── */}
-      <section className="relative pt-10 pb-24 md:pt-12 md:pb-40 overflow-hidden">
+      <section className="relative pt-16 pb-24 md:pt-28 md:pb-40 overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[500px] opacity-50 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,#c8cef5_0%,transparent_70%)]" />
         <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,#9ba8d8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.15]" />
 
