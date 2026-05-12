@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { notifyAdmin, buildSignupNotification } from "@/lib/resend";
 
 export type InscriptionAssoResult =
   | { success: true }
@@ -133,6 +134,23 @@ export async function inscriptionAssociation(
       id_document_url: `associations/${asso.id}/id.${idExt}`,
     })
     .eq("id", asso.id);
+
+  // Notification admin (non bloquant)
+  try {
+    const notif = buildSignupNotification({
+      type: "association",
+      name: nomAsso,
+      email,
+      phone: telephone,
+      city: ville,
+      postalCode: codePostal,
+      rna,
+      signupId: asso.id,
+    });
+    await notifyAdmin({ subject: notif.subject, html: notif.html, replyTo: email });
+  } catch (err) {
+    console.error("[inscription-association] notifyAdmin failed:", err);
+  }
 
   return { success: true };
 }

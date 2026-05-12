@@ -917,6 +917,80 @@ export function emailBienvenue(params: {
   };
 }
 
+/**
+ * Notification admin lors d'une nouvelle inscription commerce / association.
+ * Construit le HTML — l'envoi est fait via notifyAdmin().
+ */
+export function buildSignupNotification(params: {
+  type: "commerce" | "association";
+  name: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  postalCode?: string;
+  commerceType?: string;
+  hashgakha?: string;
+  siret?: string;
+  rna?: string;
+  signupId: string;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.name);
+  const safeEmail = escapeHtml(params.email);
+  const safePhone = params.phone ? escapeHtml(params.phone) : null;
+  const safeCity = params.city ? escapeHtml(params.city) : null;
+  const safeCP = params.postalCode ? escapeHtml(params.postalCode) : null;
+  const safeCommerceType = params.commerceType ? escapeHtml(params.commerceType) : null;
+  const safeHashgakha = params.hashgakha ? escapeHtml(params.hashgakha) : null;
+  const safeSiret = params.siret ? escapeHtml(params.siret) : null;
+  const safeRna = params.rna ? escapeHtml(params.rna) : null;
+  const safeId = escapeHtml(params.signupId);
+
+  const isCommerce = params.type === "commerce";
+  const typeLabel = isCommerce ? "🏪 COMMERCE" : "💜 ASSOCIATION";
+  const accent = isCommerce ? "#3744C8" : "#a855f7";
+  const adminPath = isCommerce ? "/kshare-admin/comptes" : "/kshare-admin/comptes";
+
+  const row = (label: string, value: string | null) =>
+    value
+      ? `<tr><td style="padding:6px 0;color:#888;width:140px;vertical-align:top;">${label}</td><td style="padding:6px 0;color:#333;font-weight:500;">${value}</td></tr>`
+      : "";
+
+  return {
+    subject: `[Kshare] Nouvelle inscription ${isCommerce ? "commerce" : "association"} — ${safeName}`,
+    html: wrapHtml(`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+        <span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:${accent};">
+          ${typeLabel}
+        </span>
+        <span style="font-size:13px;color:#888;margin-left:auto;">${safeId}</span>
+      </div>
+
+      <h2 style="color:${accent};margin:0 0 8px;">Nouvelle demande d'inscription</h2>
+      <p style="color:#666;font-size:14px;margin:0 0 20px;">
+        À valider depuis l'admin Kshare.
+      </p>
+
+      <table style="width:100%;font-size:14px;border-collapse:collapse;">
+        ${row("Nom", safeName)}
+        ${row("Email", safeEmail)}
+        ${row("Téléphone", safePhone)}
+        ${row("Ville", safeCity)}
+        ${row("Code postal", safeCP)}
+        ${isCommerce ? row("Type", safeCommerceType) : ""}
+        ${isCommerce ? row("Hashgakha", safeHashgakha) : ""}
+        ${isCommerce ? row("SIRET", safeSiret) : ""}
+        ${!isCommerce ? row("RNA", safeRna) : ""}
+      </table>
+
+      <div style="margin-top:24px;">
+        <a href="https://k-share.fr${adminPath}" style="display:inline-block;padding:12px 24px;background:${accent};color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+          Voir dans l'admin
+        </a>
+      </div>
+    `),
+  };
+}
+
 export function emailDemandeComplements(
   name: string,
   type: "commerce" | "association",

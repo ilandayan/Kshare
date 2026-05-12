@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { notifyAdmin, buildSignupNotification } from "@/lib/resend";
 
 export type InscriptionCommercantResult =
   | { success: true }
@@ -139,6 +140,25 @@ export async function inscriptionCommercant(
       id_document_url: `commerces/${commerce.id}/id.${idExt}`,
     })
     .eq("id", commerce.id);
+
+  // Notification admin (non bloquant)
+  try {
+    const notif = buildSignupNotification({
+      type: "commerce",
+      name: nom,
+      email,
+      phone: telephone,
+      city: ville,
+      postalCode: codePostal,
+      commerceType,
+      hashgakha,
+      siret,
+      signupId: commerce.id,
+    });
+    await notifyAdmin({ subject: notif.subject, html: notif.html, replyTo: email });
+  } catch (err) {
+    console.error("[inscription-commercant] notifyAdmin failed:", err);
+  }
 
   return { success: true };
 }
