@@ -295,7 +295,7 @@ export async function refuserCompte(
 
 /**
  * Régénère un lien de création de mot de passe et le renvoie par email.
- * Utile si le précédent lien (valable 48h) a expiré ou été perdu.
+ * Utile si le précédent lien (valable 24h) a expiré ou été perdu.
  */
 export async function renvoyerLienMotDePasse(
   id: string,

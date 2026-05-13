@@ -97,7 +97,7 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
     try {
       const result = await renvoyerLienMotDePasse(id, type);
       if (result.success) {
-        toast.success("Nouveau lien envoyé par email (valable 48h).");
+        toast.success("Nouveau lien envoyé par email (valable 24h).");
         router.refresh();
       } else {
         toast.error(result.error);
@@ -131,7 +131,7 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
               </Button>
               <p className="text-xs text-muted-foreground">
                 Si le compte n&apos;a pas encore créé son mot de passe (lien expiré ou perdu),
-                tu peux générer un nouveau lien valable 48h.
+                tu peux générer un nouveau lien valable 24h.
               </p>
             </div>
           )}

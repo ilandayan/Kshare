@@ -1,0 +1,109 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - heading "Ouah ! Parfait, vous pouvez envoyer" [level=1] [ref=e3]
+    - generic [ref=e4]: "Votre note :"
+    - text: 10/10
+  - generic [ref=e6]:
+    - link "" [ref=e7] [cursor=pointer]:
+      - /url: /test-02n49ehpe
+      - generic [ref=e8]: 
+    - text: "Sujet : Boucherie Dayan — opportunité anti-gaspi casher"
+    - generic [ref=e9]:
+      - generic [ref=e10]: 
+      - text: Reçu il y a 0 minutes
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14] [cursor=pointer]:
+          - generic [ref=e15]: 
+          - heading " Cliquez ici pour afficher votre message" [level=2] [ref=e16]:
+            - generic [ref=e17]: 
+            - text: Cliquez ici pour afficher votre message
+        - text:          
+      - generic [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: 
+        - heading " SpamAssassin vous aime" [level=2] [ref=e21]:
+          - generic [ref=e22]: 
+          - text: SpamAssassin vous aime
+      - generic [ref=e23]:
+        - generic [ref=e24] [cursor=pointer]:
+          - heading " Vous êtes parfaitement authentifié" [level=2] [ref=e25]:
+            - generic [ref=e26]: 
+            - text: Vous êtes parfaitement authentifié
+          - generic [ref=e27]:
+            - link "Check DMARC policy state ›" [ref=e28]:
+              - /url: https://easydmarc.com/tools/dmarc-lookup?utm_source=mailtester
+              - text: Check DMARC policy state
+              - generic [ref=e29]: ›
+            - generic [ref=e30]: 
+        - text:            
+      - generic [ref=e31]:
+        - generic [ref=e32] [cursor=pointer]:
+          - generic [ref=e33]: 
+          - heading " Votre message est sain et bien formaté" [level=2] [ref=e34]:
+            - generic [ref=e35]: 
+            - text: Votre message est sain et bien formaté
+        - text:        
+      - generic [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: 
+        - heading " Votre serveur n'est pas blocklisté" [level=2] [ref=e39]:
+          - generic [ref=e40]: 
+          - text: Votre serveur n'est pas blocklisté
+      - generic [ref=e42] [cursor=pointer]:
+        - generic [ref=e43]: 
+        - heading " Nous n'avons trouvé aucun lien brisé dans votre message" [level=2] [ref=e44]:
+          - generic [ref=e45]: 
+          - text: Nous n'avons trouvé aucun lien brisé dans votre message
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]: Run inbox placement test
+          - link "Test Now" [ref=e50] [cursor=pointer]:
+            - /url: https://easydmarc.com/tools/email-deliverability-test?utm_source=mailtester
+          - generic [ref=e51]: Determine message placement across Gmail, Outlook, Yahoo, and additional receiving providers.
+        - generic [ref=e52]:
+          - text: "Votre joli total : 10/10"
+          - generic "Lien" [ref=e55]:
+            - textbox [ref=e56]: https://www.mail-tester.com/test-02n49ehpe
+            - generic "Copy" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]: 
+      - generic [ref=e60]:
+        - generic [ref=e61]: Check DMARC policy
+        - generic [ref=e62]: A correct DMARC policy is required for consistent inbox placement and protection against domain spoofing.
+        - link "Lookup Now" [ref=e64] [cursor=pointer]:
+          - /url: https://easydmarc.com/tools/dmarc-lookup?utm_source=mailtester
+    - generic [ref=e65]:
+      - navigation [ref=e66]:
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - link "FAQ" [ref=e69] [cursor=pointer]:
+              - /url: /faq
+          - listitem [ref=e70]:
+            - link "Donnez votre avis" [ref=e71] [cursor=pointer]:
+              - /url: /contact
+          - listitem [ref=e72]:
+            - link "Politique de confidentialité" [ref=e73] [cursor=pointer]:
+              - /url: /privacy-policy
+          - listitem [ref=e74]:
+            - link "Manuels SPF" [ref=e75] [cursor=pointer]:
+              - /url: /spf/
+          - listitem [ref=e76]:
+            - link "Vérificateur SPF & DKIM" [ref=e77] [cursor=pointer]:
+              - /url: /spf-dkim-check
+          - listitem [ref=e78]:
+            - link "API" [ref=e79] [cursor=pointer]:
+              - /url: /manager
+          - listitem [ref=e80]:
+            - link "DMARC check" [ref=e81] [cursor=pointer]:
+              - /url: https://easydmarc.com/tools/dmarc-lookup?utm_source=mailtester
+          - listitem [ref=e82]:
+            - link "Email Deliverability Test" [ref=e83] [cursor=pointer]:
+              - /url: https://easydmarc.com/tools/email-deliverability-test?utm_source=mailtester
+          - listitem [ref=e84]:
+            - link "Blog" [ref=e85] [cursor=pointer]:
+              - /url: https://mail-tester.com/blog?utm_source=mailtester
+          - listitem [ref=e86]:
+            - link "Log in" [ref=e87] [cursor=pointer]:
+              - /url: /manager
+      - link "mail-tester" [ref=e89] [cursor=pointer]:
+        - /url: /
+        - img "mail-tester" [ref=e90]
