@@ -113,9 +113,11 @@ async function createAuthUserAndLink(params: {
       .eq("id", params.entityId);
   }
 
-  // Generate recovery link so user can set their password
+  // Generate recovery link so user can set their password.
+  // hint = email encodé pour pré-remplir /lien-expire si le lien expire.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-share.fr";
-  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe`;
+  const hint = Buffer.from(params.email).toString("base64url");
+  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe&hint=${hint}`;
 
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: "recovery",
@@ -333,7 +335,8 @@ export async function renvoyerLienMotDePasse(
 
   const adminClient = createAdminClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-share.fr";
-  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe`;
+  const hint = Buffer.from(accountEmail).toString("base64url");
+  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe&hint=${hint}`;
 
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: "recovery",

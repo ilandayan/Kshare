@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Clock, Mail, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +9,32 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { demanderNouveauLien } from "./_actions";
 
-export default function LienExpirePage() {
+function decodeHint(hint: string | null): string {
+  if (!hint) return "";
+  try {
+    // base64url decode (browser)
+    const padded = hint.replace(/-/g, "+").replace(/_/g, "/");
+    return atob(padded);
+  } catch {
+    return "";
+  }
+}
+
+function LienExpireContent() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pré-remplit l'email depuis le hint (transmis par le callback Supabase)
+  useEffect(() => {
+    const hint = searchParams.get("hint");
+    const decoded = decodeHint(hint);
+    if (decoded && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decoded)) {
+      setEmail(decoded);
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -111,5 +133,13 @@ export default function LienExpirePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LienExpirePage() {
+  return (
+    <Suspense fallback={<div className="min-h-[70vh]" />}>
+      <LienExpireContent />
+    </Suspense>
   );
 }

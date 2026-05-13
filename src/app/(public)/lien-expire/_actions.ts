@@ -78,9 +78,10 @@ export async function demanderNouveauLien(
     return { success: true };
   }
 
-  // Génère nouveau recovery link
+  // Génère nouveau recovery link (avec hint pour pré-remplir /lien-expire en cas de re-expiration)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-share.fr";
-  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe`;
+  const hint = Buffer.from(account.email).toString("base64url");
+  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe&hint=${hint}`;
 
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: "recovery",

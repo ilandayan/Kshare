@@ -10,6 +10,11 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
+  const hint = searchParams.get("hint");
+
+  // Construit l'URL /lien-expire avec hint si présent (pré-remplit le formulaire)
+  const lienExpireUrl = new URL("/lien-expire", origin);
+  if (hint) lienExpireUrl.searchParams.set("hint", hint);
 
   // Supabase peut transmettre des erreurs (lien expiré, déjà utilisé)
   const errorParam = searchParams.get("error");
@@ -51,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     // Code échangeable mais session échouée : probablement déjà consommé / expiré
     if (isRecoveryFlow) {
-      return NextResponse.redirect(new URL("/lien-expire", origin));
+      return NextResponse.redirect(lienExpireUrl);
     }
   }
 
