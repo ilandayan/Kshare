@@ -11,6 +11,18 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
+  // Supabase peut transmettre des erreurs (lien expiré, déjà utilisé)
+  const errorParam = searchParams.get("error");
+  const errorCode = searchParams.get("error_code");
+  const isExpired =
+    errorCode === "otp_expired" ||
+    errorParam === "access_denied" ||
+    (errorParam && errorParam.toLowerCase().includes("expired"));
+
+  // Le flux recovery (création/reset mot de passe) doit rediriger
+  // vers /lien-expire si lien périmé, et non vers /connexion.
+  const isRecoveryFlow = next.includes("/definir-mot-de-passe");
+
   if (code) {
     const response = NextResponse.redirect(new URL(next, origin));
 
@@ -36,8 +48,17 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return response;
     }
+
+    // Code échangeable mais session échouée : probablement déjà consommé / expiré
+    if (isRecoveryFlow) {
+      return NextResponse.redirect(new URL("/lien-expire", origin));
+    }
   }
 
-  // If code exchange failed or no code, redirect to an error page
+  // Pas de code ou erreur explicite Supabase
+  if (isExpired || isRecoveryFlow) {
+    return NextResponse.redirect(new URL("/lien-expire", origin));
+  }
+
   return NextResponse.redirect(new URL("/connexion?error=auth_callback", origin));
 }
