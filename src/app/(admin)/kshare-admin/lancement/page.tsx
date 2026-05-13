@@ -7,7 +7,7 @@ export default async function LancementPage() {
   const supabase = await createClient();
   const { data: config } = await supabase
     .from("platform_config")
-    .select("launched, launch_date, launched_at, launched_by")
+    .select("launched, launch_date, launched_at, launched_by, emails_sent_j7, emails_sent_j1, emails_sent_j0")
     .eq("id", true)
     .maybeSingle();
 
@@ -81,6 +81,9 @@ export default async function LancementPage() {
         launchDate={config?.launch_date ?? ""}
         commercesCount={commercesCount ?? 0}
         clientsCount={clientsCount ?? 0}
+        sentJ7={config?.emails_sent_j7 ?? null}
+        sentJ1={config?.emails_sent_j1 ?? null}
+        sentJ0={config?.emails_sent_j0 ?? null}
       />
     </div>
   );

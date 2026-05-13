@@ -794,6 +794,9 @@ export type Database = {
       }
       platform_config: {
         Row: {
+          emails_sent_j0: string | null
+          emails_sent_j1: string | null
+          emails_sent_j7: string | null
           id: boolean
           launch_date: string | null
           launched: boolean
@@ -802,6 +805,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          emails_sent_j0?: string | null
+          emails_sent_j1?: string | null
+          emails_sent_j7?: string | null
           id?: boolean
           launch_date?: string | null
           launched?: boolean
@@ -810,6 +816,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          emails_sent_j0?: string | null
+          emails_sent_j1?: string | null
+          emails_sent_j7?: string | null
           id?: boolean
           launch_date?: string | null
           launched?: boolean

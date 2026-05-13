@@ -88,9 +88,17 @@ interface Props {
   launchDate: string;
   commercesCount: number;
   clientsCount: number;
+  sentJ7: string | null;
+  sentJ1: string | null;
+  sentJ0: string | null;
 }
 
-export default function LaunchControls({ launched, launchDate, commercesCount, clientsCount }: Props) {
+function formatSent(ts: string | null): string {
+  if (!ts) return "Pas encore envoyé";
+  return `Envoyé le ${new Date(ts).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`;
+}
+
+export default function LaunchControls({ launched, launchDate, commercesCount, clientsCount, sentJ7, sentJ1, sentJ0 }: Props) {
   const router = useRouter();
   const [date, setDate] = useState(launchDate);
   const [savingDate, setSavingDate] = useState(false);
@@ -208,7 +216,14 @@ export default function LaunchControls({ launched, launchDate, commercesCount, c
             Campagne email de lancement
           </CardTitle>
           <CardDescription>
-            Envoi manuel à chaque phase. Les comptes @kshare.fr (démo) sont exclus.
+            <strong>Envoi automatique</strong> aux commerces ET clients à J-7, J-1 et J0 (vers 8h UTC ≈ 10h Paris)
+            selon la date enregistrée. Les comptes @kshare.fr (démo) sont exclus. Les boutons ci-dessous
+            permettent un envoi manuel/anticipé. Statut courant :
+            <span className="block mt-2 text-xs space-y-0.5">
+              <span className="block">• J-7 : <strong>{formatSent(sentJ7)}</strong></span>
+              <span className="block">• J-1 : <strong>{formatSent(sentJ1)}</strong></span>
+              <span className="block">• J0 : <strong>{formatSent(sentJ0)}</strong></span>
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
