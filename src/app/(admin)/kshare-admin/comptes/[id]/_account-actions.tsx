@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, MessageSquare, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, MessageSquare, Loader2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { validerCompte, refuserCompte, demanderComplements } from "./_actions";
+import { validerCompte, refuserCompte, demanderComplements, renvoyerLienMotDePasse } from "./_actions";
 
 interface AccountActionsProps {
   id: string;
@@ -32,8 +32,10 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
   const [complementOpen, setComplementOpen] = useState(false);
   const [complementMessage, setComplementMessage] = useState("");
   const [sendingComplement, setSendingComplement] = useState(false);
+  const [resendingLink, setResendingLink] = useState(false);
 
   const isActive = currentStatus === "pending" || currentStatus === "complement_required";
+  const isValidated = currentStatus === "validated";
 
   async function handleValidate() {
     setValidating(true);
@@ -90,13 +92,49 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
     }
   }
 
+  async function handleResendLink() {
+    setResendingLink(true);
+    try {
+      const result = await renvoyerLienMotDePasse(id, type);
+      if (result.success) {
+        toast.success("Nouveau lien envoyé par email (valable 48h).");
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Erreur inattendue.");
+    } finally {
+      setResendingLink(false);
+    }
+  }
+
   if (!isActive) {
     return (
       <Card>
-        <CardContent className="py-6">
-          <p className="text-sm text-muted-foreground text-center">
-            Ce compte a déjà été traité (statut : <strong>{currentStatus}</strong>).
+        <CardHeader>
+          <CardTitle className="text-base">Actions sur ce compte</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Statut actuel : <strong>{currentStatus}</strong>
           </p>
+          {isValidated && (
+            <div className="space-y-2">
+              <Button onClick={handleResendLink} disabled={resendingLink} variant="outline" className="gap-2">
+                {resendingLink ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <KeyRound className="h-4 w-4" />
+                )}
+                Renvoyer le lien de création de mot de passe
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Si le compte n&apos;a pas encore créé son mot de passe (lien expiré ou perdu),
+                tu peux générer un nouveau lien valable 48h.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     );

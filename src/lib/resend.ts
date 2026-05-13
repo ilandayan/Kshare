@@ -548,8 +548,8 @@ export function emailCompteValide(
         🔐 Créer mon mot de passe
       </a>
       <p style="color:#888;font-size:12px;line-height:1.6;">
-        Ce lien est valable 24 heures. Si vous ne l'avez pas utilisé à temps, contactez-nous à
-        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+        Ce lien est valable 48 heures. Si vous ne l'avez pas utilisé à temps, contactez-nous à
+        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a> pour en recevoir un nouveau.
       </p>
     `
     : `

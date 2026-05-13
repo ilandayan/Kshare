@@ -293,6 +293,77 @@ export async function refuserCompte(
   return { success: true };
 }
 
+/**
+ * Régénère un lien de création de mot de passe et le renvoie par email.
+ * Utile si le précédent lien (valable 48h) a expiré ou été perdu.
+ */
+export async function renvoyerLienMotDePasse(
+  id: string,
+  type: "commerce" | "association"
+): Promise<AccountActionResult> {
+  const ctx = await requireAdmin();
+  if (!ctx) return { success: false, error: "Non autorisé." };
+
+  const { supabase } = ctx;
+
+  let accountEmail: string | null = null;
+  let accountName: string | null = null;
+
+  if (type === "commerce") {
+    const { data: commerce } = await supabase
+      .from("commerces")
+      .select("name, email")
+      .eq("id", id)
+      .single();
+    accountEmail = commerce?.email ?? null;
+    accountName = commerce?.name ?? null;
+  } else {
+    const { data: asso } = await supabase
+      .from("associations")
+      .select("name, email")
+      .eq("id", id)
+      .single();
+    accountEmail = asso?.email ?? null;
+    accountName = asso?.name ?? null;
+  }
+
+  if (!accountEmail || !accountName) {
+    return { success: false, error: "Compte introuvable." };
+  }
+
+  const adminClient = createAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-share.fr";
+  const redirectTo = `${siteUrl}/api/auth/callback?next=/definir-mot-de-passe`;
+
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: "recovery",
+    email: accountEmail,
+    options: { redirectTo },
+  });
+
+  if (linkError || !linkData?.properties?.action_link) {
+    console.error("[renvoyerLien] generateLink failed:", linkError);
+    return { success: false, error: "Erreur lors de la génération du lien." };
+  }
+
+  const { subject, html } = emailCompteValide(accountName, type, linkData.properties.action_link);
+  const sent = await sendEmail({ to: accountEmail, subject, html });
+
+  if (!sent) {
+    return { success: false, error: "Le lien a été généré mais l'email n'a pas pu être envoyé." };
+  }
+
+  logAuditEvent({
+    action: "admin.resend_recovery_link",
+    actor_id: ctx.user.id,
+    target_id: id,
+    metadata: { type, accountName },
+  });
+
+  revalidatePath(`/kshare-admin/comptes/${id}`);
+  return { success: true };
+}
+
 export async function demanderComplements(
   id: string,
   type: "commerce" | "association",
