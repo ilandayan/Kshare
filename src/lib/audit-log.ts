@@ -15,6 +15,8 @@ export type AuditAction =
   | "admin.suspend_account"
   | "admin.request_info"
   | "admin.resend_recovery_link"
+  | "admin.platform_launched"
+  | "admin.launch_emails_sent"
   | "admin.delete_user"
   | "admin.refund_order"
   | "payment.checkout_created"

@@ -792,6 +792,41 @@ export type Database = {
           },
         ]
       }
+      platform_config: {
+        Row: {
+          id: boolean
+          launch_date: string | null
+          launched: boolean
+          launched_at: string | null
+          launched_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          launch_date?: string | null
+          launched?: boolean
+          launched_at?: string | null
+          launched_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          launch_date?: string | null
+          launched?: boolean
+          launched_at?: string | null
+          launched_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_config_launched_by_fkey"
+            columns: ["launched_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           archived_at: string | null

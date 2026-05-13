@@ -1022,3 +1022,112 @@ export function emailDemandeComplements(
     `),
   };
 }
+
+// ── Templates de lancement plateforme ────────────────────────────
+
+function formatLaunchDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+}
+
+export type LaunchPhase = "j7" | "j1" | "j0";
+
+export function emailLancementCommerce(params: {
+  commerceName: string;
+  responsableFirstName?: string | null;
+  launchDate: string;
+  phase: LaunchPhase;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.commerceName);
+  const safeGreet = params.responsableFirstName ? escapeHtml(params.responsableFirstName) : safeName;
+  const dateLabel = formatLaunchDate(params.launchDate);
+
+  const map: Record<LaunchPhase, { subject: string; intro: string; cta: string }> = {
+    j7: {
+      subject: `Kshare — Lancement officiel dans 7 jours (${dateLabel})`,
+      intro: `Le grand jour approche ! Kshare ouvre officiellement <strong>le ${dateLabel}</strong>. Vous pourrez publier vos premiers paniers anti-gaspi dès ce jour-là.`,
+      cta: "Préparer mon espace",
+    },
+    j1: {
+      subject: `Kshare — C'est demain ! Préparez vos premiers paniers`,
+      intro: `Demain (<strong>${dateLabel}</strong>) c'est l'ouverture officielle de Kshare. Vous pourrez publier vos premiers paniers dès demain matin.`,
+      cta: "Vérifier mes infos",
+    },
+    j0: {
+      subject: `Kshare — C'est parti ! La plateforme est ouverte 🎉`,
+      intro: `La plateforme Kshare est désormais <strong>officiellement ouverte</strong>. Vous pouvez dès maintenant publier vos premiers paniers anti-gaspi casher.`,
+      cta: "Publier mon premier panier",
+    },
+  };
+
+  const tpl = map[params.phase];
+
+  return {
+    subject: tpl.subject,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${safeGreet},</h2>
+      <p style="color:#333;line-height:1.7;">${tpl.intro}</p>
+      <p style="color:#333;line-height:1.7;">Rappel rapide :</p>
+      <ul style="color:#333;line-height:2;padding-left:20px;margin:0 0 16px;">
+        <li>Vos paniers seront visibles immédiatement par les clients de votre zone</li>
+        <li>Vous gardez 82% du prix (Plan Starter) ou 88% (Plan Pro)</li>
+        <li>Reversement automatique chaque mardi par Stripe</li>
+      </ul>
+      <a href="https://k-share.fr/shop/dashboard" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">
+        ${tpl.cta}
+      </a>
+      <p style="color:#333;line-height:1.7;">
+        Une question ? Répondez à cet email ou écrivez-nous à
+        <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+      </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
+export function emailLancementClient(params: {
+  clientName: string;
+  launchDate: string;
+  phase: LaunchPhase;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.clientName);
+  const dateLabel = formatLaunchDate(params.launchDate);
+
+  const map: Record<LaunchPhase, { subject: string; intro: string; cta: string }> = {
+    j7: {
+      subject: `Kshare — Plus que 7 jours avant l'ouverture (${dateLabel})`,
+      intro: `Vous y êtes presque ! Le <strong>${dateLabel}</strong>, Kshare ouvre officiellement et vous pourrez réserver vos premiers paniers casher anti-gaspi à -40 à -70%.`,
+      cta: "Préparer mon profil",
+    },
+    j1: {
+      subject: `Kshare — C'est demain ! Les paniers casher anti-gaspi débarquent`,
+      intro: `Demain (<strong>${dateLabel}</strong>), Kshare ouvre officiellement. Dès demain matin, vous pourrez réserver vos premiers paniers chez les commerces casher partenaires.`,
+      cta: "Voir l'app",
+    },
+    j0: {
+      subject: `Kshare — C'est parti ! Réservez votre premier panier 🎉`,
+      intro: `La plateforme Kshare est <strong>officiellement ouverte</strong>. Les premiers paniers casher anti-gaspi sont en ligne — réservez avant qu'ils ne partent !`,
+      cta: "Voir les paniers",
+    },
+  };
+
+  const tpl = map[params.phase];
+
+  return {
+    subject: tpl.subject,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${safeName},</h2>
+      <p style="color:#333;line-height:1.7;">${tpl.intro}</p>
+      <p style="color:#333;line-height:1.7;">Au programme :</p>
+      <ul style="color:#333;line-height:2;padding-left:20px;margin:0 0 16px;">
+        <li>Des paniers Bassari, Halavi, Parvé ou Shabbat à prix réduit</li>
+        <li>Réservation depuis l'app et retrait en magasin avec QR code</li>
+        <li>La possibilité d'offrir un panier à une association (mitzva)</li>
+      </ul>
+      <a href="https://k-share.fr" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">
+        ${tpl.cta}
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}

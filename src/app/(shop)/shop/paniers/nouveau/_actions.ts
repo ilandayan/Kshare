@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { validateBasketPrice } from "@/lib/stripe/client";
 import { BASKET_TYPES_BY_COMMERCE } from "@/lib/constants";
+import { checkPublicationAllowed } from "@/lib/platform-config";
 import type { Database } from "@/types/database.types";
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
@@ -35,7 +36,7 @@ export async function createBasket(data: CreateBasketData): Promise<CreateBasket
 
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("id, status, subscription_plan, commerce_type")
+    .select("id, status, subscription_plan, commerce_type, email")
     .eq("profile_id", user.id)
     .single();
 
@@ -45,6 +46,12 @@ export async function createBasket(data: CreateBasketData): Promise<CreateBasket
   }
   if (commerce.status !== "validated") {
     return { success: false, error: "Votre compte doit être validé pour créer des paniers." };
+  }
+
+  // Gate pre-launch — bloque la publication tant que la plateforme n'est pas officiellement lancée
+  const launchBlock = await checkPublicationAllowed(commerce.email);
+  if (launchBlock) {
+    return { success: false, error: launchBlock };
   }
 
   // Must choose a plan before publishing
