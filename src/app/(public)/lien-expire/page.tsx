@@ -23,16 +23,19 @@ function decodeHint(hint: string | null): string {
 function LienExpireContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
+  const [emailLocked, setEmailLocked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Pré-remplit l'email depuis le hint (transmis par le callback Supabase)
+  // Verrouille le champ pour empêcher la modification (sécurité anti-abus).
   useEffect(() => {
     const hint = searchParams.get("hint");
     const decoded = decodeHint(hint);
     if (decoded && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decoded)) {
       setEmail(decoded);
+      setEmailLocked(true);
     }
   }, [searchParams]);
 
@@ -108,8 +111,15 @@ function LienExpireContent() {
                   placeholder="contact@moncommerce.fr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || emailLocked}
+                  readOnly={emailLocked}
+                  className={emailLocked ? "bg-muted cursor-not-allowed" : ""}
                 />
+                {emailLocked && (
+                  <p className="text-xs text-muted-foreground">
+                    Le nouveau lien sera envoyé à cette adresse.
+                  </p>
+                )}
               </div>
 
               {error && (
