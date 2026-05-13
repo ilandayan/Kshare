@@ -1085,6 +1085,55 @@ export function emailLancementCommerce(params: {
   };
 }
 
+export function emailLancementAssociation(params: {
+  assoName: string;
+  responsableFirstName?: string | null;
+  launchDate: string;
+  phase: LaunchPhase;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.assoName);
+  const safeGreet = params.responsableFirstName ? escapeHtml(params.responsableFirstName) : safeName;
+  const dateLabel = formatLaunchDate(params.launchDate);
+
+  const map: Record<LaunchPhase, { subject: string; intro: string; cta: string }> = {
+    j7: {
+      subject: `Kshare — Plus que 7 jours avant l'ouverture (${dateLabel})`,
+      intro: `Le <strong>${dateLabel}</strong>, Kshare ouvre officiellement. Les premiers paniers dons des commerces casher partenaires seront disponibles à la réservation par votre association.`,
+      cta: "Préparer mon espace",
+    },
+    j1: {
+      subject: `Kshare — C'est demain ! Les premiers paniers dons arrivent`,
+      intro: `Demain (<strong>${dateLabel}</strong>), Kshare ouvre. Dès demain matin, vous pourrez réserver les paniers offerts par les commerces et les clients (mitzva).`,
+      cta: "Voir mon espace",
+    },
+    j0: {
+      subject: `Kshare — C'est parti ! Les premiers paniers dons sont disponibles 🎉`,
+      intro: `La plateforme Kshare est <strong>officiellement ouverte</strong>. Les premiers paniers dons casher sont en ligne et peuvent être réservés par votre association.`,
+      cta: "Voir les paniers dons",
+    },
+  };
+
+  const tpl = map[params.phase];
+
+  return {
+    subject: tpl.subject,
+    html: wrapHtml(`
+      <h2 style="color:#9333ea;margin:0 0 16px;">Bonjour ${safeGreet},</h2>
+      <p style="color:#333;line-height:1.7;">${tpl.intro}</p>
+      <p style="color:#333;line-height:1.7;">Comment ça marche :</p>
+      <ul style="color:#333;line-height:2;padding-left:20px;margin:0 0 16px;">
+        <li>Vous voyez les paniers dons disponibles dans votre département</li>
+        <li>Vous réservez en 1 clic, vous récupérez en magasin avec un QR code</li>
+        <li>100% gratuit pour votre association — aucune commission</li>
+      </ul>
+      <a href="https://k-share.fr/asso/paniers-dons" style="display:inline-block;padding:12px 24px;background:#9333ea;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0 16px;">
+        ${tpl.cta}
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
 export function emailLancementClient(params: {
   clientName: string;
   launchDate: string;

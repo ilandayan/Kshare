@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { triggerLaunch, setLaunchDate } from "@/lib/platform-config";
-import { sendEmail, emailLancementCommerce, emailLancementClient, type LaunchPhase } from "@/lib/resend";
+import { sendEmail, emailLancementCommerce, emailLancementClient, emailLancementAssociation, type LaunchPhase } from "@/lib/resend";
 import { logAuditEvent } from "@/lib/audit-log";
 
 export type LaunchActionResult =
@@ -41,15 +41,13 @@ export async function lancerPlateforme(): Promise<LaunchActionResult> {
 }
 
 export async function envoyerEmailsLancement(
-  audience: "commerces" | "clients",
+  audience: "commerces" | "clients" | "associations",
   phase: LaunchPhase
 ): Promise<LaunchActionResult> {
   const ctx = await requireAdmin();
   if (!ctx) return { success: false, error: "Non autorisé." };
 
   const admin = createAdminClient();
-
-  // Charge la launch_date pour personnaliser le mail
   const { data: cfg } = await admin
     .from("platform_config")
     .select("launch_date")
@@ -77,10 +75,9 @@ export async function envoyerEmailsLancement(
         launchDate: cfg.launch_date,
         phase,
       });
-      const ok = await sendEmail({ to: c.email, subject, html });
-      if (ok) sent++;
+      if (await sendEmail({ to: c.email, subject, html })) sent++;
     }
-  } else {
+  } else if (audience === "clients") {
     const { data: clients } = await admin
       .from("profiles")
       .select("email, full_name")
@@ -94,13 +91,30 @@ export async function envoyerEmailsLancement(
         launchDate: cfg.launch_date,
         phase,
       });
-      const ok = await sendEmail({ to: cl.email, subject, html });
-      if (ok) sent++;
+      if (await sendEmail({ to: cl.email, subject, html })) sent++;
+    }
+  } else {
+    const { data: assos } = await admin
+      .from("associations")
+      .select("name, email, representative_first_name")
+      .eq("status", "validated")
+      .not("email", "ilike", "%@kshare.fr");
+
+    for (const a of assos ?? []) {
+      if (!a.email) continue;
+      const { subject, html } = emailLancementAssociation({
+        assoName: a.name,
+        responsableFirstName: a.representative_first_name,
+        launchDate: cfg.launch_date,
+        phase,
+      });
+      if (await sendEmail({ to: a.email, subject, html })) sent++;
     }
   }
 
-  // Marque la phase comme envoyée pour bloquer le cron auto sur cette phase
-  const phaseField = phase === "j7" ? "emails_sent_j7" : phase === "j1" ? "emails_sent_j1" : "emails_sent_j0";
+  // Marque la phase comme envoyée pour bloquer le cron auto
+  const groupSlot = audience === "commerces" ? "commerces" : "users";
+  const phaseField = `emails_sent_${phase}_${groupSlot}` as const;
   await admin.from("platform_config").update({
     [phaseField]: new Date().toISOString(),
     updated_at: new Date().toISOString(),

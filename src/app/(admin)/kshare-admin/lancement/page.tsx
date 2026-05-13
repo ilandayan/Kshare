@@ -7,11 +7,11 @@ export default async function LancementPage() {
   const supabase = await createClient();
   const { data: config } = await supabase
     .from("platform_config")
-    .select("launched, launch_date, launched_at, launched_by, emails_sent_j7, emails_sent_j1, emails_sent_j0")
+    .select("launched, launch_date, launched_at, launched_by, emails_sent_j7_commerces, emails_sent_j1_commerces, emails_sent_j0_commerces, emails_sent_j7_users, emails_sent_j1_users, emails_sent_j0_users")
     .eq("id", true)
     .maybeSingle();
 
-  const [{ count: commercesCount }, { count: clientsCount }] = await Promise.all([
+  const [{ count: commercesCount }, { count: clientsCount }, { count: assosCount }] = await Promise.all([
     supabase
       .from("commerces")
       .select("id", { count: "exact", head: true })
@@ -21,6 +21,11 @@ export default async function LancementPage() {
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("role", "client")
+      .not("email", "ilike", "%@kshare.fr"),
+    supabase
+      .from("associations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "validated")
       .not("email", "ilike", "%@kshare.fr"),
   ]);
 
@@ -63,14 +68,18 @@ export default async function LancementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <p className="text-xs text-muted-foreground">Commerces validés (réels)</p>
+              <p className="text-xs text-muted-foreground">Commerces validés</p>
               <p className="text-lg font-semibold">{commercesCount ?? 0}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Clients inscrits (réels)</p>
+              <p className="text-xs text-muted-foreground">Clients inscrits</p>
               <p className="text-lg font-semibold">{clientsCount ?? 0}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Associations validées</p>
+              <p className="text-lg font-semibold">{assosCount ?? 0}</p>
             </div>
           </div>
         </CardContent>
@@ -81,9 +90,13 @@ export default async function LancementPage() {
         launchDate={config?.launch_date ?? ""}
         commercesCount={commercesCount ?? 0}
         clientsCount={clientsCount ?? 0}
-        sentJ7={config?.emails_sent_j7 ?? null}
-        sentJ1={config?.emails_sent_j1 ?? null}
-        sentJ0={config?.emails_sent_j0 ?? null}
+        assosCount={assosCount ?? 0}
+        sentJ7Commerces={config?.emails_sent_j7_commerces ?? null}
+        sentJ1Commerces={config?.emails_sent_j1_commerces ?? null}
+        sentJ0Commerces={config?.emails_sent_j0_commerces ?? null}
+        sentJ7Users={config?.emails_sent_j7_users ?? null}
+        sentJ1Users={config?.emails_sent_j1_users ?? null}
+        sentJ0Users={config?.emails_sent_j0_users ?? null}
       />
     </div>
   );

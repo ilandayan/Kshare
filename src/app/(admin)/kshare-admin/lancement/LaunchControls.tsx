@@ -20,7 +20,7 @@ import {
 import { saveLaunchDate, lancerPlateforme, envoyerEmailsLancement } from "./_actions";
 
 type Phase = "j7" | "j1" | "j0";
-type Audience = "commerces" | "clients";
+type Audience = "commerces" | "clients" | "associations";
 
 const PHASE_LABELS: Record<Phase, string> = {
   j7: "J-7 (une semaine avant)",
@@ -88,17 +88,33 @@ interface Props {
   launchDate: string;
   commercesCount: number;
   clientsCount: number;
-  sentJ7: string | null;
-  sentJ1: string | null;
-  sentJ0: string | null;
+  assosCount: number;
+  sentJ7Commerces: string | null;
+  sentJ1Commerces: string | null;
+  sentJ0Commerces: string | null;
+  sentJ7Users: string | null;
+  sentJ1Users: string | null;
+  sentJ0Users: string | null;
 }
 
 function formatSent(ts: string | null): string {
-  if (!ts) return "Pas encore envoyé";
-  return `Envoyé le ${new Date(ts).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`;
+  if (!ts) return "—";
+  return new Date(ts).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function LaunchControls({ launched, launchDate, commercesCount, clientsCount, sentJ7, sentJ1, sentJ0 }: Props) {
+export default function LaunchControls({
+  launched,
+  launchDate,
+  commercesCount,
+  clientsCount,
+  assosCount,
+  sentJ7Commerces,
+  sentJ1Commerces,
+  sentJ0Commerces,
+  sentJ7Users,
+  sentJ1Users,
+  sentJ0Users,
+}: Props) {
   const router = useRouter();
   const [date, setDate] = useState(launchDate);
   const [savingDate, setSavingDate] = useState(false);
@@ -216,45 +232,65 @@ export default function LaunchControls({ launched, launchDate, commercesCount, c
             Campagne email de lancement
           </CardTitle>
           <CardDescription>
-            <strong>Envoi automatique</strong> aux commerces ET clients à J-7, J-1 et J0 (vers 8h UTC ≈ 10h Paris)
-            selon la date enregistrée. Les comptes @kshare.fr (démo) sont exclus. Les boutons ci-dessous
-            permettent un envoi manuel/anticipé. Statut courant :
-            <span className="block mt-2 text-xs space-y-0.5">
-              <span className="block">• J-7 : <strong>{formatSent(sentJ7)}</strong></span>
-              <span className="block">• J-1 : <strong>{formatSent(sentJ1)}</strong></span>
-              <span className="block">• J0 : <strong>{formatSent(sentJ0)}</strong></span>
-            </span>
+            <strong>Envoi automatique</strong> selon la date de lancement :
+            <span className="block mt-1">• Commerces → <strong>7h heure de Paris</strong></span>
+            <span className="block">• Clients + associations → <strong>10h heure de Paris</strong></span>
+            <span className="block mt-2">Les comptes @kshare.fr sont exclus. Les boutons ci-dessous permettent un envoi manuel anticipé.</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {(["commerces", "clients"] as Audience[]).map((aud) => (
-            <div key={aud}>
-              <h4 className="text-sm font-semibold mb-2">
-                {aud === "commerces" ? `Commerces validés (${commercesCount})` : `Clients inscrits (${clientsCount})`}
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {(["j7", "j1", "j0"] as Phase[]).map((phase) => {
-                  const key = `${aud}-${phase}`;
-                  const isSending = sending === key;
-                  const count = aud === "commerces" ? commercesCount : clientsCount;
-                  return (
-                    <ConfirmDialog
-                      key={phase}
-                      variant="outline"
-                      size="sm"
-                      triggerLabel={PHASE_LABELS[phase]}
-                      triggerIcon={isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                      title={`Envoyer l'email ${phase.toUpperCase()} aux ${aud} ?`}
-                      description={`${count} destinataire(s). Cette action envoie immédiatement les emails via Resend.`}
-                      actionLabel="Envoyer"
-                      onConfirm={() => onSendEmails(aud, phase)}
-                      disabled={isSending || !launchDate}
-                    />
-                  );
-                })}
-              </div>
+          {/* Statut envois */}
+          <div className="text-xs border rounded-md overflow-hidden">
+            <div className="grid grid-cols-4 bg-muted/50 font-semibold p-2">
+              <div></div>
+              <div>J-7</div>
+              <div>J-1</div>
+              <div>J0</div>
             </div>
-          ))}
+            <div className="grid grid-cols-4 p-2 border-t">
+              <div className="font-medium">Commerces (7h)</div>
+              <div>{formatSent(sentJ7Commerces)}</div>
+              <div>{formatSent(sentJ1Commerces)}</div>
+              <div>{formatSent(sentJ0Commerces)}</div>
+            </div>
+            <div className="grid grid-cols-4 p-2 border-t">
+              <div className="font-medium">Clients + asso (10h)</div>
+              <div>{formatSent(sentJ7Users)}</div>
+              <div>{formatSent(sentJ1Users)}</div>
+              <div>{formatSent(sentJ0Users)}</div>
+            </div>
+          </div>
+
+          {(["commerces", "clients", "associations"] as Audience[]).map((aud) => {
+            const count = aud === "commerces" ? commercesCount : aud === "clients" ? clientsCount : assosCount;
+            const label = aud === "commerces" ? `Commerces (${commercesCount})` : aud === "clients" ? `Clients (${clientsCount})` : `Associations (${assosCount})`;
+            return (
+              <div key={aud}>
+                <h4 className="text-sm font-semibold mb-2">{label}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {(["j7", "j1", "j0"] as Phase[]).map((phase) => {
+                    const key = `${aud}-${phase}`;
+                    const isSending = sending === key;
+                    return (
+                      <ConfirmDialog
+                        key={phase}
+                        variant="outline"
+                        size="sm"
+                        triggerLabel={PHASE_LABELS[phase]}
+                        triggerIcon={isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                        title={`Envoyer l'email ${phase.toUpperCase()} aux ${aud} ?`}
+                        description={`${count} destinataire(s). Cette action envoie immédiatement les emails via Resend.`}
+                        actionLabel="Envoyer"
+                        onConfirm={() => onSendEmails(aud, phase)}
+                        disabled={isSending || !launchDate}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
           {!launchDate && (
             <p className="text-xs text-amber-600">
               ⚠ Définis d'abord la date de lancement (utilisée dans les emails).
