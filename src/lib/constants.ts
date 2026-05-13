@@ -114,19 +114,28 @@ export const COMMERCE_SUBTYPES: Record<
     ],
     multi: true, // can be both → stored as "Traiteur" when both selected
   },
+  Boulangerie: {
+    options: [
+      { value: "Bassari", label: "Bassari (parvé, sans laitier)" },
+      { value: "Halavi", label: "Halavi (avec produits laitiers)" },
+    ],
+    multi: false, // exclusive: Bassari OR Halavi
+  },
 };
 
 /** Basket types available per commerce type (composite key) */
 export const BASKET_TYPES_BY_COMMERCE: Record<string, string[]> = {
-  "Boucherie":          ["bassari", "parve", "shabbat"],
-  "Boulangerie":        ["halavi", "parve", "shabbat"],
-  "Épicerie":           ["bassari", "halavi", "parve", "mix", "shabbat"],
-  "Supermarché":        ["bassari", "halavi", "parve", "mix", "shabbat"],
-  "Restaurant Bassari": ["bassari", "parve", "shabbat"],
-  "Restaurant Halavi":  ["halavi", "parve", "shabbat"],
-  "Traiteur Bassari":   ["bassari", "parve", "shabbat"],
-  "Traiteur Halavi":    ["halavi", "parve", "shabbat"],
-  "Traiteur":           ["bassari", "halavi", "parve", "mix", "shabbat"],
+  "Boucherie":            ["bassari", "parve", "shabbat"],
+  "Boulangerie":          ["halavi", "parve", "shabbat"], // legacy (sans sous-type), équivalent Halavi
+  "Boulangerie Bassari":  ["parve", "shabbat"],
+  "Boulangerie Halavi":   ["halavi", "parve", "shabbat"],
+  "Épicerie":             ["bassari", "halavi", "parve", "mix", "shabbat"],
+  "Supermarché":          ["bassari", "halavi", "parve", "mix", "shabbat"],
+  "Restaurant Bassari":   ["bassari", "parve", "shabbat"],
+  "Restaurant Halavi":    ["halavi", "parve", "shabbat"],
+  "Traiteur Bassari":     ["bassari", "parve", "shabbat"],
+  "Traiteur Halavi":      ["halavi", "parve", "shabbat"],
+  "Traiteur":             ["bassari", "halavi", "parve", "mix", "shabbat"],
 };
 
 /** Subscription status labels in French */
