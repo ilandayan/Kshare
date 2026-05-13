@@ -19,6 +19,8 @@ import { inscriptionCommercant } from "./_actions";
 
 const schema = z.object({
   nom: z.string().min(2, "Le nom du commerce est requis"),
+  prenom: z.string().min(2, "Le prénom est requis"),
+  nomResponsable: z.string().min(2, "Le nom est requis"),
   email: z.string().email("Email invalide"),
   commerceType: z.string().min(1, "Le type de commerce est requis"),
   adresse: z.string().min(5, "L'adresse est requise"),
@@ -68,6 +70,8 @@ export default function InscriptionCommercantPage() {
       const fd = new FormData();
       fd.append("email", data.email);
       fd.append("nom", data.nom);
+      fd.append("prenom", data.prenom);
+      fd.append("nomResponsable", data.nomResponsable);
       fd.append("commerceType", data.commerceType);
       fd.append("adresse", data.adresse);
       fd.append("ville", data.ville);
@@ -138,6 +142,28 @@ export default function InscriptionCommercantPage() {
                     {...register("nom")}
                   />
                   {errors.nom && <p className="text-xs text-destructive">{errors.nom.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="prenom">Prénom du responsable <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="prenom"
+                    placeholder="David"
+                    autoComplete="given-name"
+                    {...register("prenom")}
+                  />
+                  {errors.prenom && <p className="text-xs text-destructive">{errors.prenom.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nomResponsable">Nom du responsable <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="nomResponsable"
+                    placeholder="Lévy"
+                    autoComplete="family-name"
+                    {...register("nomResponsable")}
+                  />
+                  {errors.nomResponsable && <p className="text-xs text-destructive">{errors.nomResponsable.message}</p>}
                 </div>
 
                 <div className="md:col-span-2 space-y-2">

@@ -55,6 +55,8 @@ export type Database = {
           id_document_url: string | null
           name: string
           profile_id: string | null
+          representative_first_name: string | null
+          representative_last_name: string | null
           rna_document_url: string | null
           status: Database["public"]["Enums"]["association_status"]
           updated_at: string
@@ -78,6 +80,8 @@ export type Database = {
           id_document_url?: string | null
           name: string
           profile_id?: string | null
+          representative_first_name?: string | null
+          representative_last_name?: string | null
           rna_document_url?: string | null
           status?: Database["public"]["Enums"]["association_status"]
           updated_at?: string
@@ -101,6 +105,8 @@ export type Database = {
           id_document_url?: string | null
           name?: string
           profile_id?: string | null
+          representative_first_name?: string | null
+          representative_last_name?: string | null
           rna_document_url?: string | null
           status?: Database["public"]["Enums"]["association_status"]
           updated_at?: string
@@ -258,6 +264,8 @@ export type Database = {
           photos: string[] | null
           postal_code: string | null
           profile_id: string | null
+          representative_first_name: string | null
+          representative_last_name: string | null
           siret: string | null
           status: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id: string | null
@@ -304,6 +312,8 @@ export type Database = {
           photos?: string[] | null
           postal_code?: string | null
           profile_id?: string | null
+          representative_first_name?: string | null
+          representative_last_name?: string | null
           siret?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
@@ -350,6 +360,8 @@ export type Database = {
           photos?: string[] | null
           postal_code?: string | null
           profile_id?: string | null
+          representative_first_name?: string | null
+          representative_last_name?: string | null
           siret?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
@@ -615,6 +627,8 @@ export type Database = {
           is_donation: boolean
           net_amount: number
           notes: string | null
+          payout_date: string | null
+          payout_status: string
           picked_up_at: string | null
           pickup_date: string
           pickup_end: string
@@ -643,6 +657,8 @@ export type Database = {
           is_donation?: boolean
           net_amount: number
           notes?: string | null
+          payout_date?: string | null
+          payout_status?: string
           picked_up_at?: string | null
           pickup_date: string
           pickup_end: string
@@ -671,6 +687,8 @@ export type Database = {
           is_donation?: boolean
           net_amount?: number
           notes?: string | null
+          payout_date?: string | null
+          payout_status?: string
           picked_up_at?: string | null
           pickup_date?: string
           pickup_end?: string
@@ -717,69 +735,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      prospects: {
-        Row: {
-          admin_notes: string | null
-          city: string
-          commerce_type: string
-          company_name: string
-          contacted_at: string | null
-          converted_at: string | null
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-          message: string | null
-          phone: string | null
-          plan_interest: string | null
-          postal_code: string | null
-          source: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          admin_notes?: string | null
-          city: string
-          commerce_type: string
-          company_name: string
-          contacted_at?: string | null
-          converted_at?: string | null
-          created_at?: string
-          email: string
-          first_name: string
-          id?: string
-          last_name: string
-          message?: string | null
-          phone?: string | null
-          plan_interest?: string | null
-          postal_code?: string | null
-          source?: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          admin_notes?: string | null
-          city?: string
-          commerce_type?: string
-          company_name?: string
-          contacted_at?: string | null
-          converted_at?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          message?: string | null
-          phone?: string | null
-          plan_interest?: string | null
-          postal_code?: string | null
-          source?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       payouts: {
         Row: {
@@ -846,6 +801,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_archived: boolean
+          notif_push: boolean
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           stripe_customer_id: string | null
@@ -859,6 +815,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_archived?: boolean
+          notif_push?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           stripe_customer_id?: string | null
@@ -872,9 +829,73 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_archived?: boolean
+          notif_push?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prospects: {
+        Row: {
+          admin_notes: string | null
+          city: string
+          commerce_type: string
+          company_name: string
+          contacted_at: string | null
+          converted_at: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          message: string | null
+          phone: string | null
+          plan_interest: string | null
+          postal_code: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          city: string
+          commerce_type: string
+          company_name: string
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          message?: string | null
+          phone?: string | null
+          plan_interest?: string | null
+          postal_code?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          city?: string
+          commerce_type?: string
+          company_name?: string
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          message?: string | null
+          phone?: string | null
+          plan_interest?: string | null
+          postal_code?: string | null
+          source?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -1100,19 +1121,19 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "support_ai_learnings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "support_ai_learnings_source_ticket_id_fkey"
             columns: ["source_ticket_id"]
             isOneToOne: false
             referencedRelation: "support_tickets"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "support_ai_learnings_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
         ]
       }
       support_tickets: {

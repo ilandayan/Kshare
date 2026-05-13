@@ -45,6 +45,8 @@ export async function inscriptionAssociation(
   // ── Extract text fields ──
   const email = (fd.get("email") as string)?.trim();
   const nomAsso = (fd.get("nomAsso") as string)?.trim();
+  const prenom = (fd.get("prenom") as string)?.trim();
+  const nomResponsable = (fd.get("nomResponsable") as string)?.trim();
   const rna = (fd.get("rna") as string)?.trim();
   const adresse = (fd.get("adresse") as string)?.trim();
   const ville = (fd.get("ville") as string)?.trim();
@@ -52,7 +54,7 @@ export async function inscriptionAssociation(
   const telephone = (fd.get("telephone") as string)?.trim();
 
   // ── Basic validation ──
-  if (!email || !nomAsso || !rna || !adresse || !ville || !codePostal || !telephone) {
+  if (!email || !nomAsso || !prenom || !nomResponsable || !rna || !adresse || !ville || !codePostal || !telephone) {
     return { success: false, error: "Tous les champs sont obligatoires." };
   }
 
@@ -89,6 +91,8 @@ export async function inscriptionAssociation(
     .insert({
       name: nomAsso,
       email,
+      representative_first_name: prenom,
+      representative_last_name: nomResponsable,
       contact: telephone,
       address: adresse,
       city: ville,
@@ -140,6 +144,8 @@ export async function inscriptionAssociation(
     const notif = buildSignupNotification({
       type: "association",
       name: nomAsso,
+      representativeFirstName: prenom,
+      representativeLastName: nomResponsable,
       email,
       phone: telephone,
       city: ville,

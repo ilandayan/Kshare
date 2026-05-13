@@ -17,6 +17,8 @@ import { inscriptionAssociation } from "./_actions";
 
 const schema = z.object({
   nomAsso: z.string().min(2, "Le nom de l'association est requis"),
+  prenom: z.string().min(2, "Le prénom est requis"),
+  nomResponsable: z.string().min(2, "Le nom est requis"),
   email: z.string().email("Email invalide"),
   rna: z
     .string()
@@ -61,6 +63,8 @@ export default function InscriptionAssociationPage() {
       const fd = new FormData();
       fd.append("email", data.email);
       fd.append("nomAsso", data.nomAsso);
+      fd.append("prenom", data.prenom);
+      fd.append("nomResponsable", data.nomResponsable);
       fd.append("rna", data.rna);
       fd.append("adresse", data.adresse);
       fd.append("ville", data.ville);
@@ -129,6 +133,28 @@ export default function InscriptionAssociationPage() {
                     {...register("nomAsso")}
                   />
                   {errors.nomAsso && <p className="text-xs text-destructive">{errors.nomAsso.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="prenom">Prénom du responsable <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="prenom"
+                    placeholder="David"
+                    autoComplete="given-name"
+                    {...register("prenom")}
+                  />
+                  {errors.prenom && <p className="text-xs text-destructive">{errors.prenom.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nomResponsable">Nom du responsable <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="nomResponsable"
+                    placeholder="Lévy"
+                    autoComplete="family-name"
+                    {...register("nomResponsable")}
+                  />
+                  {errors.nomResponsable && <p className="text-xs text-destructive">{errors.nomResponsable.message}</p>}
                 </div>
 
                 <div className="space-y-2">

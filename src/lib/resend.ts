@@ -924,6 +924,8 @@ export function emailBienvenue(params: {
 export function buildSignupNotification(params: {
   type: "commerce" | "association";
   name: string;
+  representativeFirstName?: string;
+  representativeLastName?: string;
   email: string;
   phone?: string;
   city?: string;
@@ -935,6 +937,9 @@ export function buildSignupNotification(params: {
   signupId: string;
 }): { subject: string; html: string } {
   const safeName = escapeHtml(params.name);
+  const safeRespFirst = params.representativeFirstName ? escapeHtml(params.representativeFirstName) : null;
+  const safeRespLast = params.representativeLastName ? escapeHtml(params.representativeLastName) : null;
+  const safeResp = safeRespFirst && safeRespLast ? `${safeRespFirst} ${safeRespLast}` : null;
   const safeEmail = escapeHtml(params.email);
   const safePhone = params.phone ? escapeHtml(params.phone) : null;
   const safeCity = params.city ? escapeHtml(params.city) : null;
@@ -971,7 +976,8 @@ export function buildSignupNotification(params: {
       </p>
 
       <table style="width:100%;font-size:14px;border-collapse:collapse;">
-        ${row("Nom", safeName)}
+        ${row(isCommerce ? "Nom du commerce" : "Nom de l'association", safeName)}
+        ${row("Responsable", safeResp)}
         ${row("Email", safeEmail)}
         ${row("Téléphone", safePhone)}
         ${row("Ville", safeCity)}

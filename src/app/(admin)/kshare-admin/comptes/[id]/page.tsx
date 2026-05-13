@@ -69,7 +69,7 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   if (accountType === "commerce") {
     const { data: commerce } = await supabase
       .from("commerces")
-      .select("id, name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url, contract_signed_at, contract_pdf_url")
+      .select("id, name, representative_first_name, representative_last_name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url, contract_signed_at, contract_pdf_url")
       .eq("id", id)
       .single();
 
@@ -107,6 +107,14 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <InfoRow
+                  label="Responsable"
+                  value={
+                    commerce.representative_first_name || commerce.representative_last_name
+                      ? `${commerce.representative_first_name ?? ""} ${commerce.representative_last_name ?? ""}`.trim()
+                      : "—"
+                  }
+                />
                 <InfoRow label="Type de commerce" value={commerce.commerce_type} />
                 <InfoRow label="Email" value={commerce.email} />
                 <InfoRow label="Téléphone" value={commerce.phone ?? "—"} />
@@ -203,7 +211,7 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   // Association
   const { data: asso } = await supabase
     .from("associations")
-    .select("id, name, contact, address, city, zone_region, status, created_at, validated_at, availability, rna_document_url, id_document_url, charter_signed_at, charter_pdf_url")
+    .select("id, name, representative_first_name, representative_last_name, contact, email, address, city, zone_region, status, created_at, validated_at, availability, rna_document_url, id_document_url, charter_signed_at, charter_pdf_url")
     .eq("id", id)
     .single();
 
@@ -241,6 +249,15 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <InfoRow
+                label="Responsable"
+                value={
+                  asso.representative_first_name || asso.representative_last_name
+                    ? `${asso.representative_first_name ?? ""} ${asso.representative_last_name ?? ""}`.trim()
+                    : "—"
+                }
+              />
+              <InfoRow label="Email" value={asso.email ?? "—"} />
               <InfoRow label="Contact" value={asso.contact} />
               <InfoRow label="Adresse" value={asso.address} />
               <InfoRow label="Ville" value={asso.city} />

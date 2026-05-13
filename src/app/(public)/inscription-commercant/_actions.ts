@@ -49,6 +49,8 @@ export async function inscriptionCommercant(
   // ── Extract text fields ──
   const email = (fd.get("email") as string)?.trim();
   const nom = (fd.get("nom") as string)?.trim();
+  const prenom = (fd.get("prenom") as string)?.trim();
+  const nomResponsable = (fd.get("nomResponsable") as string)?.trim();
   const commerceType = (fd.get("commerceType") as string)?.trim();
   const adresse = (fd.get("adresse") as string)?.trim();
   const ville = (fd.get("ville") as string)?.trim();
@@ -58,7 +60,7 @@ export async function inscriptionCommercant(
   const siret = (fd.get("siret") as string)?.trim();
 
   // ── Basic validation ──
-  if (!email || !nom || !commerceType || !adresse || !ville || !codePostal || !hashgakha || !telephone || !siret) {
+  if (!email || !nom || !prenom || !nomResponsable || !commerceType || !adresse || !ville || !codePostal || !hashgakha || !telephone || !siret) {
     return { success: false, error: "Tous les champs sont obligatoires." };
   }
 
@@ -92,6 +94,8 @@ export async function inscriptionCommercant(
     .insert({
       name: nom,
       email,
+      representative_first_name: prenom,
+      representative_last_name: nomResponsable,
       commerce_type: commerceType,
       address: adresse,
       city: ville,
@@ -146,6 +150,8 @@ export async function inscriptionCommercant(
     const notif = buildSignupNotification({
       type: "commerce",
       name: nom,
+      representativeFirstName: prenom,
+      representativeLastName: nomResponsable,
       email,
       phone: telephone,
       city: ville,
