@@ -144,7 +144,8 @@ export default function LaunchControls({ launched, launchDate, commercesCount, c
             Date de lancement officielle
           </CardTitle>
           <CardDescription>
-            Cette date est utilisée dans les emails. Elle ne déclenche pas l'ouverture automatiquement.
+            Personnalise les emails ET déclenche automatiquement l'ouverture de la publication
+            à <strong>7h00 heure de Paris</strong> ce jour-là.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -175,7 +176,8 @@ export default function LaunchControls({ launched, launchDate, commercesCount, c
           </CardTitle>
           <CardDescription>
             Tant que la plateforme n'est pas ouverte, seuls les comptes de démo (@kshare.fr) peuvent publier.
-            Une fois ouverte, tous les commerces validés peuvent publier des paniers.
+            Le déclenchement se fait <strong>automatiquement à 7h heure de Paris</strong> à la date enregistrée.
+            Le bouton ci-dessous permet de forcer un lancement manuel anticipé.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -185,11 +187,11 @@ export default function LaunchControls({ launched, launchDate, commercesCount, c
             </p>
           ) : (
             <ConfirmDialog
-              triggerLabel={launching ? "Lancement..." : "Lancer la plateforme maintenant"}
+              triggerLabel={launching ? "Lancement..." : "Forcer le lancement maintenant"}
               triggerIcon={launching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
               triggerClass="bg-emerald-600 hover:bg-emerald-700"
-              title="Confirmer le lancement ?"
-              description={`Cette action ouvre la publication de paniers à tous les ${commercesCount} commerces validés. Pense à envoyer l'email J0 séparément.`}
+              title="Confirmer le lancement immédiat ?"
+              description={`Cette action ouvre la publication de paniers à tous les ${commercesCount} commerces validés MAINTENANT, sans attendre la date prévue. Pense à envoyer l'email J0 séparément.`}
               actionLabel="Lancer 🚀"
               onConfirm={onLaunch}
               disabled={launching}
