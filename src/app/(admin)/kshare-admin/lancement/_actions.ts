@@ -99,10 +99,17 @@ export async function envoyerEmailsLancement(
     }
   }
 
+  // Marque la phase comme envoyée pour bloquer le cron auto sur cette phase
+  const phaseField = phase === "j7" ? "emails_sent_j7" : phase === "j1" ? "emails_sent_j1" : "emails_sent_j0";
+  await admin.from("platform_config").update({
+    [phaseField]: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }).eq("id", true);
+
   logAuditEvent({
     action: "admin.launch_emails_sent",
     actor_id: ctx.user.id,
-    metadata: { audience, phase, sent },
+    metadata: { audience, phase, sent, source: "manual" },
   });
 
   revalidatePath("/kshare-admin/lancement");
