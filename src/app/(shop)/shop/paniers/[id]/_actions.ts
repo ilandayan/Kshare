@@ -35,6 +35,29 @@ async function getCommerceId(supabase: Awaited<ReturnType<typeof createClient>>,
   return data?.id ?? null;
 }
 
+/**
+ * Un panier PAYANT ne peut être publié que si le commerce a un compte Stripe
+ * Connect configuré — sinon le client tomberait sur « commerce non configuré »
+ * au moment du paiement (même contrôle que l'Edge Function create-payment-intent).
+ * Les paniers dons ne nécessitent pas de compte Stripe.
+ */
+async function assertCanPublishPaid(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  commerceId: string,
+  isDonation: boolean
+): Promise<string | null> {
+  if (isDonation) return null;
+  const { data: commerce } = await supabase
+    .from("commerces")
+    .select("stripe_account_id")
+    .eq("id", commerceId)
+    .single();
+  if (!commerce?.stripe_account_id) {
+    return "Configurez d'abord vos paiements (Stripe Connect) dans « Paiements » avant de publier un panier payant.";
+  }
+  return null;
+}
+
 export async function updateBasket(
   basketId: string,
   data: UpdateBasketData
@@ -52,6 +75,12 @@ export async function updateBasket(
   // Validate minimum 20% discount for non-donation baskets
   if (!data.isDonation && data.originalPrice > 0 && data.soldPrice > data.originalPrice * 0.8) {
     return { success: false, error: "La réduction doit être d'au moins 20 %." };
+  }
+
+  // Gate Stripe Connect si on publie un panier payant
+  if (data.status === "published") {
+    const gateError = await assertCanPublishPaid(supabase, commerceId, data.isDonation);
+    if (gateError) return { success: false, error: gateError };
   }
 
   const { error } = await supabase
@@ -94,6 +123,22 @@ export async function toggleBasketStatus(
 
   const newStatus: BasketStatus =
     currentStatus === "disabled" ? "published" : "disabled";
+
+  // Gate Stripe Connect avant de (re)publier un panier payant
+  if (newStatus === "published") {
+    const { data: basketToPublish } = await supabase
+      .from("baskets")
+      .select("is_donation")
+      .eq("id", basketId)
+      .eq("commerce_id", commerceId)
+      .single();
+    const gateError = await assertCanPublishPaid(
+      supabase,
+      commerceId,
+      basketToPublish?.is_donation ?? false
+    );
+    if (gateError) return { success: false, error: gateError };
+  }
 
   const { error } = await supabase
     .from("baskets")
@@ -172,6 +217,9 @@ export async function publishBasket(
   if (commerce?.status !== "validated") {
     return { success: false, error: "Votre commerce doit être validé pour publier des paniers." };
   }
+
+  const gateError = await assertCanPublishPaid(supabase, commerceId, basket.is_donation ?? false);
+  if (gateError) return { success: false, error: gateError };
 
   const { error } = await supabase
     .from("baskets")

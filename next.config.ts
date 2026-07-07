@@ -26,6 +26,23 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-XSS-Protection", value: "1; mode=block" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Force HTTPS pendant 2 ans, sous-domaines inclus, éligible preload
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          // Restreint les APIs sensibles du navigateur (géoloc/caméra utilisées via HTTPS uniquement au besoin)
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=(self), payment=(self), interest-cohort=()",
+          },
+          // CSP volontairement minimale et sûre : bloque le clickjacking et force
+          // l'upgrade HTTPS sans restreindre script-src (à durcir après tests
+          // Stripe/Supabase/Sentry). Complète X-Frame-Options.
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'none'; upgrade-insecure-requests; base-uri 'self'; object-src 'none'",
+          },
         ],
       },
     ];

@@ -396,7 +396,8 @@ export function ScanClient() {
               <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
                 <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-700">
-                  Le client confirmera le retrait depuis son application.
+                  Remettez le panier, puis demandez au client de confirmer la réception
+                  sur son application, devant vous.
                 </p>
               </div>
             ) : (

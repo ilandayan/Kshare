@@ -1655,6 +1655,10 @@ export type Database = {
         Args: { p_basket_id: string; p_quantity: number }
         Returns: boolean
       }
+      reserve_donation: {
+        Args: { p_basket_id: string; p_quantity?: number }
+        Returns: string
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown

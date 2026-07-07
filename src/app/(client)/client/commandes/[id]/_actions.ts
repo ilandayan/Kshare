@@ -4,8 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit-log";
 
 /**
- * Server Action: client confirms they picked up their order.
- * Verifies ownership and order status before updating.
+ * Le CLIENT confirme lui-même la réception de sa commande, en magasin devant
+ * le commerçant (modèle Too Good To Go).
+ *
+ * Sécurité (RLS + trigger côté base) : un client ne peut faire QUE passer sa
+ * propre commande de paid/ready_for_pickup vers picked_up, et ne peut modifier
+ * aucun champ financier / QR / identité.
  */
 export async function confirmPickup(
   orderId: string
@@ -36,10 +40,10 @@ export async function confirmPickup(
     return { success: false, error: "Cette commande ne peut pas être confirmée" };
   }
 
-  // Update order status
+  // Update order status (RLS + trigger limitent le client à cette seule transition)
   const { error: updateError } = await supabase
     .from("orders")
-    .update({ status: "picked_up" })
+    .update({ status: "picked_up", picked_up_at: new Date().toISOString() })
     .eq("id", orderId);
 
   if (updateError) {

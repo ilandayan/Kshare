@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
@@ -75,6 +76,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       0,
     );
 
+    // Clé d'idempotence déterministe basée sur le lot exact de commandes.
+    // Si le cron rejoue (retry Vercel, double déclenchement) sur le même lot,
+    // Stripe renvoie le payout existant au lieu d'en créer un second.
+    const orderIds = orders.map((o) => o.id).sort();
+    const idempotencyKey =
+      `wp_${commerce.id}_` +
+      createHash("sha256").update(orderIds.join(",")).digest("hex").slice(0, 40);
+
     // Minimum payout: 1€
     if (totalNet < 1) {
       results.push({
@@ -109,18 +118,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         continue;
       }
 
-      // Create payout on the connected account
+      // Create payout on the connected account (idempotent)
       await stripe.payouts.create(
         {
           amount: Math.round(totalNet * 100),
           currency: "eur",
           description: `Kshare — Reversement hebdomadaire (${orders.length} commande${orders.length > 1 ? "s" : ""})`,
         },
-        { stripeAccount: commerce.stripe_account_id },
+        { stripeAccount: commerce.stripe_account_id, idempotencyKey },
       );
 
       // Mark orders as paid out
-      const orderIds = orders.map((o) => o.id);
       await supabase
         .from("orders")
         .update({
