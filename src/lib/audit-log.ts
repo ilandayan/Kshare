@@ -29,7 +29,6 @@ export type AuditAction =
   | "payment.payout_created"
   | "payment.payout_failed"
   | "order.confirmed_pickup"
-  | "order.picked_up_by_commerce"
   | "account.email_changed"
   | "account.password_changed"
   | "rate_limit.exceeded";

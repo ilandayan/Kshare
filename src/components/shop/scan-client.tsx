@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, Component, type ReactNode } from "react";
 import { ScanLine, Search, XCircle, Package, Clock, Hash, Loader2, Info, Camera, Keyboard, CheckCircle2 } from "lucide-react";
-import { rechercherParCode, confirmerRetrait, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
+import { rechercherParCode, type ScanResult } from "@/app/(shop)/shop/scan/_actions";
 
 /* ── Error Boundary ── */
 class QrErrorBoundary extends Component<
@@ -172,8 +172,6 @@ export function ScanClient() {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [confirmError, setConfirmError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const searchingRef = useRef(false);
 
@@ -229,33 +227,11 @@ export function ScanClient() {
     setCode("");
     setOrder(null);
     setError("");
-    setConfirmError("");
-    setConfirming(false);
     setIsSearching(false);
     searchingRef.current = false;
     if (mode === "code") {
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }
-
-  function handleConfirmPickup() {
-    if (!order || confirming) return;
-    setConfirming(true);
-    setConfirmError("");
-    confirmerRetrait(order.id)
-      .then((res) => {
-        setConfirming(false);
-        if (res.success) {
-          setOrder({ ...order, status: "picked_up" });
-        } else {
-          setConfirmError(res.error ?? "Erreur lors de la confirmation.");
-        }
-      })
-      .catch((err) => {
-        setConfirming(false);
-        console.error("[scan-client] confirmerRetrait error:", err);
-        setConfirmError("Erreur de connexion. Veuillez réessayer.");
-      });
   }
 
   const statusInfo = order ? STATUS_LABELS[order.status] ?? { label: order.status, color: "text-gray-500", bg: "bg-gray-50 border-gray-200" } : null;
@@ -414,35 +390,16 @@ export function ScanClient() {
             {order.status === "picked_up" ? (
               <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl p-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-green-700">Ce panier a bien été remis au client.</p>
+                <p className="text-xs text-green-700">Ce panier a déjà été retiré.</p>
               </div>
             ) : ["paid", "ready_for_pickup"].includes(order.status) ? (
-              <>
-                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                  <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-700">
-                    Remettez le panier au client, puis confirmez le retrait ci-dessous.
-                  </p>
-                </div>
-                {confirmError && (
-                  <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3">
-                    <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-700">{confirmError}</p>
-                  </div>
-                )}
-                <button
-                  onClick={handleConfirmPickup}
-                  disabled={confirming}
-                  className="w-full py-3 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {confirming ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-5 h-5" />
-                  )}
-                  Confirmer le retrait
-                </button>
-              </>
+              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700">
+                  Remettez le panier, puis demandez au client de confirmer la réception
+                  sur son application, devant vous.
+                </p>
+              </div>
             ) : (
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
