@@ -4,6 +4,25 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 
 /**
+ * Convertit une date + heure murale « Europe/Paris » en instant UTC exact.
+ * Gère automatiquement l'heure d'été/hiver (offset +1 ou +2).
+ */
+function parisWallTimeToUtc(dateStr: string, timeStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const [hh, mm] = timeStr.split(":").map(Number);
+  const utcGuess = Date.UTC(y, m - 1, d, hh, mm, 0);
+  // Offset Europe/Paris à cet instant (en ms)
+  const parisMs = new Date(
+    new Date(utcGuess).toLocaleString("en-US", { timeZone: "Europe/Paris" }),
+  ).getTime();
+  const utcMs = new Date(
+    new Date(utcGuess).toLocaleString("en-US", { timeZone: "UTC" }),
+  ).getTime();
+  const offset = parisMs - utcMs;
+  return new Date(utcGuess - offset);
+}
+
+/**
  * Cron job: mark orders as no_show when pickup_end has passed.
  * Runs every 30 minutes via Vercel cron.
  *
@@ -23,7 +42,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const supabase = createAdminClient();
-  const now = new Date().toISOString();
+  const nowMs = Date.now();
 
   // Find orders whose pickup window has expired
   // pickup_date + pickup_end < now, and status is still paid or ready_for_pickup
@@ -48,19 +67,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     if (!pickupDate || !pickupEnd) continue;
 
-    let endDateTime: Date;
-
     if (pickupDate === "today" || pickupDate === "tomorrow") {
       // Legacy format — skip, these should have been resolved at creation
       continue;
     }
 
-    // Standard ISO date format
-    const [hours, minutes] = pickupEnd.split(":").map(Number);
-    endDateTime = new Date(pickupDate);
-    endDateTime.setHours(hours, minutes, 0, 0);
+    // pickup_end est une heure murale « Europe/Paris » → conversion en instant UTC
+    const endDateTime = parisWallTimeToUtc(pickupDate, pickupEnd);
 
-    if (endDateTime.toISOString() < now) {
+    if (endDateTime.getTime() < nowMs) {
       const { error: updateErr } = await supabase
         .from("orders")
         .update({ status: "no_show" })

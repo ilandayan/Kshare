@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, emailBienvenue } from "@/lib/resend";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,36 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting anti-flooding : par IP puis par email ciblé.
+    const ip = getClientIp(req);
+    const ipLimit = checkRateLimit(`send-confirmation:ip:${ip}`, {
+      limit: 5,
+      windowSeconds: 600, // 5 emails / 10 min / IP
+    });
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: "Trop de demandes. Veuillez réessayer plus tard." },
+        { status: 429 }
+      );
+    }
+
     const { email, name } = await req.json();
 
     if (!email || typeof email !== "string") {
       return NextResponse.json(
         { error: "Email requis" },
         { status: 400 }
+      );
+    }
+
+    const emailLimit = checkRateLimit(`send-confirmation:email:${email.toLowerCase()}`, {
+      limit: 3,
+      windowSeconds: 3600, // 3 emails / h / adresse
+    });
+    if (!emailLimit.allowed) {
+      return NextResponse.json(
+        { error: "Trop de demandes pour cette adresse. Veuillez réessayer plus tard." },
+        { status: 429 }
       );
     }
 

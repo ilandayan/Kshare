@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEvent } from "@/lib/audit-log";
 
 export type ScanResult =
   | {
@@ -104,6 +105,74 @@ export async function rechercherParCode(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erreur inconnue";
     console.error("[scan] Unexpected error in rechercherParCode:", message);
+    return { success: false, error: "Erreur inattendue. Veuillez réessayer." };
+  }
+}
+
+/**
+ * Le COMMERCE confirme le retrait après avoir remis le panier au client.
+ * C'est bien le commerçant — et non le client — qui déclenche `picked_up`,
+ * ce qui empêche un client de se déclarer « retiré » sans passer en magasin.
+ */
+export async function confirmerRetrait(
+  orderId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) return { success: false, error: "Non authentifié." };
+
+    const { data: commerce } = await supabase
+      .from("commerces")
+      .select("id")
+      .eq("profile_id", user.id)
+      .single();
+
+    if (!commerce) return { success: false, error: "Commerce introuvable." };
+
+    // Vérifier que la commande appartient bien à ce commerce et est retirable
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("id, status, commerce_id")
+      .eq("id", orderId)
+      .eq("commerce_id", commerce.id)
+      .single();
+
+    if (orderError || !order) return { success: false, error: "Commande introuvable." };
+
+    if (order.status === "picked_up") {
+      return { success: false, error: "Ce panier a déjà été retiré." };
+    }
+    if (order.status !== "paid" && order.status !== "ready_for_pickup") {
+      return { success: false, error: "Cette commande ne peut pas être retirée dans son état actuel." };
+    }
+
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({ status: "picked_up", picked_up_at: new Date().toISOString() })
+      .eq("id", orderId)
+      .eq("commerce_id", commerce.id);
+
+    if (updateError) {
+      console.error("[scan] confirmerRetrait update error:", updateError.message);
+      return { success: false, error: "Erreur lors de la confirmation du retrait." };
+    }
+
+    logAuditEvent({
+      action: "order.picked_up_by_commerce",
+      actor_id: user.id,
+      target_id: orderId,
+      metadata: { orderId, commerceId: commerce.id },
+    });
+
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Erreur inconnue";
+    console.error("[scan] Unexpected error in confirmerRetrait:", message);
     return { success: false, error: "Erreur inattendue. Veuillez réessayer." };
   }
 }
