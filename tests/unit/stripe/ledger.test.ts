@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock Supabase admin client
-const mockInsert = vi.fn().mockResolvedValue({ error: null });
+// Mock Supabase admin client.
+// createLedgerEntry écrit via la RPC atomique `create_ledger_entry_atomic`
+// (le balance_after est calculé côté SQL). getCommerceBalance lit via
+// .from().select().eq().
+const mockRpc = vi.fn().mockResolvedValue({ error: null });
 const mockSelect = vi.fn();
 const mockFrom = vi.fn().mockReturnValue({
-  insert: mockInsert,
   select: vi.fn().mockReturnValue({
     eq: mockSelect,
   }),
@@ -12,6 +14,7 @@ const mockFrom = vi.fn().mockReturnValue({
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
+    rpc: mockRpc,
     from: mockFrom,
   }),
 }));
@@ -26,6 +29,7 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockRpc.mockResolvedValue({ error: null });
   // Default: empty ledger (balance = 0)
   mockSelect.mockResolvedValue({ data: [], error: null });
 });
@@ -43,24 +47,23 @@ describe("createLedgerEntry", () => {
       idempotencyKey: "test-key-1",
     });
 
-    expect(mockFrom).toHaveBeenCalledWith("ledger_entries");
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockRpc).toHaveBeenCalledWith(
+      "create_ledger_entry_atomic",
       expect.objectContaining({
-        commerce_id: "com-1",
-        order_id: "ord-1",
-        type: "payment",
-        debit: 0,
-        credit: 50,
-        balance_after: 50, // 0 + 50 - 0
-        description: "Test payment",
-        stripe_object_id: "pi_123",
-        idempotency_key: "test-key-1",
+        p_commerce_id: "com-1",
+        p_order_id: "ord-1",
+        p_type: "payment",
+        p_debit: 0,
+        p_credit: 50,
+        p_description: "Test payment",
+        p_stripe_object_id: "pi_123",
+        p_idempotency_key: "test-key-1",
       })
     );
   });
 
   it("silently ignores duplicate idempotency key (23505)", async () => {
-    mockInsert.mockResolvedValueOnce({ error: { code: "23505", message: "duplicate" } });
+    mockRpc.mockResolvedValueOnce({ error: { code: "23505", message: "duplicate" } });
 
     // Should not throw
     await expect(
@@ -76,7 +79,7 @@ describe("createLedgerEntry", () => {
   });
 
   it("throws on non-duplicate DB errors", async () => {
-    mockInsert.mockResolvedValueOnce({ error: { code: "42P01", message: "table not found" } });
+    mockRpc.mockResolvedValueOnce({ error: { code: "42P01", message: "table not found" } });
 
     await expect(
       createLedgerEntry({
@@ -103,39 +106,42 @@ describe("createPaymentLedgerEntries", () => {
       stripePaymentIntentId: "pi_abc",
     });
 
-    // Should have called insert 3 times (payment, commission, service_fee)
-    expect(mockInsert).toHaveBeenCalledTimes(3);
+    // Should have called the RPC 3 times (payment, commission, service_fee)
+    expect(mockRpc).toHaveBeenCalledTimes(3);
 
     // First call: payment credit
-    expect(mockInsert).toHaveBeenNthCalledWith(
+    expect(mockRpc).toHaveBeenNthCalledWith(
       1,
+      "create_ledger_entry_atomic",
       expect.objectContaining({
-        type: "payment",
-        credit: 8.2,
-        debit: 0,
-        idempotency_key: "payment:pi_abc:payment",
+        p_type: "payment",
+        p_credit: 8.2,
+        p_debit: 0,
+        p_idempotency_key: "payment:pi_abc:payment",
       })
     );
 
     // Second call: commission debit
-    expect(mockInsert).toHaveBeenNthCalledWith(
+    expect(mockRpc).toHaveBeenNthCalledWith(
       2,
+      "create_ledger_entry_atomic",
       expect.objectContaining({
-        type: "commission",
-        debit: 1.8,
-        credit: 0,
-        idempotency_key: "payment:pi_abc:commission",
+        p_type: "commission",
+        p_debit: 1.8,
+        p_credit: 0,
+        p_idempotency_key: "payment:pi_abc:commission",
       })
     );
 
     // Third call: service_fee debit
-    expect(mockInsert).toHaveBeenNthCalledWith(
+    expect(mockRpc).toHaveBeenNthCalledWith(
       3,
+      "create_ledger_entry_atomic",
       expect.objectContaining({
-        type: "service_fee",
-        debit: 0.94,
-        credit: 0,
-        idempotency_key: "payment:pi_abc:service_fee",
+        p_type: "service_fee",
+        p_debit: 0.94,
+        p_credit: 0,
+        p_idempotency_key: "payment:pi_abc:service_fee",
       })
     );
   });
@@ -152,7 +158,7 @@ describe("createPaymentLedgerEntries", () => {
     });
 
     // Only 2 entries: payment + commission (service fee skipped)
-    expect(mockInsert).toHaveBeenCalledTimes(2);
+    expect(mockRpc).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -166,12 +172,13 @@ describe("createRefundLedgerEntries", () => {
       stripeRefundId: "re_xyz",
     });
 
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockRpc).toHaveBeenCalledWith(
+      "create_ledger_entry_atomic",
       expect.objectContaining({
-        type: "refund",
-        debit: 8.2, // 10 - 1.8 = net refund
-        credit: 0,
-        idempotency_key: "refund:re_xyz:refund",
+        p_type: "refund",
+        p_debit: 8.2, // 10 - 1.8 = net refund
+        p_credit: 0,
+        p_idempotency_key: "refund:re_xyz:refund",
       })
     );
   });

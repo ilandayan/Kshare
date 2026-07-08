@@ -53,7 +53,7 @@ export default async function ReportingAssoPage({
 
   const periodStart = getPeriodStart(period);
 
-  let query = supabase
+  const query = supabase
     .from("orders")
     .select("status, quantity, created_at")
     .eq("association_id", asso.id)

@@ -90,6 +90,7 @@ describe("validateBasketPrice", () => {
   });
 
   it("accepts minimum price exactly", () => {
-    expect(validateBasketPrice(5, 20, false)).toBeNull();
+    // 5€ sold, 10€ original = 50% discount (dans 40–70%) et = prix plancher 5€
+    expect(validateBasketPrice(5, 10, false)).toBeNull();
   });
 });
