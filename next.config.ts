@@ -36,12 +36,25 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(), geolocation=(self), payment=(self), interest-cohort=()",
           },
-          // CSP volontairement minimale et sûre : bloque le clickjacking et force
-          // l'upgrade HTTPS sans restreindre script-src (à durcir après tests
-          // Stripe/Supabase/Sentry). Complète X-Frame-Options.
+          // CSP. Volontairement SANS default-src ni connect-src : les appels
+          // réseau (Supabase REST + Realtime wss, Sentry ingest) restent libres,
+          // ce qui évite tout risque de casse. On restreint en revanche les
+          // sources de scripts/styles/images. Aucun script externe n'est chargé
+          // (pas de Stripe.js côté web, next/font auto-hébergé), donc 'self' +
+          // inline suffit. Durcissement possible plus tard via nonces.
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'none'; upgrade-insecure-requests; base-uri 'self'; object-src 'none'",
+            value: [
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data:",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests",
+            ].join("; "),
           },
         ],
       },

@@ -64,9 +64,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         email: commerce.email,
         settings: {
           payouts: {
+            // Payouts MANUELS : c'est le cron weekly-payout (chaque mardi) qui
+            // déclenche les virements, source unique. Évite le double-virement
+            // qu'entraînerait un payout automatique Stripe en parallèle.
             schedule: {
-              interval: "weekly",
-              weekly_anchor: "tuesday",
+              interval: "manual",
             },
           },
         },
