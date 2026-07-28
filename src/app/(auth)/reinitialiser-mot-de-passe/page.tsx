@@ -19,10 +19,13 @@ export default function ReinitialiserMotDePassePage() {
   const [sessionReady, setSessionReady] = useState<boolean | null>(null);
 
   // Établit la session de récupération à partir du lien reçu par email.
-  // Supabase peut transmettre le jeton de deux façons selon la configuration :
-  //   - flux PKCE      : ?code=xxx        (query string)
-  //   - flux implicite : #access_token=xx (fragment, invisible côté serveur)
-  // On gère les deux ici, côté navigateur, pour ne dépendre d'aucun cookie.
+  // Supabase peut transmettre le jeton de TROIS façons selon la configuration
+  // du projet et du template d'email :
+  //   - token_hash     : ?token_hash=xxx&type=recovery  -> verifyOtp
+  //   - PKCE           : ?code=xxx                      -> exchangeCodeForSession
+  //   - implicite      : #access_token=xxx (fragment)   -> setSession
+  // On gère les trois ici, côté navigateur, pour ne dépendre d'aucun cookie
+  // ni du serveur (le fragment n'est jamais transmis au serveur).
   useEffect(() => {
     const supabase = createClient();
     let cancelled = false;
@@ -37,6 +40,25 @@ export default function ReinitialiserMotDePassePage() {
       const { data: existing } = await supabase.auth.getSession();
       if (existing.session) {
         if (!cancelled) setSessionReady(true);
+        return;
+      }
+
+      const query = new URLSearchParams(window.location.search);
+
+      // Flux token_hash : ?token_hash=xxx&type=recovery
+      const tokenHash = query.get("token_hash");
+      if (tokenHash) {
+        const { error: otpError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: (query.get("type") ?? "recovery") as "recovery",
+        });
+        if (cancelled) return;
+        if (!otpError) {
+          setSessionReady(true);
+          return;
+        }
+        const { data: afterOtp } = await supabase.auth.getSession();
+        if (!cancelled) setSessionReady(!!afterOtp.session);
         return;
       }
 
@@ -55,7 +77,7 @@ export default function ReinitialiserMotDePassePage() {
       }
 
       // Flux PKCE : code en query string
-      const code = new URLSearchParams(window.location.search).get("code");
+      const code = query.get("code");
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (cancelled) return;
