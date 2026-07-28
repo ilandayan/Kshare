@@ -325,24 +325,43 @@ Deno.serve(async (req: Request) => {
     if (orderError || !order) {
       // Rollback: cancel the payment intent
       await stripe.paymentIntents.cancel(paymentIntent.id).catch(() => {});
+
+      // 23514 = violation de la contrainte baskets_no_oversubscription :
+      // quelqu'un a réservé le dernier panier entre notre contrôle de stock
+      // et l'insertion. Message métier plutôt qu'une erreur technique.
+      if (orderError?.code === "23514") {
+        return new Response(
+          JSON.stringify({ error: "Ce panier vient d'être réservé par quelqu'un d'autre." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
       throw new Error("Failed to create order: " + orderError?.message);
     }
 
-    // Reserve basket quantity atomically (prevents race conditions)
-    const { data: reserved, error: reserveError } = await adminClient
-      .rpc("reserve_basket_quantity", {
-        p_basket_id: basket_id,
-        p_quantity: quantity,
-      });
+    // ── Réservation du stock ──
+    // Le trigger `on_order_change` incrémente déjà quantity_reserved à l'INSERT
+    // d'une commande en statut 'created' ou 'paid'. Il ne faut donc PAS appeler
+    // reserve_basket_quantity dans ce cas (sinon le stock est décompté 2 fois).
+    //
+    // En revanche, un don client est créé en statut 'pending_association', que
+    // le trigger ignore : la réservation doit alors être faite explicitement.
+    if (isClientDonation) {
+      const { data: reserved, error: reserveError } = await adminClient
+        .rpc("reserve_basket_quantity", {
+          p_basket_id: basket_id,
+          p_quantity: quantity,
+        });
 
-    if (reserveError || reserved === false) {
-      // Rollback: cancel the payment intent and order
-      await stripe.paymentIntents.cancel(paymentIntent.id).catch(() => {});
-      await adminClient.from("orders").delete().eq("id", order.id);
-      return new Response(
-        JSON.stringify({ error: "Ce panier vient d'être réservé par quelqu'un d'autre." }),
-        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      if (reserveError || reserved === false) {
+        // Rollback: cancel the payment intent and order
+        await stripe.paymentIntents.cancel(paymentIntent.id).catch(() => {});
+        await adminClient.from("orders").delete().eq("id", order.id);
+        return new Response(
+          JSON.stringify({ error: "Ce panier vient d'être réservé par quelqu'un d'autre." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     return new Response(

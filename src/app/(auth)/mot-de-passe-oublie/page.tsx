@@ -20,16 +20,19 @@ export default function MotDePasseOubliePage() {
 
     const supabase = createClient();
 
+    // Le lien doit passer par /api/auth/callback : c'est lui qui échange le
+    // code contre une session (flux PKCE) avant d'afficher le formulaire.
+    // Sans ça, updateUser() est appelé sans session → "Auth session missing".
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
       {
-        redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+        redirectTo: `${window.location.origin}/api/auth/callback?next=/reinitialiser-mot-de-passe`,
       }
     );
 
     if (resetError) {
       setError(
-        "Une erreur est survenue. Veuillez verifier votre adresse email et reessayer."
+        "Une erreur est survenue. Veuillez vérifier votre adresse email et réessayer."
       );
       setLoading(false);
       return;

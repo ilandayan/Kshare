@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,24 @@ export default function ReinitialiserMotDePassePage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState<boolean | null>(null);
+
+  // Le callback (/api/auth/callback) a normalement déjà échangé le code du
+  // lien email contre une session de récupération. On le vérifie ici pour
+  // afficher un message clair plutôt qu'une erreur au moment de valider.
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setSessionReady(!!data.session);
+    });
+  }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caracteres.");
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
 
@@ -41,8 +52,8 @@ export default function ReinitialiserMotDePassePage() {
     if (updateError) {
       setError(
         updateError.message.includes("same_password")
-          ? "Le nouveau mot de passe doit etre different de l'ancien."
-          : "Erreur lors de la reinitialisation. Le lien a peut-etre expire. Veuillez reessayer."
+          ? "Le nouveau mot de passe doit être différent de l'ancien."
+          : "Erreur lors de la réinitialisation. Le lien a peut-être expiré. Veuillez redemander un lien."
       );
       setLoading(false);
       return;
@@ -64,7 +75,7 @@ export default function ReinitialiserMotDePassePage() {
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#3744C8] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Retour a la connexion
+          Retour à la connexion
         </Link>
       </div>
 
@@ -84,29 +95,43 @@ export default function ReinitialiserMotDePassePage() {
                 Nouveau mot de passe
               </h1>
               <p className="text-sm text-gray-400 text-center leading-relaxed">
-                Choisissez un nouveau mot de passe securise pour votre compte
+                Choisissez un nouveau mot de passe sécurisé pour votre compte
               </p>
             </div>
 
-            {done ? (
+            {sessionReady === false ? (
+              /* Lien invalide / expiré : pas de session de récupération */
+              <div className="flex flex-col items-center text-center py-2">
+                <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                  Ce lien de réinitialisation est invalide ou a expiré.
+                  Demandez-en un nouveau pour définir votre mot de passe.
+                </p>
+                <Link
+                  href="/mot-de-passe-oublie"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#3744C8] hover:underline"
+                >
+                  Recevoir un nouveau lien
+                </Link>
+              </div>
+            ) : done ? (
               /* Success state */
               <div className="flex flex-col items-center text-center py-2">
                 <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
                   <CheckCircle className="h-7 w-7 text-emerald-500" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  Mot de passe modifie !
+                  Mot de passe modifié !
                 </h2>
                 <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                  Votre mot de passe a ete reinitialise avec succes. Vous allez
-                  etre redirige vers la page de connexion...
+                  Votre mot de passe a été réinitialisé avec succès. Vous allez
+                  être redirigé vers la page de connexion...
                 </p>
                 <Link
                   href="/connexion"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[#3744C8] hover:underline"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Aller a la connexion
+                  Aller à la connexion
                 </Link>
               </div>
             ) : (
@@ -129,7 +154,7 @@ export default function ReinitialiserMotDePassePage() {
                       type={showPassword ? "text" : "password"}
                       required
                       minLength={8}
-                      placeholder="Minimum 8 caracteres"
+                      placeholder="Minimum 8 caractères"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-xl border border-[#e2e5f0] bg-[#f8f9fc] pl-10 pr-10 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3744C8]/25 focus:border-[#3744C8] transition-colors"
@@ -193,10 +218,10 @@ export default function ReinitialiserMotDePassePage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Reinitialisation...
+                      Réinitialisation...
                     </>
                   ) : (
-                    "Reinitialiser le mot de passe"
+                    "Réinitialiser le mot de passe"
                   )}
                 </Button>
               </form>
