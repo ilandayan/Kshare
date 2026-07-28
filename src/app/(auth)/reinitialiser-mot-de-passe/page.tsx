@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { messageErreurMotDePasse } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { KshareLogo } from "@/components/shared/kshare-logo";
@@ -122,31 +123,7 @@ export default function ReinitialiserMotDePassePage() {
     });
 
     if (updateError) {
-      // Supabase expose la cause dans `code` (et un message en anglais).
-      // On traduit les cas connus et on affiche le message brut sinon :
-      // masquer l'erreur réelle rend le problème indiagnosticable.
-      const code = (updateError as { code?: string }).code ?? "";
-      const raw = updateError.message ?? "";
-      const rawLower = raw.toLowerCase();
-
-      let message: string;
-      if (code === "same_password" || rawLower.includes("different from the old password")) {
-        message = "Le nouveau mot de passe doit être différent de l'ancien.";
-      } else if (
-        rawLower.includes("session") ||
-        rawLower.includes("jwt") ||
-        rawLower.includes("token")
-      ) {
-        message =
-          "Votre lien de réinitialisation n'est plus valide. Veuillez en demander un nouveau.";
-      } else if (rawLower.includes("weak") || rawLower.includes("at least")) {
-        message =
-          "Mot de passe trop faible. Choisissez un mot de passe plus long ou plus complexe.";
-      } else {
-        message = `Erreur lors de la réinitialisation : ${raw}`;
-      }
-
-      setError(message);
+      setError(messageErreurMotDePasse(updateError, "reinitialisation"));
       setLoading(false);
       return;
     }
@@ -187,7 +164,8 @@ export default function ReinitialiserMotDePassePage() {
                 Nouveau mot de passe
               </h1>
               <p className="text-sm text-gray-400 text-center leading-relaxed">
-                Choisissez un nouveau mot de passe sécurisé pour votre compte
+                Choisissez un nouveau mot de passe sécurisé, différent de
+                votre ancien mot de passe
               </p>
             </div>
 
@@ -246,7 +224,7 @@ export default function ReinitialiserMotDePassePage() {
                       type={showPassword ? "text" : "password"}
                       required
                       minLength={8}
-                      placeholder="Minimum 8 caractères"
+                      placeholder="Minimum 8 caractères, différent de l'ancien"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-xl border border-[#e2e5f0] bg-[#f8f9fc] pl-10 pr-10 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3744C8]/25 focus:border-[#3744C8] transition-colors"

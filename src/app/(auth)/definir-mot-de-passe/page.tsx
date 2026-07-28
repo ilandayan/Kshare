@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { messageErreurMotDePasse } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Lock, CheckCircle, Eye, EyeOff, PartyPopper } from "lucide-react";
 import { KshareLogo } from "@/components/shared/kshare-logo";
@@ -39,9 +40,7 @@ export default function DefinirMotDePassePage() {
     });
 
     if (updateError) {
-      setError(
-        "Erreur lors de la création du mot de passe. Le lien a peut-être expiré. Veuillez contacter le support."
-      );
+      setError(messageErreurMotDePasse(updateError, "creation"));
       setLoading(false);
       return;
     }
