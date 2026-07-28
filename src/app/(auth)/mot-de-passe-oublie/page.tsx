@@ -51,7 +51,7 @@ export default function MotDePasseOubliePage() {
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#3744C8] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Retour a la connexion
+          Retour à la connexion
         </Link>
       </div>
 
@@ -72,11 +72,11 @@ export default function MotDePasseOubliePage() {
               </div>
 
               <h1 className="text-xl font-bold text-gray-900 mb-1">
-                Mot de passe oublie
+                Mot de passe oublié
               </h1>
               <p className="text-sm text-gray-400 text-center leading-relaxed">
                 Entrez votre adresse email et nous vous enverrons un lien pour
-                reinitialiser votre mot de passe
+                réinitialiser votre mot de passe
               </p>
             </div>
 
@@ -87,19 +87,19 @@ export default function MotDePasseOubliePage() {
                   <CheckCircle className="h-7 w-7 text-emerald-500" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  Email envoye !
+                  Email envoyé !
                 </h2>
                 <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                  Verifiez votre boite de reception et cliquez sur le lien pour
-                  reinitialiser votre mot de passe. Si vous ne trouvez pas
-                  l&apos;email, pensez a verifier vos spams.
+                  Vérifiez votre boîte de réception et cliquez sur le lien pour
+                  réinitialiser votre mot de passe. Si vous ne trouvez pas
+                  l&apos;email, pensez à vérifier vos spams.
                 </p>
                 <Link
                   href="/connexion"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[#3744C8] hover:underline"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Retour a la connexion
+                  Retour à la connexion
                 </Link>
               </div>
             ) : (
@@ -126,7 +126,7 @@ export default function MotDePasseOubliePage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full rounded-xl border border-[#e2e5f0] bg-[#f8f9fc] pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3744C8]/25 focus:border-[#3744C8] transition-colors"
-                      aria-label="Adresse email pour la reinitialisation"
+                      aria-label="Adresse email pour la réinitialisation"
                     />
                   </div>
                 </div>
@@ -146,7 +146,7 @@ export default function MotDePasseOubliePage() {
                   style={{
                     background: "linear-gradient(135deg, #3744C8 0%, #2B38B8 100%)",
                   }}
-                  aria-label="Envoyer le lien de reinitialisation"
+                  aria-label="Envoyer le lien de réinitialisation"
                 >
                   {loading ? (
                     <>
@@ -177,7 +177,7 @@ export default function MotDePasseOubliePage() {
 
           {/* Footer hint */}
           <p className="text-center text-xs text-gray-400 mt-4 px-4 leading-relaxed">
-            Le lien de reinitialisation est valable pendant 24 heures.
+            Le lien de réinitialisation est valable pendant 24 heures.
           </p>
         </div>
       </div>
