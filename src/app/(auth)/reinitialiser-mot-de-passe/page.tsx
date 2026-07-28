@@ -18,14 +18,64 @@ export default function ReinitialiserMotDePassePage() {
   const [error, setError] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState<boolean | null>(null);
 
-  // Le callback (/api/auth/callback) a normalement déjà échangé le code du
-  // lien email contre une session de récupération. On le vérifie ici pour
-  // afficher un message clair plutôt qu'une erreur au moment de valider.
+  // Établit la session de récupération à partir du lien reçu par email.
+  // Supabase peut transmettre le jeton de deux façons selon la configuration :
+  //   - flux PKCE      : ?code=xxx        (query string)
+  //   - flux implicite : #access_token=xx (fragment, invisible côté serveur)
+  // On gère les deux ici, côté navigateur, pour ne dépendre d'aucun cookie.
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
-      setSessionReady(!!data.session);
+    let cancelled = false;
+
+    // Le client Supabase détecte parfois le jeton tout seul : on écoute
+    // pour ne pas conclure trop vite à un lien invalide.
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && !cancelled) setSessionReady(true);
     });
+
+    (async () => {
+      const { data: existing } = await supabase.auth.getSession();
+      if (existing.session) {
+        if (!cancelled) setSessionReady(true);
+        return;
+      }
+
+      // Flux implicite : tokens dans le fragment
+      const hash = window.location.hash.replace(/^#/, "");
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (!cancelled) setSessionReady(!sessionError);
+        return;
+      }
+
+      // Flux PKCE : code en query string
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (cancelled) return;
+        if (!exchangeError) {
+          setSessionReady(true);
+          return;
+        }
+        // Le code a pu être consommé par la détection automatique : on revérifie
+        const { data: retry } = await supabase.auth.getSession();
+        if (!cancelled) setSessionReady(!!retry.session);
+        return;
+      }
+
+      if (!cancelled) setSessionReady(false);
+    })();
+
+    return () => {
+      cancelled = true;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {

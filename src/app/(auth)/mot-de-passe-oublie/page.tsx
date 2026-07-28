@@ -20,13 +20,14 @@ export default function MotDePasseOubliePage() {
 
     const supabase = createClient();
 
-    // Le lien doit passer par /api/auth/callback : c'est lui qui échange le
-    // code contre une session (flux PKCE) avant d'afficher le formulaire.
-    // Sans ça, updateUser() est appelé sans session → "Auth session missing".
+    // Le lien pointe directement sur la page de réinitialisation : c'est elle
+    // qui établit la session à partir du jeton (code PKCE en query, ou tokens
+    // dans le fragment d'URL). Passer par une route serveur ne fonctionne pas
+    // dans tous les cas : le fragment `#...` n'est jamais transmis au serveur.
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
       {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/reinitialiser-mot-de-passe`,
+        redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
       }
     );
 
