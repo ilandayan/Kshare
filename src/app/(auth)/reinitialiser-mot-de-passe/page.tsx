@@ -122,11 +122,31 @@ export default function ReinitialiserMotDePassePage() {
     });
 
     if (updateError) {
-      setError(
-        updateError.message.includes("same_password")
-          ? "Le nouveau mot de passe doit être différent de l'ancien."
-          : "Erreur lors de la réinitialisation. Le lien a peut-être expiré. Veuillez redemander un lien."
-      );
+      // Supabase expose la cause dans `code` (et un message en anglais).
+      // On traduit les cas connus et on affiche le message brut sinon :
+      // masquer l'erreur réelle rend le problème indiagnosticable.
+      const code = (updateError as { code?: string }).code ?? "";
+      const raw = updateError.message ?? "";
+      const rawLower = raw.toLowerCase();
+
+      let message: string;
+      if (code === "same_password" || rawLower.includes("different from the old password")) {
+        message = "Le nouveau mot de passe doit être différent de l'ancien.";
+      } else if (
+        rawLower.includes("session") ||
+        rawLower.includes("jwt") ||
+        rawLower.includes("token")
+      ) {
+        message =
+          "Votre lien de réinitialisation n'est plus valide. Veuillez en demander un nouveau.";
+      } else if (rawLower.includes("weak") || rawLower.includes("at least")) {
+        message =
+          "Mot de passe trop faible. Choisissez un mot de passe plus long ou plus complexe.";
+      } else {
+        message = `Erreur lors de la réinitialisation : ${raw}`;
+      }
+
+      setError(message);
       setLoading(false);
       return;
     }
