@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       analytics_events: {
@@ -251,6 +276,7 @@ export type Database = {
           iban: string | null
           id: string
           id_document_url: string | null
+          is_demo: boolean
           kbis_url: string | null
           last_plan_change_at: string | null
           latitude: number | null
@@ -269,7 +295,11 @@ export type Database = {
           siret: string | null
           status: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id: string | null
+          stripe_charges_enabled: boolean
           stripe_customer_id: string | null
+          stripe_details_submitted: boolean
+          stripe_payouts_enabled: boolean
+          stripe_status_updated_at: string | null
           subscription_plan:
             | Database["public"]["Enums"]["subscription_plan"]
             | null
@@ -299,6 +329,7 @@ export type Database = {
           iban?: string | null
           id?: string
           id_document_url?: string | null
+          is_demo?: boolean
           kbis_url?: string | null
           last_plan_change_at?: string | null
           latitude?: number | null
@@ -317,7 +348,11 @@ export type Database = {
           siret?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           stripe_customer_id?: string | null
+          stripe_details_submitted?: boolean
+          stripe_payouts_enabled?: boolean
+          stripe_status_updated_at?: string | null
           subscription_plan?:
             | Database["public"]["Enums"]["subscription_plan"]
             | null
@@ -347,6 +382,7 @@ export type Database = {
           iban?: string | null
           id?: string
           id_document_url?: string | null
+          is_demo?: boolean
           kbis_url?: string | null
           last_plan_change_at?: string | null
           latitude?: number | null
@@ -365,7 +401,11 @@ export type Database = {
           siret?: string | null
           status?: Database["public"]["Enums"]["commerce_status"]
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           stripe_customer_id?: string | null
+          stripe_details_submitted?: boolean
+          stripe_payouts_enabled?: boolean
+          stripe_status_updated_at?: string | null
           subscription_plan?:
             | Database["public"]["Enums"]["subscription_plan"]
             | null
@@ -1442,6 +1482,8 @@ export type Database = {
             }
             Returns: string
           }
+      can_see_demo: { Args: never; Returns: boolean }
+      commerce_is_demo: { Args: { p_commerce_id: string }; Returns: boolean }
       commerces_near: {
         Args: { lat: number; lng: number; radius_km?: number }
         Returns: {
@@ -2434,6 +2476,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       association_status: [

@@ -28,6 +28,7 @@ export type AuditAction =
   | "payment.dispute_created"
   | "payment.payout_created"
   | "payment.payout_failed"
+  | "payment.connect_account_activated"
   | "order.confirmed_pickup"
   | "account.email_changed"
   | "account.password_changed"

@@ -559,12 +559,35 @@ export function emailCompteValide(
       </a>
     `;
 
+  // Un commerce validé ne peut toujours pas vendre : il lui reste à activer son
+  // compte de paiement. C'est l'étape que les commerçants ne découvraient
+  // jusqu'ici qu'en butant sur le blocage à la publication de leur premier panier.
+  const etapePaiement =
+    type === "commerce"
+      ? `
+      <div style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:24px 0;">
+        <p style="margin:0 0 8px;color:#92400e;font-weight:700;font-size:15px;">
+          Dernière étape avant de pouvoir publier vos paniers
+        </p>
+        <p style="margin:0 0 12px;color:#92400e;font-size:14px;line-height:1.6;">
+          Votre compte de paiement n'est pas encore actif. Vos paniers ne peuvent pas
+          être mis en vente tant qu'il ne l'est pas. Préparez votre IBAN et une pièce
+          d'identité.
+        </p>
+        <a href="https://k-share.fr/shop/stripe-connect" style="display:inline-block;padding:12px 24px;background:#d97706;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">
+          Activer mes paiements
+        </a>
+      </div>
+    `
+      : "";
+
   return {
     subject: `Kshare — Votre compte ${type} a été validé !`,
     html: wrapHtml(`
       <h2 style="color:#3744C8;margin:0 0 16px;">Bienvenue sur Kshare, ${safeName} !</h2>
       <p style="color:#333;line-height:1.7;">Votre compte <strong>${type}</strong> a été validé par notre équipe. 🎉</p>
       ${ctaBlock}
+      ${etapePaiement}
       <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
     `),
   };
