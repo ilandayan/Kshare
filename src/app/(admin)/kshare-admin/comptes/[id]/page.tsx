@@ -69,7 +69,7 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
   if (accountType === "commerce") {
     const { data: commerce } = await supabase
       .from("commerces")
-      .select("id, name, representative_first_name, representative_last_name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url, contract_signed_at, contract_pdf_url")
+      .select("id, name, representative_first_name, representative_last_name, email, phone, address, city, postal_code, commerce_type, hashgakha, description, status, created_at, validated_at, kbis_url, id_document_url, contract_signed_at, contract_pdf_url, stripe_account_id")
       .eq("id", id)
       .single();
 
@@ -202,7 +202,12 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
             </CardContent>
           </Card>
 
-          <AccountActions id={id} type="commerce" currentStatus={commerce.status} />
+          <AccountActions
+            id={id}
+            type="commerce"
+            currentStatus={commerce.status}
+            aComptePaiement={Boolean(commerce.stripe_account_id)}
+          />
         </div>
       </div>
     );
