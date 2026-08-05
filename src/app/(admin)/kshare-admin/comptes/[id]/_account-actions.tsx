@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, MessageSquare, Loader2, KeyRound } from "lucide-react";
+import { CheckCircle, XCircle, MessageSquare, Loader2, KeyRound, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,15 +17,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { validerCompte, refuserCompte, demanderComplements, renvoyerLienMotDePasse } from "./_actions";
+import { validerCompte, refuserCompte, demanderComplements, renvoyerLienMotDePasse, creerComptePaiement } from "./_actions";
 
 interface AccountActionsProps {
   id: string;
   type: "commerce" | "association";
   currentStatus: string;
+  /** Commerces uniquement : un compte Stripe Connect existe déjà. */
+  aComptePaiement?: boolean;
 }
 
-export default function AccountActions({ id, type, currentStatus }: AccountActionsProps) {
+export default function AccountActions({
+  id,
+  type,
+  currentStatus,
+  aComptePaiement,
+}: AccountActionsProps) {
   const router = useRouter();
   const [validating, setValidating] = useState(false);
   const [refusing, setRefusing] = useState(false);
@@ -33,6 +40,7 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
   const [complementMessage, setComplementMessage] = useState("");
   const [sendingComplement, setSendingComplement] = useState(false);
   const [resendingLink, setResendingLink] = useState(false);
+  const [creatingPayment, setCreatingPayment] = useState(false);
 
   const isActive = currentStatus === "pending" || currentStatus === "complement_required";
   const isValidated = currentStatus === "validated";
@@ -109,6 +117,23 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
     }
   }
 
+  async function handleCreatePaymentAccount() {
+    setCreatingPayment(true);
+    try {
+      const result = await creerComptePaiement(id);
+      if (result.success) {
+        toast.success("Compte de paiement créé. Le commerce n'a plus qu'à renseigner ses informations chez Stripe.");
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Erreur inattendue.");
+    } finally {
+      setCreatingPayment(false);
+    }
+  }
+
   if (!isActive) {
     return (
       <Card>
@@ -132,6 +157,31 @@ export default function AccountActions({ id, type, currentStatus }: AccountActio
               <p className="text-xs text-muted-foreground">
                 Si le compte n&apos;a pas encore créé son mot de passe (lien expiré ou perdu),
                 tu peux générer un nouveau lien valable 24h.
+              </p>
+            </div>
+          )}
+
+          {/* Rattrapage des commerces validés avant la création automatique */}
+          {isValidated && type === "commerce" && !aComptePaiement && (
+            <div className="space-y-2">
+              <Button
+                onClick={handleCreatePaymentAccount}
+                disabled={creatingPayment}
+                variant="outline"
+                className="gap-2"
+              >
+                {creatingPayment ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                Créer le compte de paiement
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Ce commerce n&apos;a pas encore de compte Stripe. Depuis la mise en place
+                de la création automatique, seuls les comptes validés auparavant sont
+                concernés. Le commerce devra ensuite renseigner ses informations chez
+                Stripe pour pouvoir vendre.
               </p>
             </div>
           )}

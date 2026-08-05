@@ -343,6 +343,56 @@ export async function refuserCompte(
  * Régénère un lien de création de mot de passe et le renvoie par email.
  * Utile si le précédent lien (valable 24h) a expiré ou été perdu.
  */
+/**
+ * Crée le compte de paiement d'un commerce validé avant la mise en place de la
+ * création automatique. Rattrapage manuel, sans effet sur les commerces déjà
+ * pourvus. S'exécute côté serveur, donc avec la clé Stripe de l'environnement,
+ * ce qu'un script local ne pourrait pas garantir.
+ */
+export async function creerComptePaiement(id: string): Promise<AccountActionResult> {
+  const ctx = await requireAdmin();
+  if (!ctx) return { success: false, error: "Non autorisé." };
+
+  const { data: commerce } = await ctx.supabase
+    .from("commerces")
+    .select("name, email, status, stripe_account_id")
+    .eq("id", id)
+    .single();
+
+  if (!commerce) return { success: false, error: "Commerce introuvable." };
+  if (commerce.status !== "validated") {
+    return { success: false, error: "Le commerce doit d'abord être validé." };
+  }
+  if (commerce.stripe_account_id) {
+    return { success: false, error: "Ce commerce a déjà un compte de paiement." };
+  }
+  if (!commerce.email) {
+    return { success: false, error: "Aucune adresse email sur ce commerce." };
+  }
+
+  await creerCompteConnect(id, commerce.email);
+
+  const { data: apres } = await createAdminClient()
+    .from("commerces")
+    .select("stripe_account_id")
+    .eq("id", id)
+    .single();
+
+  if (!apres?.stripe_account_id) {
+    return { success: false, error: "Stripe n'a pas pu créer le compte. Réessayez." };
+  }
+
+  logAuditEvent({
+    action: "admin.connect_account_created",
+    actor_id: ctx.user.id,
+    target_id: id,
+    metadata: { commerceName: commerce.name, accountId: apres.stripe_account_id },
+  });
+
+  revalidatePath(`/kshare-admin/comptes/${id}`);
+  return { success: true };
+}
+
 export async function renvoyerLienMotDePasse(
   id: string,
   type: "commerce" | "association"
