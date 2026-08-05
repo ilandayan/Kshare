@@ -49,13 +49,19 @@ async function assertCanPublishPaid(
   if (isDonation) return null;
   const { data: commerce } = await supabase
     .from("commerces")
-    .select("stripe_account_id")
+    .select("stripe_account_id, stripe_charges_enabled, stripe_details_submitted")
     .eq("id", commerceId)
     .single();
-  if (!commerce?.stripe_account_id) {
-    return "Configurez d'abord vos paiements (Stripe Connect) dans « Paiements » avant de publier un panier payant.";
+
+  // On teste `charges_enabled`, pas l'existence du compte : celui-ci peut être
+  // créé automatiquement alors que l'onboarding n'est pas terminé, auquel cas
+  // le commerce ne peut toujours pas encaisser.
+  if (commerce?.stripe_charges_enabled) return null;
+
+  if (commerce?.stripe_details_submitted) {
+    return "Stripe n'a pas encore validé votre compte de paiement. Vous pourrez mettre vos paniers en vente dès qu'il sera actif.";
   }
-  return null;
+  return "Il vous reste à activer vos paiements pour mettre un panier en vente. Rendez-vous dans « Paiements », comptez une dizaine de minutes.";
 }
 
 export async function updateBasket(

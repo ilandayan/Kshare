@@ -6,10 +6,52 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, emailCompteValide, emailCompteRefuse, emailDemandeComplements } from "@/lib/resend";
 import { logAuditEvent } from "@/lib/audit-log";
 import { SUBSCRIPTION_PLANS } from "@/lib/constants";
+import { getStripe } from "@/lib/stripe/client";
 
 export type AccountActionResult =
   | { success: true }
   | { success: false; error: string };
+
+/**
+ * Crée le compte Stripe Connect du commerce dès sa validation, pour lui épargner
+ * une étape : il n'aura plus qu'à renseigner ses informations chez Stripe.
+ *
+ * Volontairement non bloquant. Un incident chez Stripe ne doit pas empêcher la
+ * validation d'un compte : la route `/api/stripe/connect/onboard` recrée le
+ * compte s'il manque. Et cette création ne débloque rien à elle seule, la
+ * publication d'un panier payant restant conditionnée à `charges_enabled`.
+ */
+async function creerCompteConnect(commerceId: string, email: string | null): Promise<void> {
+  if (!email) return;
+  try {
+    const supabase = createAdminClient();
+    const { data: commerce } = await supabase
+      .from("commerces")
+      .select("stripe_account_id")
+      .eq("id", commerceId)
+      .single();
+
+    if (commerce?.stripe_account_id) return;
+
+    const account = await getStripe().accounts.create({
+      type: "express",
+      country: "FR",
+      email,
+      settings: {
+        // Virements manuels : le cron hebdomadaire du mardi reste la source
+        // unique, sinon Stripe verserait en parallèle.
+        payouts: { schedule: { interval: "manual" } },
+      },
+    });
+
+    await supabase
+      .from("commerces")
+      .update({ stripe_account_id: account.id })
+      .eq("id", commerceId);
+  } catch (error) {
+    console.error("[validateAccount] Création du compte Connect échouée:", error);
+  }
+}
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -164,6 +206,8 @@ export async function validerCompte(
     accountEmail = commerce?.email ?? null;
     accountName = commerce?.name ?? null;
     accountPhone = commerce?.phone ?? null;
+
+    await creerCompteConnect(id, accountEmail);
 
     // If no profile_id yet, create Auth user + profile + link
     if (!commerce?.profile_id && accountEmail && accountName) {

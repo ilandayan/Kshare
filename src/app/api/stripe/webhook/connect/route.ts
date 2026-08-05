@@ -237,6 +237,49 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, accountId: string): 
   }
 }
 
+/**
+ * `account.updated` — seule source fiable de l'état d'onboarding d'un commerce.
+ *
+ * Sans cet événement, Kshare n'apprend jamais qu'un commerçant a terminé sa
+ * configuration Stripe : sa bannière resterait affichée et ses paniers payants
+ * bloqués alors que son compte est actif. Inversement, un compte que Stripe
+ * restreint après coup doit refermer la garde de publication.
+ */
+async function handleAccountUpdated(account: Stripe.Account, accountId: string): Promise<void> {
+  const supabase = createAdminClient();
+
+  const { data: commerce } = await supabase
+    .from("commerces")
+    .select("id, stripe_charges_enabled")
+    .eq("stripe_account_id", accountId)
+    .single();
+
+  if (!commerce) {
+    console.error("[connect-webhook] Commerce not found for account:", accountId);
+    return;
+  }
+
+  const chargesEnabled = account.charges_enabled === true;
+  const devientActif = chargesEnabled && !commerce.stripe_charges_enabled;
+
+  await supabase
+    .from("commerces")
+    .update({
+      stripe_charges_enabled: chargesEnabled,
+      stripe_payouts_enabled: account.payouts_enabled === true,
+      stripe_details_submitted: account.details_submitted === true,
+      stripe_status_updated_at: new Date().toISOString(),
+    })
+    .eq("id", commerce.id);
+
+  if (devientActif) {
+    logAuditEvent({
+      action: "payment.connect_account_activated",
+      metadata: { commerceId: commerce.id, accountId },
+    });
+  }
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const webhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -287,6 +330,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case "charge.dispute.closed":
         await handleDisputeClosed(event.data.object as Stripe.Dispute, accountId);
+        break;
+
+      case "account.updated":
+        await handleAccountUpdated(event.data.object as Stripe.Account, accountId);
         break;
 
       default:
