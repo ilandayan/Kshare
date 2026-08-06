@@ -29,7 +29,7 @@ export default async function OrdersPage() {
     supabase
       .from("orders")
       .select(`
-        id, status, quantity, total_amount, created_at, is_donation,
+        id, status, quantity, total_amount, net_amount, capture_status, capture_reason, created_at, is_donation,
         pickup_date, pickup_start, pickup_end,
         baskets!inner(sold_price, type, day, pickup_start, pickup_end)
       `)
@@ -60,6 +60,9 @@ export default async function OrdersPage() {
       id: o.id,
       orderNumber: formatOrderNumber(o.id, o.created_at),
       status: o.status,
+      captureStatus: o.capture_status,
+      netAmount: Number(o.net_amount ?? 0),
+      captureReason: o.capture_reason,
       date: formatDate(o.created_at),
       quantity: o.quantity ?? 1,
       pricePerBasket,

@@ -19,6 +19,9 @@ interface Order {
   id: string;
   orderNumber: string;
   status: string;
+  captureStatus: string | null;
+  netAmount: number;
+  captureReason: string | null;
   date: string;
   quantity: number;
   pricePerBasket: number;
@@ -82,6 +85,23 @@ function OrderRow({ order, compact }: { order: Order; compact?: boolean }) {
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${status.cls}`}>
             {status.label}
           </span>
+          {/* L'écart de paiement doit être visible ici, sinon le commerce ne le
+              découvre que sur son virement du mardi, sans explication. */}
+          {order.captureStatus === "partially_captured" && (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+              Montant ajusté — {order.netAmount.toFixed(2)}&nbsp;€ pour vous
+            </span>
+          )}
+          {order.captureStatus === "canceled" && (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+              Paiement annulé
+            </span>
+          )}
+          {order.captureStatus === "failed" && (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+              Paiement en échec — nous traitons
+            </span>
+          )}
           {!compact && (
             <span className="flex items-center gap-1.5 text-xs text-gray-400">
               <Calendar className="h-3 w-3" /> {order.date}
