@@ -60,9 +60,9 @@ function OrderRow({ order }: { order: AdminOrder }) {
   const [isPending, startTransition] = useTransition();
   const status = STATUS_CONFIG[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-500" };
 
-  // Tant que le paiement n'est pas capture, rembourser ou annuler n'a pas de
+  // Tant que le paiement n'est pas capturé, rembourser ou annuler n'a pas de
   // sens : Stripe refuse le remboursement d'une autorisation, et l'annulation
-  // doit passer par adminAnnulerPaiement pour relacher les fonds.
+  // doit passer par adminAnnulerPaiement pour relâcher les fonds.
   const enAttente = order.captureStatus === "pending";
   const canRefund = !enAttente && !["refunded", "cancelled_admin"].includes(order.status);
   const canCancel = !enAttente && !["refunded", "cancelled_admin", "picked_up"].includes(order.status);
@@ -85,8 +85,8 @@ function OrderRow({ order }: { order: AdminOrder }) {
   }
 
   // Paiement encore en autorisation : l'admin peut encaisser tout ou partie,
-  // ou relacher les fonds sans frais. Passe ce stade, seul le remboursement
-  // reste possible, et il coute les frais Stripe.
+  // ou relâcher les fonds sans frais. Passé ce stade, seul le remboursement
+  // reste possible, et il coûte les frais Stripe.
   const enAttenteCapture = order.captureStatus === "pending";
 
   function handleValider(pourcentage: number) {
@@ -97,7 +97,7 @@ function OrderRow({ order }: { order: AdminOrder }) {
     startTransition(async () => {
       const res = await adminValiderPaiement(order.id, pourcentage, motif.trim() || undefined);
       if (res.success) {
-        toast.success(pourcentage === 100 ? "Paiement encaisse." : `Paiement encaisse a ${pourcentage} %.`);
+        toast.success(pourcentage === 100 ? "Paiement encaissé." : `Paiement encaissé à ${pourcentage} %.`);
         setMotif("");
         router.refresh();
       } else toast.error(res.error);
@@ -112,7 +112,7 @@ function OrderRow({ order }: { order: AdminOrder }) {
     startTransition(async () => {
       const res = await adminAnnulerPaiement(order.id, motif.trim());
       if (res.success) {
-        toast.success("Autorisation relachee, le client n'a pas ete debite.");
+        toast.success("Autorisation relâchée, le client n'a pas été débité.");
         setMotif("");
         router.refresh();
       } else toast.error(res.error);
@@ -218,12 +218,12 @@ function OrderRow({ order }: { order: AdminOrder }) {
             <div className="mt-4 pt-3 border-t border-[#f0f1f5]">
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-amber-900">
-                  Paiement autorise, pas encore encaisse
+                  Paiement autorisé, pas encore encaissé
                 </p>
                 <p className="text-xs text-amber-800 mt-1 mb-3">
-                  Le client n&apos;est pas debite. Relacher l&apos;autorisation ne coute
-                  rien, contrairement a un remboursement. Un motif est obligatoire
-                  des que le montant est reduit.
+                  Le client n&apos;est pas débité. Relâcher l&apos;autorisation ne coûte
+                  rien, contrairement à un remboursement. Un motif est obligatoire
+                  dès que le montant est réduit.
                 </p>
 
                 <input
