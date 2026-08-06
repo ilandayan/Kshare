@@ -658,6 +658,11 @@ export type Database = {
         Row: {
           association_id: string | null
           basket_id: string
+          capture_error: string | null
+          capture_reason: string | null
+          capture_status: string
+          captured_amount: number | null
+          captured_at: string | null
           client_id: string
           commerce_id: string
           commission_amount: number
@@ -688,6 +693,11 @@ export type Database = {
         Insert: {
           association_id?: string | null
           basket_id: string
+          capture_error?: string | null
+          capture_reason?: string | null
+          capture_status?: string
+          captured_amount?: number | null
+          captured_at?: string | null
           client_id: string
           commerce_id: string
           commission_amount: number
@@ -718,6 +728,11 @@ export type Database = {
         Update: {
           association_id?: string | null
           basket_id?: string
+          capture_error?: string | null
+          capture_reason?: string | null
+          capture_status?: string
+          captured_amount?: number | null
+          captured_at?: string | null
           client_id?: string
           commerce_id?: string
           commission_amount?: number

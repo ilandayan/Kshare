@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  capturerCommande,
+  commandesAvecSignalementOuvert,
+  type OrderForCapture,
+} from "@/lib/stripe/capture";
 
 export const dynamic = "force-dynamic";
+
+/** Colonnes nécessaires au calcul des montants de capture. */
+const COLONNES_CAPTURE =
+  "id, basket_id, pickup_date, pickup_end, status, stripe_payment_intent_id, total_amount, service_fee_amount, commission_amount, capture_status";
 
 /**
  * Convertit une date + heure murale « Europe/Paris » en instant UTC exact.
@@ -23,11 +32,18 @@ function parisWallTimeToUtc(dateStr: string, timeStr: string): Date {
 }
 
 /**
- * Cron job: mark orders as no_show when pickup_end has passed.
- * Runs every 30 minutes via Vercel cron.
+ * Cron quotidien de fin de journée (22h) : encaissement et no-shows.
  *
- * Targets orders with status "paid" or "ready_for_pickup" whose
- * pickup window has ended. No refund is issued.
+ * Depuis le passage en capture différée, la réservation ne fait qu'autoriser le
+ * paiement. Ce cron l'encaisse, dans les deux cas où c'est dû :
+ *
+ * - le client a confirmé son retrait ;
+ * - le créneau est passé sans retrait — le commerce a préparé le panier, il
+ *   doit être payé, c'est le principe du no-show.
+ *
+ * Une commande portant un signalement ouvert est laissée en autorisation :
+ * c'est la fenêtre pendant laquelle l'admin peut encore relâcher les fonds
+ * sans frais, ou n'en capturer qu'une partie.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // Verify cron secret (Vercel sets this header)
@@ -44,46 +60,77 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const supabase = createAdminClient();
   const nowMs = Date.now();
 
-  // Find orders whose pickup window has expired
-  // pickup_date + pickup_end < now, and status is still paid or ready_for_pickup
-  const { data: expiredOrders, error } = await supabase
+  // Commandes encore en attente de capture : retraits confirmés du jour, et
+  // commandes dont le créneau pourrait être écoulé.
+  const { data: enAttente, error } = await supabase
     .from("orders")
-    .select("id, basket_id, pickup_date, pickup_end")
-    .in("status", ["paid", "ready_for_pickup"])
-    .not("pickup_date", "is", null)
-    .not("pickup_end", "is", null);
+    .select(COLONNES_CAPTURE)
+    .eq("capture_status", "pending")
+    .in("status", ["paid", "ready_for_pickup", "picked_up"]);
 
   if (error) {
     console.error("[cron/no-show] Failed to fetch orders:", error);
     return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
 
-  let updated = 0;
+  const commandes = (enAttente ?? []) as unknown as (OrderForCapture & {
+    status: string;
+    pickup_date: string | null;
+    pickup_end: string | null;
+  })[];
 
-  for (const order of expiredOrders ?? []) {
-    // Build the actual pickup end datetime
-    const pickupDate = order.pickup_date; // e.g. "2026-03-12" or "today"/"tomorrow"
-    const pickupEnd = order.pickup_end; // e.g. "18:00"
+  // Un signalement ouvert suspend la capture jusqu'à décision de l'admin.
+  const signalees = await commandesAvecSignalementOuvert(commandes.map((o) => o.id));
 
-    if (!pickupDate || !pickupEnd) continue;
+  let capturees = 0;
+  let noShows = 0;
+  let echecs = 0;
+  let suspendues = 0;
 
-    if (pickupDate === "today" || pickupDate === "tomorrow") {
-      // Legacy format — skip, these should have been resolved at creation
+  for (const order of commandes) {
+    if (signalees.has(order.id)) {
+      suspendues++;
       continue;
     }
 
-    // pickup_end est une heure murale « Europe/Paris » → conversion en instant UTC
-    const endDateTime = parisWallTimeToUtc(pickupDate, pickupEnd);
+    const retraitConfirme = order.status === "picked_up";
+    let creneauEcoule = false;
 
-    if (endDateTime.getTime() < nowMs) {
+    if (!retraitConfirme) {
+      const { pickup_date: pickupDate, pickup_end: pickupEnd } = order;
+      if (!pickupDate || !pickupEnd) continue;
+      // Format hérité, jamais résolu en date réelle : on ne peut rien en déduire.
+      if (pickupDate === "today" || pickupDate === "tomorrow") continue;
+
+      // pickup_end est une heure murale « Europe/Paris » → instant UTC exact
+      creneauEcoule = parisWallTimeToUtc(pickupDate, pickupEnd).getTime() < nowMs;
+      if (!creneauEcoule) continue;
+    }
+
+    const resultat = await capturerCommande(order);
+
+    if (!resultat.success) {
+      echecs++;
+      continue;
+    }
+    capturees++;
+
+    // Le no-show est constaté après encaissement : le commerce est payé, mais
+    // la commande doit refléter que le panier n'a pas été retiré.
+    if (!retraitConfirme) {
       const { error: updateErr } = await supabase
         .from("orders")
         .update({ status: "no_show" })
         .eq("id", order.id);
-
-      if (!updateErr) updated++;
+      if (!updateErr) noShows++;
     }
   }
 
-  return NextResponse.json({ updated, checked: expiredOrders?.length ?? 0 });
+  return NextResponse.json({
+    checked: commandes.length,
+    capturees,
+    noShows,
+    suspendues,
+    echecs,
+  });
 }

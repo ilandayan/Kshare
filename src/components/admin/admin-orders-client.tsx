@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package, ShoppingCart, Wallet, ShoppingBag, Handshake, Mail, Phone, RotateCcw, XCircle, ArrowRightLeft, Loader2, Star, type LucideIcon } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, User, Store, Calendar, Package, ShoppingCart, Wallet, ShoppingBag, Handshake, Mail, Phone, RotateCcw, XCircle, ArrowRightLeft, Loader2, Star, BadgeEuro, Ban, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
+  adminValiderPaiement,
+  adminAnnulerPaiement,
   adminRembourserCommande,
   adminAnnulerCommande,
   adminChangerStatutCommande,
@@ -18,6 +20,7 @@ export interface AdminOrder {
   id: string;
   orderNumber: string;
   status: string;
+  captureStatus: string | null;
   date: string;
   quantity: number;
   pricePerBasket: number;
@@ -53,11 +56,16 @@ const NEXT_STATUS: Record<string, { label: string; value: string }> = {
 function OrderRow({ order }: { order: AdminOrder }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(true);
+  const [motif, setMotif] = useState("");
   const [isPending, startTransition] = useTransition();
   const status = STATUS_CONFIG[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-500" };
 
-  const canRefund = !["refunded", "cancelled_admin"].includes(order.status);
-  const canCancel = !["refunded", "cancelled_admin", "picked_up"].includes(order.status);
+  // Tant que le paiement n'est pas capture, rembourser ou annuler n'a pas de
+  // sens : Stripe refuse le remboursement d'une autorisation, et l'annulation
+  // doit passer par adminAnnulerPaiement pour relacher les fonds.
+  const enAttente = order.captureStatus === "pending";
+  const canRefund = !enAttente && !["refunded", "cancelled_admin"].includes(order.status);
+  const canCancel = !enAttente && !["refunded", "cancelled_admin", "picked_up"].includes(order.status);
   const nextStatus = NEXT_STATUS[order.status];
 
   function handleRefund() {
@@ -73,6 +81,41 @@ function OrderRow({ order }: { order: AdminOrder }) {
       const res = await adminAnnulerCommande(order.id);
       if (res.success) { toast.success("Commande annulee."); router.refresh(); }
       else toast.error(res.error);
+    });
+  }
+
+  // Paiement encore en autorisation : l'admin peut encaisser tout ou partie,
+  // ou relacher les fonds sans frais. Passe ce stade, seul le remboursement
+  // reste possible, et il coute les frais Stripe.
+  const enAttenteCapture = order.captureStatus === "pending";
+
+  function handleValider(pourcentage: number) {
+    if (pourcentage < 100 && !motif.trim()) {
+      toast.error("Un motif est obligatoire pour un paiement partiel.");
+      return;
+    }
+    startTransition(async () => {
+      const res = await adminValiderPaiement(order.id, pourcentage, motif.trim() || undefined);
+      if (res.success) {
+        toast.success(pourcentage === 100 ? "Paiement encaisse." : `Paiement encaisse a ${pourcentage} %.`);
+        setMotif("");
+        router.refresh();
+      } else toast.error(res.error);
+    });
+  }
+
+  function handleAnnulerPaiement() {
+    if (!motif.trim()) {
+      toast.error("Un motif est obligatoire pour annuler un paiement.");
+      return;
+    }
+    startTransition(async () => {
+      const res = await adminAnnulerPaiement(order.id, motif.trim());
+      if (res.success) {
+        toast.success("Autorisation relachee, le client n'a pas ete debite.");
+        setMotif("");
+        router.refresh();
+      } else toast.error(res.error);
     });
   }
 
@@ -169,6 +212,61 @@ function OrderRow({ order }: { order: AdminOrder }) {
               <div className="text-xs text-gray-400">{order.commerceType}</div>
             </div>
           </div>
+
+          {/* ── Paiement en attente de decision ── */}
+          {enAttenteCapture && (
+            <div className="mt-4 pt-3 border-t border-[#f0f1f5]">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">
+                  Paiement autorise, pas encore encaisse
+                </p>
+                <p className="text-xs text-amber-800 mt-1 mb-3">
+                  Le client n&apos;est pas debite. Relacher l&apos;autorisation ne coute
+                  rien, contrairement a un remboursement. Un motif est obligatoire
+                  des que le montant est reduit.
+                </p>
+
+                <input
+                  type="text"
+                  value={motif}
+                  onChange={(e) => setMotif(e.target.value)}
+                  placeholder="Motif — repris tel quel dans l'email au commerce"
+                  className="w-full mb-3 px-3 py-2 text-sm rounded-lg border border-amber-300 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => handleValider(100)}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-800 bg-green-100 rounded-lg hover:bg-green-200 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <BadgeEuro className="h-3 w-3" />}
+                    Valider le paiement
+                  </button>
+
+                  {[75, 50, 25].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => handleValider(p)}
+                      disabled={isPending}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-white border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      Encaisser {p} %
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={handleAnnulerPaiement}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Ban className="h-3 w-3" />}
+                    Annuler le paiement
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── Admin action buttons ── */}
           <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-[#f0f1f5]">

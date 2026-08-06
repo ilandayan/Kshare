@@ -1203,3 +1203,57 @@ export function emailLancementClient(params: {
     `),
   };
 }
+
+/**
+ * Informe un commerce qu'un paiement a été réduit ou annulé après signalement.
+ *
+ * L'écart doit être annoncé, et motivé. Un commerçant qui découvre un virement
+ * du mardi inférieur à ses ventes sans explication est un commerçant qui part.
+ */
+export function emailPaiementAjuste(params: {
+  commerceName: string;
+  montantInitial: number;
+  montantVerse: number;
+  motif: string;
+  dateCommande: string;
+}): { subject: string; html: string } {
+  const { commerceName, montantInitial, montantVerse, motif, dateCommande } = params;
+  const annule = montantVerse <= 0;
+  const euros = (v: number) => v.toFixed(2).replace(".", ",") + " €";
+
+  return {
+    subject: annule
+      ? "Kshare — Une commande a été annulée suite à un signalement"
+      : "Kshare — Un paiement a été ajusté suite à un signalement",
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${escapeHtml(commerceName)},</h2>
+      <p style="color:#333;line-height:1.7;">
+        Un client a signalé un problème sur une commande du ${escapeHtml(dateCommande)}.
+        Après examen, nous avons ${annule ? "annulé le paiement" : "ajusté le montant qui vous sera versé"}.
+      </p>
+
+      <div style="background:#f8f9fc;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0 0 8px;color:#333;">
+          Montant initial : <strong>${escapeHtml(euros(montantInitial))}</strong>
+        </p>
+        <p style="margin:0;color:#333;">
+          Montant qui vous sera versé : <strong>${escapeHtml(euros(montantVerse))}</strong>
+        </p>
+      </div>
+
+      <p style="color:#333;line-height:1.7;margin:0 0 4px;"><strong>Motif retenu</strong></p>
+      <p style="color:#333;line-height:1.7;margin:0 0 16px;">${escapeHtml(motif)}</p>
+
+      <p style="color:#333;line-height:1.7;">
+        Le client n'a pas été débité de la part concernée : notre commission a été
+        réduite dans la même proportion que votre part.
+      </p>
+      <p style="color:#333;line-height:1.7;">
+        Si vous estimez cette décision infondée, répondez à cet email ou écrivez-nous
+        à <a href="mailto:contact@k-share.fr" style="color:#3744C8;">contact@k-share.fr</a>.
+        Nous réexaminerons le dossier.
+      </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}

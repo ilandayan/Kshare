@@ -219,7 +219,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         transfer_data: {
           destination: commerce.stripe_account_id,
         },
-        ...(isClientDonation ? { capture_method: "manual" as const } : {}),
+        // Capture différée pour tous les paniers, dons compris. La réservation
+        // ne fait qu'autoriser : le cron du soir encaisse, et un signalement
+        // permet de relâcher l'autorisation sans frais ni débit du client.
+        capture_method: "manual" as const,
       },
       mode: "payment",
       metadata: {

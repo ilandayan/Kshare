@@ -256,7 +256,10 @@ Deno.serve(async (req: Request) => {
       transfer_data: {
         destination: commerce.stripe_account_id,
       },
-      ...(isClientDonation ? { capture_method: "manual" as const } : {}),
+      // Capture différée pour tous les paniers, dons compris : la réservation
+      // autorise seulement. Le cron du soir encaisse, et un signalement permet
+      // de relâcher l'autorisation sans frais ni débit du client.
+      capture_method: "manual" as const,
       metadata: {
         basket_id,
         commerce_id: commerce.id,
@@ -311,6 +314,7 @@ Deno.serve(async (req: Request) => {
         net_amount: netAmountEur,
         service_fee_amount: serviceFeeAmountEur,
         status: isClientDonation ? "pending_association" : "created",
+        capture_status: "pending",
         stripe_payment_intent_id: paymentIntent.id,
         is_donation: isClientDonation || (basket.is_donation ?? false),
         qr_code_token: isClientDonation ? null : pickupToken,
