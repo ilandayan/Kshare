@@ -14,6 +14,7 @@
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
 
 /** Commande telle que lue par les appelants (cron, actions admin). */
 export interface OrderForCapture {
@@ -23,6 +24,7 @@ export interface OrderForCapture {
   service_fee_amount: number | string | null;
   commission_amount: number | string | null;
   capture_status: string | null;
+  commerce_id?: string | null;
 }
 
 export type CaptureResult =
@@ -148,6 +150,29 @@ export async function capturerCommande(
       net_amount: netCapture,
     })
     .eq("id", order.id);
+
+  // Le grand livre est alimenté ici, et nulle part ailleurs : c'est le seul
+  // moment où l'argent existe réellement, et le seul endroit qui connaisse le
+  // montant effectivement capturé. Les écritures portées par les webhooks
+  // créditaient le commerce dès l'autorisation, avec les montants d'origine.
+  if (order.commerce_id) {
+    try {
+      await createPaymentLedgerEntries({
+        commerceId: order.commerce_id,
+        orderId: order.id,
+        totalAmount: Math.round(toNumber(order.total_amount) * ratio * 100) / 100,
+        commissionAmount: commissionCapturee,
+        serviceFeeAmount:
+          Math.round(toNumber(order.service_fee_amount) * ratio * 100) / 100,
+        netAmount: netCapture,
+        stripePaymentIntentId: order.stripe_payment_intent_id,
+      });
+    } catch (error) {
+      // Non bloquant : l'argent est encaissé, seule la comptabilité est en
+      // retard. Mieux vaut une écriture manquante qu'une capture annulée.
+      console.error("[capture] Écritures comptables non créées pour", order.id, error);
+    }
+  }
 
   return { success: true, capturedAmount: captureCents / 100, partial: partiel };
 }

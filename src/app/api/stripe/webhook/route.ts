@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
-import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from "@/lib/constants";
 import { sendEmail, emailPaiementEchoue, emailConfirmationCommande } from "@/lib/resend";
 import type Stripe from "stripe";
@@ -74,8 +73,6 @@ async function handleCheckoutSessionCompleted(
     return;
   }
 
-  const netAmountNum = basketAmountNum - commissionAmountNum;
-
   // Fetch basket info for pickup times + type + commerce name
   const { data: basket, error: basketError } = await supabase
     .from("baskets")
@@ -99,6 +96,9 @@ async function handleCheckoutSessionCompleted(
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : null;
+
+  const netAmountNum =
+    Math.round((basketAmountNum - commissionAmountNum) * 100) / 100;
 
   if (isClientDonation) {
     // Don client: order en attente d'une association
@@ -171,23 +171,9 @@ async function handleCheckoutSessionCompleted(
       return;
     }
 
-    // Create ledger entries for the payment
-    if (order && paymentIntentId && commissionAmountNum > 0) {
-      try {
-        await createPaymentLedgerEntries({
-          commerceId,
-          orderId: order.id,
-          totalAmount: basketAmountNum,
-          commissionAmount: commissionAmountNum,
-          serviceFeeAmount: serviceFeeAmountNum,
-          netAmount: netAmountNum,
-          stripePaymentIntentId: paymentIntentId,
-        });
-      } catch (ledgerErr) {
-        // Non-blocking: log but don't fail the webhook
-        console.error("[webhook] Ledger entry failed:", ledgerErr);
-      }
-    }
+    // Aucune écriture comptable ici : cet événement se déclenche à
+    // l'autorisation, pas à l'encaissement. Le grand livre est alimenté au
+    // moment de la capture, avec le montant réellement prélevé.
 
     // Fetch real Stripe fee from the charge's balance_transaction
     if (order && paymentIntentId) {
@@ -247,12 +233,24 @@ async function handleCheckoutSessionCompleted(
  * When Stripe confirms payment, we move the order to "paid", update basket
  * quantities (reserved → sold), and create ledger entries.
  */
+/**
+ * Confirme une commande mobile dès que le paiement est autorisé.
+ *
+ * Avec la capture différée, `payment_intent.succeeded` ne survient plus qu'au
+ * moment de l'encaissement, le soir. C'est donc
+ * `payment_intent.amount_capturable_updated`, émis dès l'autorisation, qui
+ * confirme la commande — sans quoi elle resterait en « created » toute la
+ * journée, invisible du cron de capture, et le client sans panier réservé.
+ *
+ * Les deux événements y mènent : la fonction est idempotente, elle ressort si
+ * la commande est déjà confirmée.
+ */
 async function handlePaymentIntentSucceeded(
   paymentIntent: Stripe.PaymentIntent
 ): Promise<void> {
   const supabase = createAdminClient();
 
-  const { source, basket_id, commerce_id, user_id, quantity, basket_amount, commission_amount, service_fee_amount } =
+  const { source, basket_id, user_id, quantity, basket_amount, service_fee_amount } =
     paymentIntent.metadata ?? {};
 
   // Only handle mobile-created PaymentIntents (Checkout sessions have their own handler)
@@ -269,15 +267,12 @@ async function handlePaymentIntentSucceeded(
     return;
   }
   const basketAmountNum = parseInt(basket_amount ?? "0", 10) / 100;
-  const commissionAmountNum = parseInt(commission_amount ?? "0", 10) / 100;
   const serviceFeeAmountNum = parseInt(service_fee_amount ?? "0", 10) / 100;
 
   if (!Number.isFinite(basketAmountNum) || basketAmountNum < 0 || basketAmountNum > 99999) {
     console.error("[webhook] Invalid basket_amount in PI metadata:", basket_amount, paymentIntent.id);
     return;
   }
-
-  const netAmountNum = basketAmountNum - commissionAmountNum;
 
   // Find the existing order created by the Edge Function
   const { data: order, error: orderError } = await supabase
@@ -314,22 +309,8 @@ async function handlePaymentIntentSucceeded(
     p_quantity: quantityNum,
   });
 
-  // Create ledger entries
-  if (commerce_id && commissionAmountNum > 0) {
-    try {
-      await createPaymentLedgerEntries({
-        commerceId: commerce_id,
-        orderId: order.id,
-        totalAmount: basketAmountNum,
-        commissionAmount: commissionAmountNum,
-        serviceFeeAmount: serviceFeeAmountNum,
-        netAmount: netAmountNum,
-        stripePaymentIntentId: paymentIntent.id,
-      });
-    } catch (ledgerErr) {
-      console.error("[webhook] Ledger entry failed (mobile):", ledgerErr);
-    }
-  }
+  // Pas d'écriture comptable ici non plus : la capture s'en charge, avec le
+  // montant réellement encaissé, qu'un geste commercial peut avoir réduit.
 
   // Fetch real Stripe fee
   try {
@@ -641,6 +622,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
+      case "payment_intent.amount_capturable_updated":
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(
           event.data.object as Stripe.PaymentIntent
