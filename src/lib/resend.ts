@@ -1257,3 +1257,69 @@ export function emailPaiementAjuste(params: {
     `),
   };
 }
+
+/**
+ * Informe le client de la décision prise sur son signalement.
+ *
+ * Un client qui signale un problème et n'obtient aucune réponse ne signale plus,
+ * il conteste auprès de sa banque — ce qui coûte les frais de litige et pèse sur
+ * le taux de contestations. Répondre, même pour refuser, est donc autant une
+ * question de service qu'une protection.
+ */
+export function emailDecisionSignalement(params: {
+  clientName: string;
+  decision: "maintenu" | "partiel" | "annule";
+  montantDebite: number;
+  montantInitial: number;
+  motif?: string;
+}): { subject: string; html: string } {
+  const { clientName, decision, montantDebite, montantInitial, motif } = params;
+  const euros = (v: number) => v.toFixed(2).replace(".", ",") + " €";
+
+  const corps: Record<typeof decision, { titre: string; texte: string }> = {
+    maintenu: {
+      titre: "Nous avons examiné votre signalement",
+      texte: `Après vérification, nous n'avons pas pu retenir votre demande, et le
+        montant de ${escapeHtml(euros(montantInitial))} reste dû. Si vous disposez
+        d'éléments complémentaires, une photo par exemple, répondez à cet email :
+        nous réexaminerons le dossier.`,
+    },
+    partiel: {
+      titre: "Votre signalement a été retenu",
+      texte: `Vous n'avez été débité que de <strong>${escapeHtml(euros(montantDebite))}</strong>
+        au lieu de ${escapeHtml(euros(montantInitial))}. La différence n'a jamais été
+        prélevée sur votre moyen de paiement, vous n'avez donc aucun remboursement
+        à attendre.`,
+    },
+    annule: {
+      titre: "Votre commande a été annulée",
+      texte: `Vous <strong>n'avez pas été débité</strong>. Le montant de
+        ${escapeHtml(euros(montantInitial))} était seulement réservé sur votre moyen
+        de paiement : il est libéré, et l'empreinte disparaîtra de votre relevé sous
+        quelques jours selon votre banque.`,
+    },
+  };
+
+  const { titre, texte } = corps[decision];
+
+  return {
+    subject: `Kshare — ${titre}`,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${escapeHtml(clientName)},</h2>
+      <p style="color:#333;line-height:1.7;">${texte}</p>
+      ${
+        motif
+          ? `<div style="background:#f8f9fc;border-radius:8px;padding:16px;margin:16px 0;">
+               <p style="margin:0 0 4px;color:#666;font-size:13px;">Motif retenu</p>
+               <p style="margin:0;color:#333;">${escapeHtml(motif)}</p>
+             </div>`
+          : ""
+      }
+      <p style="color:#333;line-height:1.7;">
+        Le détail figure aussi dans votre demande, depuis l'onglet Profil de
+        l'application.
+      </p>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}

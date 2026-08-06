@@ -9,15 +9,111 @@ import {
   annulerAutorisation,
   type OrderForCapture,
 } from "@/lib/stripe/capture";
-import { sendEmail, emailPaiementAjuste } from "@/lib/resend";
+import { sendEmail, emailPaiementAjuste, emailDecisionSignalement } from "@/lib/resend";
 import { logAuditEvent } from "@/lib/audit-log";
+import type { Database } from "@/types/database.types";
+
+/** Colonne jsonb : Supabase attend son propre type Json, pas un tableau d'objets. */
+type Json = Database["public"]["Tables"]["support_tickets"]["Row"]["messages"];
 
 export type AdminOrderActionResult =
   | { success: true }
   | { success: false; error: string };
 
 const COLONNES_CAPTURE =
-  "id, status, capture_status, stripe_payment_intent_id, total_amount, service_fee_amount, commission_amount, commerce_id, created_at";
+  "id, status, capture_status, stripe_payment_intent_id, total_amount, service_fee_amount, commission_amount, commerce_id, client_id, created_at";
+
+/**
+ * Répond au client sur son signalement : message dans son fil de discussion,
+ * clôture du ticket, et email.
+ *
+ * Un client sans réponse ne signale plus, il conteste auprès de sa banque. La
+ * réponse est donc autant du service que la protection du taux de litiges.
+ * Non bloquant : la décision de paiement prime sur la notification.
+ */
+async function informerClient(
+  orderId: string,
+  clientId: string | null,
+  adminId: string,
+  decision: "maintenu" | "partiel" | "annule",
+  montantDebite: number,
+  montantInitial: number,
+  motif?: string,
+): Promise<void> {
+  const supabase = createAdminClient();
+  const maintenant = new Date().toISOString();
+
+  const textes: Record<typeof decision, string> = {
+    maintenu:
+      "Après vérification, nous n'avons pas pu retenir votre demande. Si vous disposez d'éléments complémentaires, une photo par exemple, répondez ici : nous réexaminerons le dossier.",
+    partiel: `Votre signalement a été retenu. Vous n'avez été débité que de ${montantDebite
+      .toFixed(2)
+      .replace(".", ",")} € au lieu de ${montantInitial.toFixed(2).replace(".", ",")} €.`,
+    annule:
+      "Votre commande a été annulée et vous n'avez pas été débité. Le montant réservé sur votre moyen de paiement est libéré.",
+  };
+  const contenu = motif ? `${textes[decision]}\n\nMotif : ${motif}` : textes[decision];
+
+  try {
+    // Le fil de discussion est le canal que le client consulte : on y répond,
+    // et on clôt le ticket dans la foulée.
+    const { data: tickets } = await supabase
+      .from("support_tickets")
+      .select("id, messages")
+      .eq("order_id", orderId)
+      .in("status", ["open", "in_progress"]);
+
+    for (const ticket of tickets ?? []) {
+      const existants = (ticket.messages ?? []) as Array<Record<string, unknown>>;
+      const messages = [
+        ...existants,
+        {
+          role: "admin",
+          sender: "admin",
+          name: "Équipe Kshare",
+          author_id: adminId,
+          content: contenu,
+          text: contenu,
+          created_at: maintenant,
+        },
+      ] as unknown as Json;
+
+      await supabase
+        .from("support_tickets")
+        .update({
+          messages,
+          status: "resolved",
+          resolved_at: maintenant,
+          resolved_by: adminId,
+        })
+        .eq("id", ticket.id);
+    }
+  } catch (error) {
+    console.error("[admin/commandes] Réponse au ticket non enregistrée:", error);
+  }
+
+  if (!clientId) return;
+  try {
+    const { data: profil } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", clientId)
+      .single();
+
+    if (!profil?.email) return;
+
+    const { subject, html } = emailDecisionSignalement({
+      clientName: profil.full_name ?? "",
+      decision,
+      montantDebite,
+      montantInitial,
+      motif,
+    });
+    await sendEmail({ to: profil.email, subject, html });
+  } catch (error) {
+    console.error("[admin/commandes] Email de décision non envoyé:", error);
+  }
+}
 
 /**
  * Prévient le commerce d'un paiement réduit ou annulé.
@@ -105,16 +201,33 @@ export async function adminValiderPaiement(
     metadata: { pourcentage, montant: resultat.capturedAmount, motif: motif ?? null },
   });
 
+  // Montants vus par le client : le prix du panier majoré des frais de service.
+  const paye = Number(order.total_amount ?? 0) + Number(order.service_fee_amount ?? 0);
+  const payeApres = Math.round(paye * (pourcentage / 100) * 100) / 100;
+
   if (partiel) {
-    const initial = Number(order.total_amount ?? 0) - Number(order.commission_amount ?? 0);
+    const netCommerce =
+      Number(order.total_amount ?? 0) - Number(order.commission_amount ?? 0);
     await previenirCommerce(
       order.commerce_id,
-      initial,
-      Math.round(initial * (pourcentage / 100) * 100) / 100,
+      netCommerce,
+      Math.round(netCommerce * (pourcentage / 100) * 100) / 100,
       motif!.trim(),
       order.created_at,
     );
   }
+
+  // Le client est informé dans les deux cas : un signalement écarté sans réponse
+  // se transforme en contestation bancaire.
+  await informerClient(
+    orderId,
+    order.client_id,
+    ctx.user.id,
+    partiel ? "partiel" : "maintenu",
+    payeApres,
+    paye,
+    motif?.trim(),
+  );
 
   revalidatePath("/kshare-admin/commandes");
   return { success: true };
@@ -156,8 +269,12 @@ export async function adminAnnulerPaiement(
     metadata: { motif: motif.trim() },
   });
 
-  const initial = Number(order.total_amount ?? 0) - Number(order.commission_amount ?? 0);
-  await previenirCommerce(order.commerce_id, initial, 0, motif.trim(), order.created_at);
+  const netCommerce =
+    Number(order.total_amount ?? 0) - Number(order.commission_amount ?? 0);
+  await previenirCommerce(order.commerce_id, netCommerce, 0, motif.trim(), order.created_at);
+
+  const paye = Number(order.total_amount ?? 0) + Number(order.service_fee_amount ?? 0);
+  await informerClient(orderId, order.client_id, ctx.user.id, "annule", 0, paye, motif.trim());
 
   revalidatePath("/kshare-admin/commandes");
   return { success: true };
