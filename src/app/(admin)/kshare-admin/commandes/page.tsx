@@ -20,7 +20,7 @@ export default async function AdminCommandesPage() {
     supabase
       .from("orders")
       .select(`
-        id, status, quantity, total_amount, created_at, is_donation,
+        id, status, quantity, total_amount, created_at, is_donation, capture_status,
         baskets!inner(sold_price, type),
         profiles!orders_client_id_fkey(full_name, email, phone),
         commerces(name, commerce_type),
@@ -47,6 +47,7 @@ export default async function AdminCommandesPage() {
       id:               o.id,
       orderNumber:      formatOrderNumber(o.id, o.created_at),
       status:           o.status,
+      captureStatus:    o.capture_status,
       date:             formatDate(o.created_at),
       quantity:         o.quantity ?? 1,
       pricePerBasket:   basket?.sold_price ?? 0,

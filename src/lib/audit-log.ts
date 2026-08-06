@@ -16,6 +16,8 @@ export type AuditAction =
   | "admin.request_info"
   | "admin.resend_recovery_link"
   | "admin.connect_account_created"
+  | "admin.order_captured"
+  | "admin.order_authorization_canceled"
   | "admin.platform_launched"
   | "admin.launch_emails_sent"
   | "admin.delete_user"
