@@ -308,7 +308,7 @@ export async function adminRembourserCommande(
 
   const { data: order } = await supabase
     .from("orders")
-    .select("id, status, stripe_payment_intent_id, total_amount")
+    .select("id, status, capture_status, stripe_payment_intent_id, total_amount")
     .eq("id", orderId)
     .single();
 
@@ -316,6 +316,17 @@ export async function adminRembourserCommande(
 
   if (["refunded", "cancelled_admin"].includes(order.status)) {
     return { success: false, error: "Cette commande est deja remboursee ou annulee." };
+  }
+
+  // Stripe refuse de rembourser une autorisation : il n'y a rien à rendre tant
+  // que rien n'a été prélevé. L'interface masque déjà le bouton, ce garde-fou
+  // couvre les appels directs.
+  if (order.capture_status === "pending") {
+    return {
+      success: false,
+      error:
+        "Paiement pas encore encaissé : utilisez « Annuler le paiement » pour relâcher les fonds, sans frais.",
+    };
   }
 
   // Attempt Stripe refund if payment intent exists

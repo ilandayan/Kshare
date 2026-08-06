@@ -151,6 +151,28 @@ export async function capturerCommande(
     })
     .eq("id", order.id);
 
+  // Frais Stripe réels : ils n'existent qu'une fois la transaction réglée. Les
+  // lire à l'autorisation renvoyait toujours zéro, d'où la route de
+  // réconciliation qui devait ensuite les rattraper commande par commande.
+  try {
+    const pi = await getStripe().paymentIntents.retrieve(
+      order.stripe_payment_intent_id,
+      { expand: ["latest_charge.balance_transaction"] },
+    );
+    const charge = pi.latest_charge as Stripe.Charge | null;
+    const bt = charge?.balance_transaction as Stripe.BalanceTransaction | null;
+    if (bt) {
+      await supabase
+        .from("orders")
+        .update({ stripe_fee_amount: bt.fee / 100 })
+        .eq("id", order.id);
+    }
+  } catch (error) {
+    // Sans gravité : la route de réconciliation sait rattraper une commande
+    // dont les frais n'ont pas pu être lus.
+    console.error("[capture] Frais Stripe non récupérés pour", order.id, error);
+  }
+
   // Le grand livre est alimenté ici, et nulle part ailleurs : c'est le seul
   // moment où l'argent existe réellement, et le seul endroit qui connaisse le
   // montant effectivement capturé. Les écritures portées par les webhooks
