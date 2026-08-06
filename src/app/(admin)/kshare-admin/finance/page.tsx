@@ -84,17 +84,24 @@ export default async function FinancePage({
   const supabase = await createClient();
 
   // Build queries with optional upper bound for year filters
+  // `no_show` compte comme une vente : le panier a été préparé, le paiement
+  // encaissé, la commission prélevée. L'exclure minorait les revenus de Kshare.
   let paidQuery = supabase
     .from("orders")
     .select("total_amount, commission_amount, service_fee_amount, stripe_fee_amount, is_donation" as string)
-    .in("status", ["paid", "ready_for_pickup", "picked_up"])
+    .in("status", ["paid", "ready_for_pickup", "picked_up", "no_show"])
     .gte("created_at", periodISO);
   if (periodEndISO) paidQuery = paidQuery.lt("created_at", periodEndISO);
 
+  // Reste à verser : mêmes critères que le cron du mardi, sans quoi l'admin
+  // afficherait un montant que le virement ne paiera pas. Une commande dont la
+  // capture est suspendue ou a échoué ne correspond à aucun argent disponible.
   let pendingQuery = supabase
     .from("orders")
     .select("id, commerce_id, net_amount, created_at, commerces(name)")
-    .eq("status", "picked_up")
+    .in("status", ["picked_up", "no_show"])
+    .in("capture_status", ["captured", "partially_captured"])
+    .eq("payout_status", "pending")
     .eq("is_donation", false)
     .gte("created_at", periodISO);
   if (periodEndISO) pendingQuery = pendingQuery.lt("created_at", periodEndISO);

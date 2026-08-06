@@ -82,12 +82,17 @@ export default async function DashboardPage({
 
   const periodStart = getPeriodStart(period, commerce.created_at);
 
-  // Fetch paid orders in period
+  // Commandes du commerce sur la période.
+  //
+  // `no_show` est inclus : le panier a été préparé, le paiement est encaissé et
+  // le commerce viré. L'exclure lui masquait une part réelle de son chiffre.
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, total_amount, quantity, created_at, is_donation")
+    .select(
+      "id, total_amount, commission_amount, net_amount, quantity, created_at, is_donation",
+    )
     .eq("commerce_id", commerce.id)
-    .in("status", ["paid", "ready_for_pickup", "picked_up"])
+    .in("status", ["paid", "ready_for_pickup", "picked_up", "no_show"])
     .gte("created_at", periodStart.toISOString());
 
   // Fetch baskets in period for type breakdown + bar chart
@@ -100,10 +105,16 @@ export default async function DashboardPage({
   const allOrders  = orders ?? [];
   const allBaskets = basketsRaw ?? [];
 
-  const commissionRate = (commerce.commission_rate ?? 18) / 100;
-  const caGenere   = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
-  const commission = caGenere * commissionRate;
-  const caNet      = caGenere - commission;
+  // Montants lus sur chaque commande, jamais recalculés depuis le taux courant.
+  //
+  // Les recalculer avait trois conséquences : un changement de plan réécrivait
+  // rétroactivement l'historique au nouveau taux ; les dons, dont la commission
+  // est nulle, se voyaient appliquer 18 % ; et un geste commercial sur un panier
+  // non conforme n'était pas répercuté, le commerce voyant un net supérieur à ce
+  // qu'il allait recevoir.
+  const commission = allOrders.reduce((s, o) => s + Number(o.commission_amount ?? 0), 0);
+  const caNet      = allOrders.reduce((s, o) => s + Number(o.net_amount ?? 0), 0);
+  const caGenere   = Math.round((caNet + commission) * 100) / 100;
   const paniers    = allOrders.reduce((s, o) => s + (o.quantity ?? 1), 0);
   const donCommerce = allBaskets.filter((b) => b.is_donation).length;
   const donClients  = allOrders.filter((o) => o.is_donation).length;
@@ -217,12 +228,11 @@ export default async function DashboardPage({
     }
   }
 
-  // Pie chart — basket type distribution
+  // Répartition par type de panier, calculée sur les paniers vendus.
+  //
+  // Une boucle vide sur les commandes subsistait ici, vestige d'une tentative
+  // de répartition par commande abandonnée faute de jointure sur le type.
   const typeCounts: Record<string, number> = {};
-  allOrders.forEach((o) => {
-    // approximate: each order contributes quantity to a type — we'd need basket type join
-    // For now use a simplified count per order
-  });
   allBaskets.forEach((b) => {
     typeCounts[b.type] = (typeCounts[b.type] ?? 0) + (b.quantity_sold ?? 1);
   });
