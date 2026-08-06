@@ -64,10 +64,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         }
       }
 
-      // Mettre à jour le statut de la commande
+      // Statut ET état de capture : sans ce second champ, la commande resterait
+      // « en attente de capture » et le cron du soir tenterait de l'encaisser.
       await supabase
         .from("orders")
-        .update({ status: "expired" })
+        .update({
+          status: "expired",
+          capture_status: "canceled",
+          captured_amount: 0,
+          net_amount: 0,
+          commission_amount: 0,
+        })
         .eq("id", order.id);
 
       // Décrémenter quantity_reserved du panier

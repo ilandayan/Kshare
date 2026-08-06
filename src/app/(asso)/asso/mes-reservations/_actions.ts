@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getStripe } from "@/lib/stripe/client";
+import { capturerCommande, type OrderForCapture } from "@/lib/stripe/capture";
 
 export type ReservationActionResult =
   | { success: true }
@@ -34,7 +34,7 @@ export async function confirmerCollecte(
   const { data: order } = await admin
     .from("orders")
     .select(
-      "id, status, association_id, is_donation, stripe_payment_intent_id, basket_id, quantity"
+      "id, status, association_id, is_donation, stripe_payment_intent_id, basket_id, quantity, capture_status, total_amount, service_fee_amount, commission_amount, commerce_id"
     )
     .eq("id", orderId)
     .single();
@@ -54,13 +54,15 @@ export async function confirmerCollecte(
     };
   }
 
-  // Pour les dons clients : capturer le paiement Stripe au moment de la collecte
+  // Pour les dons clients : capturer le paiement au moment de la collecte.
+  //
+  // Passe par capturerCommande plutôt que par un appel Stripe direct : sans
+  // cela `capture_status` resterait à « pending », le virement hebdomadaire
+  // exclurait la commande, et aucune écriture comptable ne serait produite.
   if (order.stripe_payment_intent_id) {
-    const stripe = getStripe();
-    try {
-      await stripe.paymentIntents.capture(order.stripe_payment_intent_id);
-    } catch (err) {
-      console.error("[confirmerCollecte] Stripe capture error:", err);
+    const resultat = await capturerCommande(order as unknown as OrderForCapture);
+    if (!resultat.success) {
+      console.error("[confirmerCollecte] Capture échouée:", resultat.error);
       return {
         success: false,
         error:

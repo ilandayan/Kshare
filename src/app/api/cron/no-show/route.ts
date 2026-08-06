@@ -62,10 +62,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Commandes encore en attente de capture : retraits confirmés du jour, et
   // commandes dont le créneau pourrait être écoulé.
+  // Les dons sont exclus : leur encaissement est déclenché par la collecte de
+  // l'association, et le cron d'expiration relâche ceux que personne ne prend.
+  // Les capturer ici prélèverait le client pour un panier jamais collecté.
   const { data: enAttente, error } = await supabase
     .from("orders")
     .select(COLONNES_CAPTURE)
     .eq("capture_status", "pending")
+    .eq("is_donation", false)
     .in("status", ["paid", "ready_for_pickup", "picked_up"]);
 
   if (error) {
