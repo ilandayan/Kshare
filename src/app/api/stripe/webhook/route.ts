@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomInt, randomBytes } from "crypto";
+import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
 import { createPaymentLedgerEntries } from "@/lib/stripe/ledger";
@@ -387,21 +387,6 @@ async function handlePaymentIntentSucceeded(
   console.info("[webhook] Mobile order confirmed:", order.id);
 }
 
-async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
-  if (!account.charges_enabled) return;
-
-  const supabase = createAdminClient();
-
-  const { error } = await supabase
-    .from("commerces")
-    .update({ stripe_account_id: account.id })
-    .eq("stripe_account_id", account.id);
-
-  if (error) {
-    console.error("[webhook] Failed to update commerce for account:", account.id, error);
-  }
-}
-
 async function handleSubscriptionCreatedOrUpdated(
   subscription: Stripe.Subscription
 ): Promise<void> {
@@ -660,9 +645,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
-      case "account.updated":
-        await handleAccountUpdated(event.data.object as Stripe.Account);
-        break;
+      // `account.updated` est traité par /api/stripe/webhook/connect, seul
+      // endpoint abonné aux événements des comptes connectés. Le handler qui
+      // existait ici réécrivait `stripe_account_id` avec sa propre valeur :
+      // il ne faisait rien, tout en laissant croire que le cas était couvert.
 
       case "customer.subscription.created":
       case "customer.subscription.updated":
