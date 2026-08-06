@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
  * Cron job: weekly payout to commerces via Stripe Connect.
  * Runs every Tuesday at 06:00 UTC via Vercel cron.
  *
- * Calculates net_amount for all picked_up orders since last payout
- * and triggers a Stripe payout for each commerce.
+ * Somme le net_amount des commandes retirées ou non retirées dont le paiement
+ * a effectivement été encaissé, puis déclenche un virement par commerce.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
@@ -51,12 +51,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   for (const commerce of commerces) {
     if (!commerce.stripe_account_id) continue;
 
-    // Get picked_up orders not yet paid out
+    // Commandes encaissées et non encore virées.
+    //
+    // `capture_status` est déterminant depuis le passage en capture différée :
+    // une commande retirée mais dont la capture est suspendue par un
+    // signalement, ou a échoué, ne correspond à aucun argent sur le compte
+    // Stripe du commerce. L'inclure gonflerait le total, et le virement entier
+    // serait alors refusé pour solde insuffisant.
+    //
+    // Les no-shows sont inclus : le panier a été préparé, la capture a eu lieu,
+    // le commerce doit être payé. Les exclure laissait ces fonds dormir
+    // indéfiniment sur son solde Stripe.
     const { data: orders, error: ordersError } = await supabase
       .from("orders")
       .select("id, net_amount")
       .eq("commerce_id", commerce.id)
-      .eq("status", "picked_up")
+      .in("status", ["picked_up", "no_show"])
+      .in("capture_status", ["captured", "partially_captured"])
       .eq("payout_status", "pending")
       .gt("net_amount", 0);
 
