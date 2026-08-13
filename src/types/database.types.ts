@@ -257,6 +257,48 @@ export type Database = {
           },
         ]
       }
+      charges: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          incurred_on: string
+          label: string
+          notes: string | null
+          receipt_url: string | null
+          recurring: boolean
+          supplier: string | null
+          vat_amount: number | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          id?: string
+          incurred_on: string
+          label: string
+          notes?: string | null
+          receipt_url?: string | null
+          recurring?: boolean
+          supplier?: string | null
+          vat_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          incurred_on?: string
+          label?: string
+          notes?: string | null
+          receipt_url?: string | null
+          recurring?: boolean
+          supplier?: string | null
+          vat_amount?: number | null
+        }
+        Relationships: []
+      }
       commerces: {
         Row: {
           address: string
@@ -434,6 +476,36 @@ export type Database = {
           },
         ]
       }
+      crm_documents: {
+        Row: {
+          category: string
+          created_at: string
+          file_url: string | null
+          id: string
+          issued_on: string | null
+          notes: string | null
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          issued_on?: string | null
+          notes?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          issued_on?: string | null
+          notes?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       disputes: {
         Row: {
           amount: number
@@ -526,6 +598,80 @@ export type Database = {
           },
           {
             foreignKeyName: "favorites_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_ht: number
+          amount_ttc: number
+          commerce_id: string | null
+          commission_total: number
+          created_at: string
+          id: string
+          issued_at: string | null
+          notes: string | null
+          number: string
+          orders_count: number
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          sent_at: string | null
+          sequence_number: number
+          status: string
+          updated_at: string
+          vat_amount: number
+          vat_rate: number
+        }
+        Insert: {
+          amount_ht?: number
+          amount_ttc?: number
+          commerce_id?: string | null
+          commission_total?: number
+          created_at?: string
+          id?: string
+          issued_at?: string | null
+          notes?: string | null
+          number: string
+          orders_count?: number
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          sent_at?: string | null
+          sequence_number?: number
+          status?: string
+          updated_at?: string
+          vat_amount?: number
+          vat_rate?: number
+        }
+        Update: {
+          amount_ht?: number
+          amount_ttc?: number
+          commerce_id?: string | null
+          commission_total?: number
+          created_at?: string
+          id?: string
+          issued_at?: string | null
+          notes?: string | null
+          number?: string
+          orders_count?: number
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          sent_at?: string | null
+          sequence_number?: number
+          status?: string
+          updated_at?: string
+          vat_amount?: number
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_commerce_id_fkey"
             columns: ["commerce_id"]
             isOneToOne: false
             referencedRelation: "commerces"
@@ -945,66 +1091,143 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_activities: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string | null
+          direction: string | null
+          id: string
+          occurred_at: string
+          outcome: string | null
+          prospect_id: string
+          subject: string | null
+          type: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          direction?: string | null
+          id?: string
+          occurred_at?: string
+          outcome?: string | null
+          prospect_id: string
+          subject?: string | null
+          type: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          direction?: string | null
+          id?: string
+          occurred_at?: string
+          outcome?: string | null
+          prospect_id?: string
+          subject?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_activities_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prospects: {
         Row: {
+          address: string | null
           admin_notes: string | null
-          city: string
-          commerce_type: string
+          category: string | null
+          city: string | null
+          commerce_type: string | null
           company_name: string
           contacted_at: string | null
           converted_at: string | null
           created_at: string
-          email: string
-          first_name: string
+          cuisine_type: string | null
+          email: string | null
+          external_links: Json | null
+          first_name: string | null
+          hashgakha: string | null
           id: string
-          last_name: string
+          last_name: string | null
           message: string | null
+          mobile: string | null
+          next_action_at: string | null
           phone: string | null
           plan_interest: string | null
           postal_code: string | null
+          region: string | null
           source: string
+          sources: string | null
           status: string
           updated_at: string
+          website: string | null
         }
         Insert: {
+          address?: string | null
           admin_notes?: string | null
-          city: string
-          commerce_type: string
+          category?: string | null
+          city?: string | null
+          commerce_type?: string | null
           company_name: string
           contacted_at?: string | null
           converted_at?: string | null
           created_at?: string
-          email: string
-          first_name: string
+          cuisine_type?: string | null
+          email?: string | null
+          external_links?: Json | null
+          first_name?: string | null
+          hashgakha?: string | null
           id?: string
-          last_name: string
+          last_name?: string | null
           message?: string | null
+          mobile?: string | null
+          next_action_at?: string | null
           phone?: string | null
           plan_interest?: string | null
           postal_code?: string | null
+          region?: string | null
           source?: string
+          sources?: string | null
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          address?: string | null
           admin_notes?: string | null
-          city?: string
-          commerce_type?: string
+          category?: string | null
+          city?: string | null
+          commerce_type?: string | null
           company_name?: string
           contacted_at?: string | null
           converted_at?: string | null
           created_at?: string
-          email?: string
-          first_name?: string
+          cuisine_type?: string | null
+          email?: string | null
+          external_links?: Json | null
+          first_name?: string | null
+          hashgakha?: string | null
           id?: string
-          last_name?: string
+          last_name?: string | null
           message?: string | null
+          mobile?: string | null
+          next_action_at?: string | null
           phone?: string | null
           plan_interest?: string | null
           postal_code?: string | null
+          region?: string | null
           source?: string
+          sources?: string | null
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

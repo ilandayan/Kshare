@@ -108,7 +108,10 @@ export default async function ProspectsPage() {
                 phone: p.phone,
                 companyName: p.company_name,
                 commerceType: p.commerce_type,
-                commerceTypeLabel: COMMERCE_TYPE_LABELS[p.commerce_type] ?? p.commerce_type,
+                commerceTypeLabel:
+                  (p.commerce_type ? COMMERCE_TYPE_LABELS[p.commerce_type] : null) ??
+                  p.commerce_type ??
+                  "",
                 city: p.city,
                 postalCode: p.postal_code,
                 planInterest: p.plan_interest,

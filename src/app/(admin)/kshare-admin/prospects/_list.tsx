@@ -33,14 +33,16 @@ import { updateProspectStatus, updateProspectNotes, deleteProspect } from "./_ac
 
 interface Prospect {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  // Nullables depuis l'ouverture de la table au démarchage sortant : un
+  // commerce recensé dans le fichier n'a ni contact nommé ni email.
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
   phone: string | null;
   companyName: string;
-  commerceType: string;
+  commerceType: string | null;
   commerceTypeLabel: string;
-  city: string;
+  city: string | null;
   postalCode: string | null;
   planInterest: string | null;
   planLabel: string;
