@@ -19,6 +19,12 @@ export const STATUT_LABELS: Record<string, string> = {
 
 const PAGE = 100;
 
+/** Statuts comptés sur la page. Doit rester aligné sur STATUTS_PROSPECT. */
+const STATUTS = [
+  "new", "contacted", "to_call_back", "demo_scheduled", "converted",
+  "rejected", "no_response", "wrong_number", "do_not_contact", "closed",
+] as const;
+
 export default async function ProspectionPage({
   searchParams,
 }: {
@@ -28,13 +34,19 @@ export default async function ProspectionPage({
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
   const supabase = createAdminClient();
 
-  // Compteurs par statut, calculés côté base : 1053 lignes ne se comptent pas
-  // en mémoire à chaque affichage.
-  const { data: tousStatuts } = await supabase.from("prospects").select("status");
+  // Un compteur par statut, en `head` : ramener les lignes pour les compter en
+  // mémoire butait sur la limite de mille résultats de PostgREST, et affichait
+  // 991 « à contacter » là où la base en a 1028.
   const compteurs: Record<string, number> = {};
-  for (const p of tousStatuts ?? []) {
-    compteurs[p.status] = (compteurs[p.status] ?? 0) + 1;
-  }
+  await Promise.all(
+    STATUTS.map(async (s) => {
+      const { count } = await supabase
+        .from("prospects")
+        .select("id", { count: "exact", head: true })
+        .eq("status", s);
+      if (count) compteurs[s] = count;
+    }),
+  );
 
   let requete = supabase
     .from("prospects")
