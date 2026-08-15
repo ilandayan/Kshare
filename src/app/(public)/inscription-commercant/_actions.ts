@@ -88,6 +88,13 @@ export async function inscriptionCommercant(
     return { success: false, error: "Cette adresse email est déjà utilisée pour un commerce." };
   }
 
+  // Position du commerce : elle sert à la carte de l'application et au rayon de
+  // 50 km dans lequel les associations voient ses paniers dons. Un échec de
+  // géocodage n'empêche pas l'inscription — le commerce sera simplement absent
+  // de la carte tant que l'adresse n'aura pas été résolue.
+  const { geocoderAdresseOuNull } = await import("@/lib/geocode");
+  const coords = await geocoderAdresseOuNull(adresse, codePostal, ville);
+
   // Créer le commerce SANS compte Auth (sera créé à la validation admin)
   const { data: commerce, error: commerceError } = await supabase
     .from("commerces")
@@ -100,6 +107,8 @@ export async function inscriptionCommercant(
       address: adresse,
       city: ville,
       postal_code: codePostal,
+      latitude: coords?.latitude ?? null,
+      longitude: coords?.longitude ?? null,
       hashgakha,
       phone: telephone,
       siret,

@@ -254,6 +254,17 @@ export async function publishBasket(
     ).catch(() => {});
   }
 
+  // Un panier don dont personne n'est averti finit à la poubelle : les
+  // associations ne consultent pas l'application toute la journée, et le
+  // créneau est souvent le soir même. L'envoi ne bloque pas la publication —
+  // un email en échec ne doit pas faire croire au commerçant que son panier
+  // n'est pas en ligne.
+  if (basket?.is_donation) {
+    import("@/lib/dons/prevenir-associations")
+      .then((m) => m.prevenirAssociations(basketId))
+      .catch(() => {});
+  }
+
   return { success: true };
 }
 

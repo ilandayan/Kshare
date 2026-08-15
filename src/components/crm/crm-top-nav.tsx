@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
  */
 const TABS = [
   { label: "Prospection", href: "/crm" },
+  { label: "Associations", href: "/crm/associations" },
   { label: "Clients", href: "/crm/clients" },
   { label: "Chiffres", href: "/crm/chiffres" },
   { label: "Seuils", href: "/crm/seuils" },

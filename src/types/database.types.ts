@@ -38,6 +38,66 @@ export type Database = {
         }
         Relationships: []
       }
+      association_leads: {
+        Row: {
+          address: string | null
+          commerce_id: string | null
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          handled_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          address?: string | null
+          commerce_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          handled_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          address?: string | null
+          commerce_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          handled_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "association_leads_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "association_leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       associations: {
         Row: {
           address: string
@@ -51,8 +111,11 @@ export type Database = {
           created_at: string
           department: string | null
           email: string
+          geocoded_at: string | null
           id: string
           id_document_url: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           profile_id: string | null
           representative_first_name: string | null
@@ -76,8 +139,11 @@ export type Database = {
           created_at?: string
           department?: string | null
           email: string
+          geocoded_at?: string | null
           id?: string
           id_document_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
           profile_id?: string | null
           representative_first_name?: string | null
@@ -101,8 +167,11 @@ export type Database = {
           created_at?: string
           department?: string | null
           email?: string
+          geocoded_at?: string | null
           id?: string
           id_document_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           profile_id?: string | null
           representative_first_name?: string | null
@@ -167,6 +236,8 @@ export type Database = {
           created_at: string
           day: Database["public"]["Enums"]["basket_day"]
           description: string | null
+          exclusive_association_id: string | null
+          exclusive_until: string | null
           expires_at: string | null
           id: string
           is_donation: boolean
@@ -187,6 +258,8 @@ export type Database = {
           created_at?: string
           day: Database["public"]["Enums"]["basket_day"]
           description?: string | null
+          exclusive_association_id?: string | null
+          exclusive_until?: string | null
           expires_at?: string | null
           id?: string
           is_donation?: boolean
@@ -207,6 +280,8 @@ export type Database = {
           created_at?: string
           day?: Database["public"]["Enums"]["basket_day"]
           description?: string | null
+          exclusive_association_id?: string | null
+          exclusive_until?: string | null
           expires_at?: string | null
           id?: string
           is_donation?: boolean
@@ -228,6 +303,20 @@ export type Database = {
             columns: ["commerce_id"]
             isOneToOne: false
             referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "baskets_exclusive_association_id_fkey"
+            columns: ["exclusive_association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "baskets_exclusive_association_id_fkey"
+            columns: ["exclusive_association_id"]
+            isOneToOne: false
+            referencedRelation: "associations_publiques"
             referencedColumns: ["id"]
           },
         ]
@@ -306,6 +395,7 @@ export type Database = {
           phone: string | null
           photos: string[] | null
           postal_code: string | null
+          preferred_association_id: string | null
           profile_id: string | null
           representative_first_name: string | null
           representative_last_name: string | null
@@ -359,6 +449,7 @@ export type Database = {
           phone?: string | null
           photos?: string[] | null
           postal_code?: string | null
+          preferred_association_id?: string | null
           profile_id?: string | null
           representative_first_name?: string | null
           representative_last_name?: string | null
@@ -412,6 +503,7 @@ export type Database = {
           phone?: string | null
           photos?: string[] | null
           postal_code?: string | null
+          preferred_association_id?: string | null
           profile_id?: string | null
           representative_first_name?: string | null
           representative_last_name?: string | null
@@ -436,6 +528,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "commerces_preferred_association_id_fkey"
+            columns: ["preferred_association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerces_preferred_association_id_fkey"
+            columns: ["preferred_association_id"]
+            isOneToOne: false
+            referencedRelation: "associations_publiques"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "commerces_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -455,29 +561,38 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          file_size: number | null
           file_url: string | null
           id: string
           issued_on: string | null
+          mime_type: string | null
           notes: string | null
           title: string
+          uploaded_by: string | null
         }
         Insert: {
           category: string
           created_at?: string
+          file_size?: number | null
           file_url?: string | null
           id?: string
           issued_on?: string | null
+          mime_type?: string | null
           notes?: string | null
           title: string
+          uploaded_by?: string | null
         }
         Update: {
           category?: string
           created_at?: string
+          file_size?: number | null
           file_url?: string | null
           id?: string
           issued_on?: string | null
+          mime_type?: string | null
           notes?: string | null
           title?: string
+          uploaded_by?: string | null
         }
         Relationships: []
       }
@@ -938,6 +1053,13 @@ export type Database = {
             columns: ["association_id"]
             isOneToOne: false
             referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations_publiques"
             referencedColumns: ["id"]
           },
           {
@@ -1575,6 +1697,27 @@ export type Database = {
       }
     }
     Views: {
+      associations_publiques: {
+        Row: {
+          city: string | null
+          department: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          city?: string | null
+          department?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          city?: string | null
+          department?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
@@ -1817,8 +1960,60 @@ export type Database = {
         }
         Returns: undefined
       }
+      crm_chiffres: {
+        Args: { p_debut: string; p_fin: string }
+        Returns: {
+          commission: number
+          commission_rendue: number
+          dons: number
+          frais_service: number
+          frais_stripe: number
+          mois: string
+          paniers: number
+          remboursements: number
+          ventes: number
+        }[]
+      }
+      crm_clients: {
+        Args: never
+        Returns: {
+          commerce_id: string
+          commission: number
+          commission_30j: number
+          derniere_vente: string
+          paniers: number
+          paniers_30j: number
+          premiere_vente: string
+          ventes: number
+          ventes_30j: number
+        }[]
+      }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       disablelongtransactions: { Args: never; Returns: string }
+      distance_km: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      dons_disponibles: {
+        Args: { p_rayon_km?: number }
+        Returns: {
+          commerce_address: string
+          commerce_city: string
+          commerce_name: string
+          commerce_postal_code: string
+          commerce_type: string
+          day: string
+          description: string
+          distance_km: number
+          exclusif: boolean
+          id: string
+          pickup_end: string
+          pickup_start: string
+          quantity_reserved: number
+          quantity_total: number
+          type: string
+        }[]
+      }
       dropgeometrycolumn:
         | {
             Args: {

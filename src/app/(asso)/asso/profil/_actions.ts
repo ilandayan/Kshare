@@ -38,16 +38,35 @@ export async function updateAssoProfile(
     return { success: false, error: "Le nom est requis." };
   }
 
+  const adresse = data.address?.trim();
+  const ville = data.city?.trim();
+
+  const champs: Record<string, unknown> = {
+    name: data.name.trim(),
+    address: adresse || undefined,
+    city: ville || undefined,
+    contact: data.contact?.trim() || undefined,
+    zone_region: data.zoneRegion?.trim() || undefined,
+    department: data.department?.trim() || undefined,
+  };
+
+  // Les paniers dons sont proposés dans un rayon de 50 km : sans coordonnées,
+  // l'association ne voit rien du tout. On résout l'adresse à l'enregistrement,
+  // mais un échec de géocodage ne doit pas empêcher de sauver son profil — le
+  // CRM signale les associations restées sans position et permet de rattraper.
+  if (adresse) {
+    const { geocoderAdresseOuNull } = await import("@/lib/geocode");
+    const coords = await geocoderAdresseOuNull(adresse, null, ville);
+    if (coords) {
+      champs.latitude = coords.latitude;
+      champs.longitude = coords.longitude;
+      champs.geocoded_at = new Date().toISOString();
+    }
+  }
+
   const { error } = await supabase
     .from("associations")
-    .update({
-      name: data.name.trim(),
-      address: data.address?.trim() || undefined,
-      city: data.city?.trim() || undefined,
-      contact: data.contact?.trim() || undefined,
-      zone_region: data.zoneRegion?.trim() || undefined,
-      department: data.department?.trim() || undefined,
-    })
+    .update(champs)
     .eq("id", asso.id);
 
   if (error) return { success: false, error: "Erreur lors de la mise à jour." };

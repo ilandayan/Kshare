@@ -1382,3 +1382,78 @@ export function emailDecisionSignalement(params: {
     `),
   };
 }
+
+/**
+ * Prévient une association qu'un panier don vient d'être publié près d'elle.
+ *
+ * Un panier dont personne n'est averti finit à la poubelle : les associations ne
+ * consultent pas l'application toute la journée, et le créneau de retrait est
+ * souvent le soir même. L'email dit la distance et l'heure, les deux
+ * informations sur lesquelles se décide un déplacement.
+ */
+export function emailPanierDonDisponible(params: {
+  associationName: string;
+  commerceName: string;
+  commerceCity: string | null;
+  distanceKm: number | null;
+  creneau: string;
+  jour: string;
+  quantite: number;
+  /** Priorité accordée par le commerçant : le panier lui est réservé 2 h. */
+  prioritaire: boolean;
+}): { subject: string; html: string } {
+  const {
+    associationName,
+    commerceName,
+    commerceCity,
+    distanceKm,
+    creneau,
+    jour,
+    quantite,
+    prioritaire,
+  } = params;
+
+  const distance =
+    distanceKm === null
+      ? ""
+      : distanceKm < 10
+        ? `${distanceKm.toFixed(1)} km`.replace(".", ",")
+        : `${Math.round(distanceKm)} km`;
+
+  const lieu = [commerceCity, distance].filter(Boolean).join(" · ");
+
+  return {
+    subject: prioritaire
+      ? `Kshare — ${commerceName} vous réserve ${quantite > 1 ? `${quantite} paniers` : "un panier"}`
+      : `Kshare — ${quantite > 1 ? `${quantite} paniers` : "Un panier"} à récupérer chez ${commerceName}`,
+    html: wrapHtml(`
+      <h2 style="color:#6A4FE0;margin:0 0 16px;">Bonjour ${escapeHtml(associationName)},</h2>
+      ${
+        prioritaire
+          ? `<div style="background:#FEF6DC;border-left:4px solid #E5B93C;border-radius:8px;padding:16px;margin:0 0 16px;">
+               <p style="margin:0;color:#8A6D0B;font-size:14px;">
+                 <strong>${escapeHtml(commerceName)} vous a désignée comme association bénéficiaire.</strong>
+                 Ce panier vous est réservé pendant deux heures ; passé ce délai, il sera
+                 proposé aux autres associations du secteur.
+               </p>
+             </div>`
+          : ""
+      }
+      <p style="color:#333;line-height:1.7;">
+        ${escapeHtml(commerceName)} met à disposition
+        <strong>${quantite > 1 ? `${quantite} paniers` : "un panier"}</strong> en don.
+      </p>
+      <div style="background:#f8f9fc;border-radius:8px;padding:16px;margin:16px 0;">
+        ${lieu ? `<p style="margin:0 0 6px;color:#333;font-size:14px;">📍 ${escapeHtml(lieu)}</p>` : ""}
+        <p style="margin:0;color:#333;font-size:14px;">🕒 ${escapeHtml(jour)}, ${escapeHtml(creneau)}</p>
+      </div>
+      <p style="color:#333;line-height:1.7;">
+        Les paniers partent à la première association qui les réserve.
+      </p>
+      <a href="https://k-share.fr/asso/paniers-dons" style="display:inline-block;padding:12px 24px;background:#6A4FE0;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Réserver ce panier
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}

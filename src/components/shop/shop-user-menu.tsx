@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronDown, User, LogOut, CreditCard, Settings } from "lucide-react";
+import { ChevronDown, User, LogOut, CreditCard, Settings, Heart } from "lucide-react";
 import Link from "next/link";
 
 interface ShopUserMenuProps {
@@ -57,6 +57,14 @@ export function ShopUserMenu({ commerceName, userInitial }: ShopUserMenuProps) {
             >
               <CreditCard className="h-4 w-4 text-gray-400" />
               Abonnement
+            </Link>
+            <Link
+              href="/shop/dons"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              <Heart className="h-4 w-4 text-gray-400" />
+              Dons & associations
             </Link>
             <Link
               href="/shop/stripe-connect"
