@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       analytics_events: {
@@ -607,64 +582,103 @@ export type Database = {
       }
       invoices: {
         Row: {
+          adjustment_total: number
           amount_ht: number
           amount_ttc: number
+          cancel_reason: string | null
+          canceled_at: string | null
           commerce_id: string | null
+          commerce_snapshot: Json | null
+          commission_rate: number | null
           commission_total: number
           created_at: string
+          due_amount: number
           id: string
           issued_at: string | null
+          kind: string
+          lines: Json
           notes: string | null
-          number: string
+          number: string | null
+          order_detail: Json
+          order_ids: string[]
           orders_count: number
           pdf_url: string | null
           period_end: string
           period_start: string
+          plan: string | null
+          sales_total: number
           sent_at: string | null
-          sequence_number: number
+          sequence_number: number | null
           status: string
+          subscription_amount: number
           updated_at: string
           vat_amount: number
           vat_rate: number
         }
         Insert: {
+          adjustment_total?: number
           amount_ht?: number
           amount_ttc?: number
+          cancel_reason?: string | null
+          canceled_at?: string | null
           commerce_id?: string | null
+          commerce_snapshot?: Json | null
+          commission_rate?: number | null
           commission_total?: number
           created_at?: string
+          due_amount?: number
           id?: string
           issued_at?: string | null
+          kind?: string
+          lines?: Json
           notes?: string | null
-          number: string
+          number?: string | null
+          order_detail?: Json
+          order_ids?: string[]
           orders_count?: number
           pdf_url?: string | null
           period_end: string
           period_start: string
+          plan?: string | null
+          sales_total?: number
           sent_at?: string | null
-          sequence_number?: number
+          sequence_number?: number | null
           status?: string
+          subscription_amount?: number
           updated_at?: string
           vat_amount?: number
           vat_rate?: number
         }
         Update: {
+          adjustment_total?: number
           amount_ht?: number
           amount_ttc?: number
+          cancel_reason?: string | null
+          canceled_at?: string | null
           commerce_id?: string | null
+          commerce_snapshot?: Json | null
+          commission_rate?: number | null
           commission_total?: number
           created_at?: string
+          due_amount?: number
           id?: string
           issued_at?: string | null
+          kind?: string
+          lines?: Json
           notes?: string | null
-          number?: string
+          number?: string | null
+          order_detail?: Json
+          order_ids?: string[]
           orders_count?: number
           pdf_url?: string | null
           period_end?: string
           period_start?: string
+          plan?: string | null
+          sales_total?: number
           sent_at?: string | null
-          sequence_number?: number
+          sequence_number?: number | null
           status?: string
+          subscription_amount?: number
           updated_at?: string
           vat_amount?: number
           vat_rate?: number
@@ -812,9 +826,12 @@ export type Database = {
           client_id: string
           commerce_id: string
           commission_amount: number
+          commission_invoiced: number
+          commission_refunded: number
           created_at: string
           donation_expires_at: string | null
           id: string
+          invoiced_on: string | null
           is_donation: boolean
           net_amount: number
           notes: string | null
@@ -827,6 +844,7 @@ export type Database = {
           qr_code: string | null
           qr_code_token: string | null
           quantity: number
+          refunded_amount: number
           service_fee_amount: number
           status: Database["public"]["Enums"]["order_status"]
           stripe_charge_id: string | null
@@ -847,9 +865,12 @@ export type Database = {
           client_id: string
           commerce_id: string
           commission_amount: number
+          commission_invoiced?: number
+          commission_refunded?: number
           created_at?: string
           donation_expires_at?: string | null
           id?: string
+          invoiced_on?: string | null
           is_donation?: boolean
           net_amount: number
           notes?: string | null
@@ -862,6 +883,7 @@ export type Database = {
           qr_code?: string | null
           qr_code_token?: string | null
           quantity?: number
+          refunded_amount?: number
           service_fee_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
           stripe_charge_id?: string | null
@@ -882,9 +904,12 @@ export type Database = {
           client_id?: string
           commerce_id?: string
           commission_amount?: number
+          commission_invoiced?: number
+          commission_refunded?: number
           created_at?: string
           donation_expires_at?: string | null
           id?: string
+          invoiced_on?: string | null
           is_donation?: boolean
           net_amount?: number
           notes?: string | null
@@ -897,6 +922,7 @@ export type Database = {
           qr_code?: string | null
           qr_code_token?: string | null
           quantity?: number
+          refunded_amount?: number
           service_fee_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
           stripe_charge_id?: string | null
@@ -1720,6 +1746,49 @@ export type Database = {
             }
             Returns: string
           }
+      annuler_facture: {
+        Args: { p_invoice_id: string; p_motif: string }
+        Returns: {
+          adjustment_total: number
+          amount_ht: number
+          amount_ttc: number
+          cancel_reason: string | null
+          canceled_at: string | null
+          commerce_id: string | null
+          commerce_snapshot: Json | null
+          commission_rate: number | null
+          commission_total: number
+          created_at: string
+          due_amount: number
+          id: string
+          issued_at: string | null
+          kind: string
+          lines: Json
+          notes: string | null
+          number: string | null
+          order_detail: Json
+          order_ids: string[]
+          orders_count: number
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          plan: string | null
+          sales_total: number
+          sent_at: string | null
+          sequence_number: number | null
+          status: string
+          subscription_amount: number
+          updated_at: string
+          vat_amount: number
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       can_see_demo: { Args: never; Returns: boolean }
       commerce_is_demo: { Args: { p_commerce_id: string }; Returns: boolean }
       commerces_near: {
@@ -1780,8 +1849,86 @@ export type Database = {
           }
         | { Args: { schema_name: string; table_name: string }; Returns: string }
         | { Args: { table_name: string }; Returns: string }
+      emettre_facture: {
+        Args: { p_invoice_id: string }
+        Returns: {
+          adjustment_total: number
+          amount_ht: number
+          amount_ttc: number
+          cancel_reason: string | null
+          canceled_at: string | null
+          commerce_id: string | null
+          commerce_snapshot: Json | null
+          commission_rate: number | null
+          commission_total: number
+          created_at: string
+          due_amount: number
+          id: string
+          issued_at: string | null
+          kind: string
+          lines: Json
+          notes: string | null
+          number: string | null
+          order_detail: Json
+          order_ids: string[]
+          orders_count: number
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          plan: string | null
+          sales_total: number
+          sent_at: string | null
+          sequence_number: number | null
+          status: string
+          subscription_amount: number
+          updated_at: string
+          vat_amount: number
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      facturation_detail: {
+        Args: { p_commerce?: string; p_debut: string; p_fin: string }
+        Returns: {
+          captured_at: string
+          commerce_id: string
+          commission_brute: number
+          commission_facturee: number
+          commission_rendue: number
+          delta: number
+          est_regularisation: boolean
+          order_id: string
+          rembourse: number
+          remboursement_integral: boolean
+          vente: number
+          vente_brute: number
+        }[]
+      }
+      facturation_recap: {
+        Args: { p_debut: string; p_fin: string }
+        Returns: {
+          commerce_id: string
+          commission_brute: number
+          paniers: number
+          remb_periode_base: number
+          remb_periode_commandes: number
+          remb_periode_montant: number
+          remise_base: number
+          remise_commandes: number
+          remise_montant: number
+          reprise_base: number
+          reprise_commandes: number
+          reprise_montant: number
+          ventes_brutes: number
+        }[]
+      }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -2714,9 +2861,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       association_status: [

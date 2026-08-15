@@ -70,7 +70,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const adminSupabase = createAdminClient();
     const { data: order, error: orderError } = await adminSupabase
       .from("orders")
-      .select("id, total_amount, commission_amount, net_amount, stripe_payment_intent_id, status, commerce_id")
+      .select("id, total_amount, commission_amount, net_amount, stripe_payment_intent_id, status, commerce_id, refunded_amount, commission_refunded")
       .eq("id", orderId)
       .single();
 
@@ -106,7 +106,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const isFullRefund = refundAmountEur >= order.total_amount;
     await adminSupabase
       .from("orders")
-      .update({ status: isFullRefund ? "refunded" : "paid" })
+      .update({
+        status: isFullRefund ? "refunded" : "paid",
+        // Ce qui a été rendu, cumulé : un remboursement partiel laissait
+        // `commission_amount` à son montant d'origine, et la facture du mois
+        // aurait réclamé au commerce une commission déjà restituée au client.
+        refunded_amount:
+          Math.round((Number(order.refunded_amount ?? 0) + refundAmountEur) * 100) / 100,
+        commission_refunded:
+          Math.round((Number(order.commission_refunded ?? 0) + commissionRefund) * 100) / 100,
+      })
       .eq("id", orderId);
 
     // Create ledger entries

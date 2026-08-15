@@ -644,6 +644,65 @@ export function emailCompteRefuse(name: string, type: "commerce" | "association"
   };
 }
 
+/**
+ * Envoi d'une facture mensuelle, commission ou abonnement.
+ *
+ * Le message dit d'emblée qu'il n'y a rien à payer : la commission est prélevée
+ * à la source, l'abonnement par SEPA. Sans cette précision, un commerçant lit
+ * « facture » et cherche un règlement à faire.
+ */
+export function emailFactureCommission(params: {
+  commerceName: string;
+  numero: string;
+  periode: string;
+  montant: number;
+  nature: "commission" | "subscription";
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.commerceName);
+  const numero = escapeHtml(params.numero);
+  const periode = escapeHtml(params.periode);
+  const montant = params.montant.toFixed(2).replace(".", ",");
+  const commission = params.nature === "commission";
+
+  const objet = commission ? "Facture de commission" : "Facture d'abonnement";
+  const corps = commission
+    ? `qui récapitule la commission Kshare sur vos ventes de ${periode}`
+    : `correspondant à votre abonnement Pro de ${periode}`;
+  const reglement = commission
+    ? "déjà prélevé à la source sur chaque transaction"
+    : "déjà prélevé par SEPA";
+
+  return {
+    subject: `Kshare — ${objet} ${params.numero} (${params.periode})`,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Votre facture de ${periode}</h2>
+      <p style="color:#333;line-height:1.7;">
+        Bonjour ${safeName},
+      </p>
+      <p style="color:#333;line-height:1.7;">
+        Vous trouverez en pièce jointe la facture <strong>${numero}</strong>, ${corps}.
+      </p>
+      <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#166534;font-size:14px;">
+          Montant : <strong>${montant} €</strong> — ${reglement}.
+          Aucun paiement n'est à effectuer.
+        </p>
+      </div>
+      ${
+        commission
+          ? `<p style="color:#333;line-height:1.7;">
+        Le détail commande par commande figure en annexe du document, remboursements compris.
+      </p>`
+          : ""
+      }
+      <a href="https://k-share.fr/shop/dashboard" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Voir mon espace
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
 export function emailContratSigne(commerceName: string): {
   subject: string;
   html: string;
