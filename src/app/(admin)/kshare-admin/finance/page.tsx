@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, CreditCard, Receipt, Banknote, Clock } from "lucide-react";
 import { SUBSCRIPTION_PLANS } from "@/lib/constants";
 import { ReconcileButton } from "./reconcile-button";
+import {
+  CAPTURES_ENCAISSEES,
+  agregerRecettes,
+  type CommandeEncaissee,
+} from "@/lib/revenus";
 import { FinancePeriodFilter } from "./finance-period-filter";
 
 function getPeriodStart(period: string): Date {
@@ -61,14 +66,6 @@ const SUBSCRIPTION_STATUS_COLORS: Record<string, string> = {
   cancellation_requested: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
-type OrderRow = {
-  total_amount: number;
-  commission_amount: number;
-  service_fee_amount: number;
-  stripe_fee_amount: number | null;
-  is_donation: boolean;
-};
-
 export default async function FinancePage({
   searchParams,
 }: {
@@ -83,15 +80,19 @@ export default async function FinancePage({
 
   const supabase = await createClient();
 
-  // Build queries with optional upper bound for year filters
-  // `no_show` compte comme une vente : le panier a été préparé, le paiement
-  // encaissé, la commission prélevée. L'exclure minorait les revenus de Kshare.
+  // La recette se compte à la capture, et non au statut de la commande : une
+  // commande seulement autorisée n'a rien rapporté, et un signalement peut
+  // encore l'annuler. Les comptes de démonstration sont écartés — les compter
+  // affichait un chiffre d'affaires qui n'existe pas. Voir `@/lib/revenus`.
   let paidQuery = supabase
     .from("orders")
-    .select("total_amount, commission_amount, service_fee_amount, stripe_fee_amount, is_donation" as string)
-    .in("status", ["paid", "ready_for_pickup", "picked_up", "no_show"])
-    .gte("created_at", periodISO);
-  if (periodEndISO) paidQuery = paidQuery.lt("created_at", periodEndISO);
+    .select(
+      "total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, service_fee_amount, stripe_fee_amount, is_donation, commerces!inner(is_demo)",
+    )
+    .eq("commerces.is_demo", false)
+    .in("capture_status", CAPTURES_ENCAISSEES as unknown as string[])
+    .gte("captured_at", periodISO);
+  if (periodEndISO) paidQuery = paidQuery.lt("captured_at", periodEndISO);
 
   // Reste à verser : mêmes critères que le cron du mardi, sans quoi l'admin
   // afficherait un montant que le virement ne paiera pas. Une commande dont la
@@ -100,7 +101,7 @@ export default async function FinancePage({
     .from("orders")
     .select("id, commerce_id, net_amount, created_at, commerces(name)")
     .in("status", ["picked_up", "no_show"])
-    .in("capture_status", ["captured", "partially_captured"])
+    .in("capture_status", CAPTURES_ENCAISSEES as unknown as string[])
     .eq("payout_status", "pending")
     .eq("is_donation", false)
     .gte("created_at", periodISO);
@@ -112,26 +113,19 @@ export default async function FinancePage({
       .from("subscriptions")
       .select("*, commerces(name, city, email)")
       .order("created_at", { ascending: false }),
-    paidQuery as unknown as { data: OrderRow[] | null; error: unknown },
+    paidQuery as unknown as { data: CommandeEncaissee[] | null; error: unknown },
     pendingQuery,
   ]);
 
-  const orders = (paidOrders ?? []) as OrderRow[];
+  const orders = (paidOrders ?? []) as CommandeEncaissee[];
 
   // ── KPI calculations ──
-  const totalCommissions = orders
-    .filter((o) => !o.is_donation)
-    .reduce((sum, o) => sum + (o.commission_amount ?? 0), 0);
-
-  const totalServiceFees = orders.reduce(
-    (sum, o) => sum + (o.service_fee_amount ?? 0),
-    0
-  );
-
-  const totalStripeFees = orders.reduce(
-    (sum, o) => sum + (o.stripe_fee_amount ?? 0),
-    0
-  );
+  // Un seul point de vérité : les mêmes règles servent au CRM, pour que les
+  // deux espaces ne puissent plus annoncer des montants différents.
+  const recettes = agregerRecettes(orders);
+  const totalCommissions = recettes.commission;
+  const totalServiceFees = recettes.fraisService;
+  const totalStripeFees = recettes.fraisStripe;
 
   const ordersWithoutFee = orders.filter(
     (o) => !o.is_donation && (!o.stripe_fee_amount || o.stripe_fee_amount === 0) && o.total_amount > 0

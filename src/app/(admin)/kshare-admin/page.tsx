@@ -5,6 +5,7 @@ const AdminCharts = dynamic(
   () => import("@/components/admin/admin-charts").then((m) => m.AdminCharts)
 );
 import { Euro, TrendingUp, ShoppingBag, Package, BarChart3, Store, Heart, Gift, CreditCard, Banknote, Receipt, Star } from "lucide-react";
+import { CAPTURES_ENCAISSEES, agregerRecettes, type CommandeEncaissee } from "@/lib/revenus";
 
 function getPeriodStart(period: string): Date {
   const now = new Date();
@@ -75,15 +76,26 @@ export default async function AdminDashboard({
     .from("commerces")
     .select("id, name, city, commission_rate, average_rating, total_ratings")
     .eq("status", "validated")
+    .eq("is_demo", false)
     .order("name");
 
-  // Orders — filtered by commerce and period
+  // Commandes réellement encaissées : une commande seulement autorisée n'a
+  // rien rapporté, et un signalement peut encore l'annuler. Les comptes de
+  // démonstration sont écartés — les compter affichait un chiffre d'affaires
+  // qui n'existe pas. Mêmes règles que le CRM, voir `@/lib/revenus`.
+  //
+  // `created_at` reste lu pour les courbes horaires et journalières : la
+  // capture a lieu en lot le soir, et grouper par heure de capture écraserait
+  // toutes les ventes de la journée sur une seule barre.
   let ordersQuery = supabase
     .from("orders")
-    .select("id, total_amount, quantity, created_at, is_donation, commerce_id, service_fee_amount, stripe_fee_amount, status")
-    .in("status", ["paid", "ready_for_pickup", "picked_up"])
-    .gte("created_at", periodStart.toISOString());
-  if (periodEnd) ordersQuery = ordersQuery.lt("created_at", periodEnd.toISOString());
+    .select(
+      "id, total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, quantity, created_at, captured_at, is_donation, commerce_id, service_fee_amount, stripe_fee_amount, status, commerces!inner(is_demo)",
+    )
+    .eq("commerces.is_demo", false)
+    .in("capture_status", CAPTURES_ENCAISSEES as unknown as string[])
+    .gte("captured_at", periodStart.toISOString());
+  if (periodEnd) ordersQuery = ordersQuery.lt("captured_at", periodEnd.toISOString());
   if (commerce) ordersQuery = ordersQuery.eq("commerce_id", commerce);
   const { data: orders } = await ordersQuery;
 
@@ -99,7 +111,8 @@ export default async function AdminDashboard({
   const { count: activeCommerces } = await supabase
     .from("commerces")
     .select("*", { count: "exact", head: true })
-    .eq("status", "validated");
+    .eq("status", "validated")
+    .eq("is_demo", false);
 
   // Favorites — all time (not period-filtered, favorites are cumulative)
   const { data: favorites } = await supabase
@@ -118,23 +131,24 @@ export default async function AdminDashboard({
   const allOrders  = orders  ?? [];
   const allBaskets = baskets ?? [];
 
-  // Commission rate: use commerce-specific rate when filtered, otherwise starter default (18%)
-  const selectedCommerce = commerce ? commercesList?.find((c) => c.id === commerce) : null;
-  const commissionRate = selectedCommerce ? (selectedCommerce.commission_rate ?? 18) / 100 : 0.18;
+  // La commission est celle réellement prélevée sur chaque commande, et non un
+  // taux forfaitaire appliqué au chiffre d'affaires : les commerces n'ont pas
+  // tous le même plan, un geste commercial écarte du nominal, et un panier
+  // offert ne rapporte rien.
+  const recettes = agregerRecettes(allOrders as unknown as CommandeEncaissee[]);
 
-  const nonDonationOrders = allOrders.filter((o) => !o.is_donation);
-  const nbTransactions = nonDonationOrders.length;
-  const caGenere      = allOrders.reduce((s, o) => s + (o.total_amount ?? 0), 0);
-  const commission    = caGenere * commissionRate;
-  const serviceFees   = allOrders.reduce((s, o) => s + (o.service_fee_amount ?? 0), 0);
-  const caNet         = caGenere - commission;
+  const nbTransactions = recettes.paniers;
+  const caGenere      = recettes.ventes;
+  const commission    = recettes.commission;
+  const serviceFees   = recettes.fraisService;
+  const caNet         = recettes.netCommerces;
   const paniersVendus = allOrders.reduce((s, o) => s + (o.quantity ?? 1), 0);
   const avgPrice      = paniersVendus > 0 ? caGenere / paniersVendus : 0;
   const donCommerce   = allBaskets.filter((b) => b.is_donation).length;
   const donClients    = allOrders.filter((o) => o.is_donation).length;
   const donsDistribues = allOrders.filter((o) => o.is_donation && o.status === "picked_up").reduce((s, o) => s + (o.quantity ?? 1), 0);
   // Stripe fees: use real recorded fees, fallback to estimate for orders without reconciled fees
-  const stripeFees    = allOrders.reduce((s, o) => s + (o.stripe_fee_amount ?? 0), 0);
+  const stripeFees    = recettes.fraisStripe;
   const ordersWithoutFee = allOrders.filter((o) => !o.stripe_fee_amount && !o.is_donation).length;
   const revenuKshare  = commission + serviceFees;
   const revenuNet     = revenuKshare - stripeFees;
@@ -142,10 +156,13 @@ export default async function AdminDashboard({
   // ── Ranking: aggregate ALL orders for the period (no commerce filter) ──
   let rankingQuery = supabase
     .from("orders")
-    .select("commerce_id, total_amount, commission_amount, quantity")
-    .in("status", ["paid", "ready_for_pickup", "picked_up"])
-    .gte("created_at", periodStart.toISOString());
-  if (periodEnd) rankingQuery = rankingQuery.lt("created_at", periodEnd.toISOString());
+    .select(
+      "commerce_id, total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, quantity, commerces!inner(is_demo)",
+    )
+    .eq("commerces.is_demo", false)
+    .in("capture_status", CAPTURES_ENCAISSEES as unknown as string[])
+    .gte("captured_at", periodStart.toISOString());
+  if (periodEnd) rankingQuery = rankingQuery.lt("captured_at", periodEnd.toISOString());
   const { data: rankingOrders } = await rankingQuery;
 
   const rankingMap = new Map<string, { name: string; city: string; ca: number; commission: number; paniers: number; favoris: number; avgRating: number | null; totalRatings: number }>();
@@ -155,8 +172,8 @@ export default async function AdminDashboard({
   for (const o of rankingOrders ?? []) {
     const entry = rankingMap.get(o.commerce_id);
     if (entry) {
-      entry.ca += o.total_amount ?? 0;
-      entry.commission += o.commission_amount ?? 0;
+      entry.ca += Number(o.captured_amount ?? o.total_amount) - Number(o.refunded_amount ?? 0);
+      entry.commission += Number(o.commission_amount) - Number(o.commission_refunded ?? 0);
       entry.paniers += o.quantity ?? 1;
     }
   }
