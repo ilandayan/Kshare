@@ -16,8 +16,12 @@
     },
     {
       "name": "Expo Mobile",
-      "runtimeExecutable": "C:\\Windows\\System32\\cmd.exe",
-      "runtimeArgs": ["/c", "start-expo-mobile.bat"],
+      "runtimeExecutable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "& 'C:\\Users\\ilan.dayan\\Documents\\Documents perso\\CLAUDE\\Kshare\\kshare\\start-expo-mobile.bat'"
+      ],
       "port": 8082,
       "autoPort": false
     }
