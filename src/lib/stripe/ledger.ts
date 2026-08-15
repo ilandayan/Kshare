@@ -136,6 +136,24 @@ export async function createRefundLedgerEntries(params: {
     stripeObjectId: params.stripeRefundId,
     idempotencyKey: `${baseKey}:refund`,
   });
+
+  // Contrepartie de la commission rendue au client.
+  //
+  // Sans cette écriture, le cumul des commissions restait au montant d'origine
+  // et l'espace commerçant annonçait une commission supérieure à celle de sa
+  // facture, qui la déduit. Un commerçant qui compare les deux ouvre un litige.
+  if (params.commissionRefund > 0) {
+    await createLedgerEntry({
+      commerceId: params.commerceId,
+      orderId: params.orderId,
+      type: "commission",
+      debit: 0,
+      credit: params.commissionRefund,
+      description: "Commission rendue sur remboursement",
+      stripeObjectId: params.stripeRefundId,
+      idempotencyKey: `${baseKey}:commission`,
+    });
+  }
 }
 
 /**
@@ -201,7 +219,9 @@ export async function getCommerceLedgerSummary(
         totalSales += Number(entry.credit);
         break;
       case "commission":
-        totalCommissions += Number(entry.debit);
+        // Débit à la vente, crédit à la restitution : le solde net est la
+        // commission réellement acquise.
+        totalCommissions += Number(entry.debit) - Number(entry.credit);
         break;
       case "service_fee":
         totalServiceFees += Number(entry.debit);

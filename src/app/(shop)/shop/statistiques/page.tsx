@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Euro, ShoppingBag, TrendingUp, Gift } from "lucide-react";
+import { CAPTURES_ENCAISSEES } from "@/lib/revenus";
 
 export default async function StatistiquesPage() {
   const supabase = await createClient();
@@ -11,15 +12,31 @@ export default async function StatistiquesPage() {
   const { data: commerce } = await supabase.from("commerces").select("id, commission_rate").eq("profile_id", user.id).single();
   if (!commerce) redirect("/inscription-commercant");
 
+  // Mêmes règles que le tableau de bord et que la facture : seules les
+  // commandes encaissées comptent, et les remboursements se déduisent.
   const { data: orders } = await supabase
     .from("orders")
-    .select("total_amount, net_amount, status, created_at, is_donation")
-    .eq("commerce_id", commerce.id)
-    .neq("status", "cancelled_admin");
+    .select(
+      "total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, status, created_at, is_donation, capture_status",
+    )
+    .eq("commerce_id", commerce.id);
 
-  const paidOrders = orders?.filter((o) => ["paid", "picked_up", "ready_for_pickup"].includes(o.status)) ?? [];
-  const cabrut = paidOrders.reduce((s, o) => s + (o.total_amount || 0), 0);
-  const canet = paidOrders.reduce((s, o) => s + (o.net_amount || 0), 0);
+  const paidOrders =
+    orders?.filter((o) =>
+      (CAPTURES_ENCAISSEES as unknown as string[]).includes(o.capture_status),
+    ) ?? [];
+  const cabrut = paidOrders.reduce(
+    (s, o) => s + Number(o.captured_amount ?? o.total_amount ?? 0) - Number(o.refunded_amount ?? 0),
+    0,
+  );
+  const canet = paidOrders.reduce(
+    (s, o) =>
+      s +
+      Number(o.captured_amount ?? o.total_amount ?? 0) -
+      Number(o.refunded_amount ?? 0) -
+      (Number(o.commission_amount ?? 0) - Number(o.commission_refunded ?? 0)),
+    0,
+  );
   const paniersVendus = paidOrders.filter((o) => !o.is_donation).length;
   const donations = orders?.filter((o) => o.is_donation).length ?? 0;
 
@@ -57,8 +74,22 @@ export default async function StatistiquesPage() {
               {paidOrders.slice(0, 20).map((o, i) => (
                 <div key={i} className="flex justify-between items-center py-2 border-b border-border last:border-0 text-sm">
                   <span className="text-muted-foreground">{new Date(o.created_at).toLocaleDateString("fr-FR")}</span>
-                  <span className="font-medium">{o.total_amount?.toFixed(2)} €</span>
-                  <span className="text-muted-foreground">Net : {o.net_amount?.toFixed(2)} €</span>
+                  <span className="font-medium">
+                    {(
+                      Number(o.captured_amount ?? o.total_amount ?? 0) -
+                      Number(o.refunded_amount ?? 0)
+                    ).toFixed(2)}{" "}
+                    €
+                  </span>
+                  <span className="text-muted-foreground">
+                    Net :{" "}
+                    {(
+                      Number(o.captured_amount ?? o.total_amount ?? 0) -
+                      Number(o.refunded_amount ?? 0) -
+                      (Number(o.commission_amount ?? 0) - Number(o.commission_refunded ?? 0))
+                    ).toFixed(2)}{" "}
+                    €
+                  </span>
                 </div>
               ))}
             </div>

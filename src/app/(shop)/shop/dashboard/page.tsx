@@ -6,6 +6,7 @@ const DashboardCharts = dynamic(
   () => import("@/components/shop/dashboard-charts").then((m) => m.DashboardCharts)
 );
 import { TrendingUp, ShoppingBag, Heart, Euro, Star } from "lucide-react";
+import { CAPTURES_ENCAISSEES } from "@/lib/revenus";
 
 /* ── Period helpers ────────────────────────────────────────────── */
 function getPeriodStart(period: string, commerceCreatedAt?: string): Date {
@@ -84,15 +85,19 @@ export default async function DashboardPage({
 
   // Commandes du commerce sur la période.
   //
-  // `no_show` est inclus : le panier a été préparé, le paiement est encaissé et
-  // le commerce viré. L'exclure lui masquait une part réelle de son chiffre.
+  // Seules les commandes réellement encaissées comptent, `no_show` compris : le
+  // panier a été préparé, le paiement capturé et le commerce viré. Une commande
+  // seulement autorisée, elle, peut encore être annulée par un signalement — la
+  // montrer comme un revenu acquis promettait au commerce un argent qu'il
+  // n'aurait peut-être jamais. C'est aussi la règle de sa facture, et les deux
+  // doivent tomber sur le même montant.
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      "id, total_amount, commission_amount, net_amount, quantity, created_at, is_donation",
+      "id, total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, net_amount, quantity, created_at, is_donation",
     )
     .eq("commerce_id", commerce.id)
-    .in("status", ["paid", "ready_for_pickup", "picked_up", "no_show"])
+    .in("capture_status", CAPTURES_ENCAISSEES as unknown as string[])
     .gte("created_at", periodStart.toISOString());
 
   // Fetch baskets in period for type breakdown + bar chart
@@ -112,9 +117,20 @@ export default async function DashboardPage({
   // est nulle, se voyaient appliquer 18 % ; et un geste commercial sur un panier
   // non conforme n'était pas répercuté, le commerce voyant un net supérieur à ce
   // qu'il allait recevoir.
-  const commission = allOrders.reduce((s, o) => s + Number(o.commission_amount ?? 0), 0);
-  const caNet      = allOrders.reduce((s, o) => s + Number(o.net_amount ?? 0), 0);
-  const caGenere   = Math.round((caNet + commission) * 100) / 100;
+  // Remboursements déduits : sans cela le commerce voyait un chiffre qu'il ne
+  // percevrait jamais, et supérieur à celui de sa facture.
+  const commission = allOrders.reduce(
+    (s, o) => s + Number(o.commission_amount ?? 0) - Number(o.commission_refunded ?? 0),
+    0,
+  );
+  const caGenere = Math.round(
+    allOrders.reduce(
+      (s, o) =>
+        s + Number(o.captured_amount ?? o.total_amount ?? 0) - Number(o.refunded_amount ?? 0),
+      0,
+    ) * 100,
+  ) / 100;
+  const caNet = Math.round((caGenere - commission) * 100) / 100;
   const paniers    = allOrders.reduce((s, o) => s + (o.quantity ?? 1), 0);
   const donCommerce = allBaskets.filter((b) => b.is_donation).length;
   const donClients  = allOrders.filter((o) => o.is_donation).length;
