@@ -773,6 +773,7 @@ export type Database = {
           period_end: string
           period_start: string
           plan: string | null
+          replaces_id: string | null
           sales_total: number
           sent_at: string | null
           sequence_number: number | null
@@ -807,6 +808,7 @@ export type Database = {
           period_end: string
           period_start: string
           plan?: string | null
+          replaces_id?: string | null
           sales_total?: number
           sent_at?: string | null
           sequence_number?: number | null
@@ -841,6 +843,7 @@ export type Database = {
           period_end?: string
           period_start?: string
           plan?: string | null
+          replaces_id?: string | null
           sales_total?: number
           sent_at?: string | null
           sequence_number?: number | null
@@ -856,6 +859,13 @@ export type Database = {
             columns: ["commerce_id"]
             isOneToOne: false
             referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_replaces_id_fkey"
+            columns: ["replaces_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -1518,6 +1528,96 @@ export type Database = {
           },
         ]
       }
+      sales_statements: {
+        Row: {
+          cancel_reason: string | null
+          canceled_at: string | null
+          commerce_id: string
+          commerce_snapshot: Json | null
+          commission_total: number
+          created_at: string
+          donations_count: number
+          id: string
+          issued_at: string
+          lines: Json
+          net_total: number
+          orders_count: number
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          reference: string
+          refunds_total: number
+          replaces_id: string | null
+          sales_total: number
+          sent_at: string | null
+          service_fees_total: number
+          status: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          commerce_id: string
+          commerce_snapshot?: Json | null
+          commission_total?: number
+          created_at?: string
+          donations_count?: number
+          id?: string
+          issued_at?: string
+          lines?: Json
+          net_total?: number
+          orders_count?: number
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          reference: string
+          refunds_total?: number
+          replaces_id?: string | null
+          sales_total?: number
+          sent_at?: string | null
+          service_fees_total?: number
+          status?: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          commerce_id?: string
+          commerce_snapshot?: Json | null
+          commission_total?: number
+          created_at?: string
+          donations_count?: number
+          id?: string
+          issued_at?: string
+          lines?: Json
+          net_total?: number
+          orders_count?: number
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          reference?: string
+          refunds_total?: number
+          replaces_id?: string | null
+          sales_total?: number
+          sent_at?: string | null
+          service_fees_total?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_statements_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_statements_replaces_id_fkey"
+            columns: ["replaces_id"]
+            isOneToOne: false
+            referencedRelation: "sales_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -1968,6 +2068,7 @@ export type Database = {
           period_end: string
           period_start: string
           plan: string | null
+          replaces_id: string | null
           sales_total: number
           sent_at: string | null
           sequence_number: number | null
@@ -2125,6 +2226,7 @@ export type Database = {
           period_end: string
           period_start: string
           plan: string | null
+          replaces_id: string | null
           sales_total: number
           sent_at: string | null
           sequence_number: number | null
@@ -2327,6 +2429,83 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      remplacer_facture: {
+        Args: { p_invoice_id: string; p_motif: string }
+        Returns: {
+          adjustment_total: number
+          amount_ht: number
+          amount_ttc: number
+          cancel_reason: string | null
+          canceled_at: string | null
+          commerce_id: string | null
+          commerce_snapshot: Json | null
+          commission_rate: number | null
+          commission_total: number
+          created_at: string
+          due_amount: number
+          id: string
+          issued_at: string | null
+          kind: string
+          lines: Json
+          notes: string | null
+          number: string | null
+          order_detail: Json
+          order_ids: string[]
+          orders_count: number
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          plan: string | null
+          replaces_id: string | null
+          sales_total: number
+          sent_at: string | null
+          sequence_number: number | null
+          status: string
+          subscription_amount: number
+          updated_at: string
+          vat_amount: number
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      remplacer_releve: {
+        Args: { p_motif: string; p_statement_id: string }
+        Returns: {
+          cancel_reason: string | null
+          canceled_at: string | null
+          commerce_id: string
+          commerce_snapshot: Json | null
+          commission_total: number
+          created_at: string
+          donations_count: number
+          id: string
+          issued_at: string
+          lines: Json
+          net_total: number
+          orders_count: number
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          reference: string
+          refunds_total: number
+          replaces_id: string | null
+          sales_total: number
+          sent_at: string | null
+          service_fees_total: number
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sales_statements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reserve_basket_quantity: {
         Args: { p_basket_id: string; p_quantity: number }
         Returns: boolean

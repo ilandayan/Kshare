@@ -703,6 +703,76 @@ export function emailFactureCommission(params: {
   };
 }
 
+/**
+ * Envoi mensuel au commerce : son relevé de ventes et sa ou ses factures.
+ *
+ * Un seul message plutôt que trois : le commerce reçoit tout ce qui concerne
+ * le mois écoulé d'un coup, et n'a pas à rapprocher des emails séparés.
+ *
+ * Le message insiste sur le chiffre d'affaires à déclarer, parce que c'est
+ * l'erreur qu'un commerçant fait naturellement : déclarer ce qu'il a reçu sur
+ * son compte plutôt que ce qu'il a vendu.
+ */
+export function emailDocumentsMensuels(params: {
+  commerceName: string;
+  periode: string;
+  ventes: number;
+  commission: number;
+  net: number;
+  referenceReleve: string;
+  numerosFactures: string[];
+  correction?: boolean;
+}): { subject: string; html: string } {
+  const safeName = escapeHtml(params.commerceName);
+  const periode = escapeHtml(params.periode);
+  const montant = (v: number) => v.toFixed(2).replace(".", ",");
+  const factures = params.numerosFactures.map((n) => escapeHtml(n));
+
+  return {
+    subject: params.correction
+      ? `Kshare — Documents rectifiés de ${params.periode}`
+      : `Kshare — Vos documents de ${params.periode}`,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">${params.correction ? "Documents rectifiés" : "Vos documents"} de ${periode}</h2>
+      <p style="color:#333;line-height:1.7;">Bonjour ${safeName},</p>
+      ${
+        params.correction
+          ? `<div style="background:#fef2f2;border-left:4px solid #dc2626;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0;color:#991b1b;font-size:14px;">
+          Ces documents <strong>annulent et remplacent</strong> ceux que nous vous avions envoyés pour ${periode}.
+          Merci de ne conserver que ceux-ci.
+        </p>
+      </div>`
+          : `<p style="color:#333;line-height:1.7;">
+        Vous trouverez en pièce jointe votre relevé de ventes et votre facture de commission
+        pour ${periode}.
+      </p>`
+      }
+      <div style="background:#f7f8ff;border:1px solid #e2e5f0;border-radius:12px;padding:18px;margin:18px 0;">
+        <p style="margin:0 0 10px;color:#3744C8;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+          Chiffre d'affaires à déclarer
+        </p>
+        <p style="margin:0;color:#111;font-size:26px;font-weight:700;">${montant(params.ventes)} €</p>
+        <p style="margin:10px 0 0;color:#555;font-size:13px;line-height:1.6;">
+          C'est le prix de vente de vos paniers, et non le montant viré sur votre compte.
+          La commission de <strong>${montant(params.commission)} €</strong> est une charge de votre
+          exploitation, justifiée par la facture jointe : elle ne réduit pas votre recette.
+        </p>
+        <p style="margin:10px 0 0;color:#555;font-size:13px;">
+          Net versé par Kshare : <strong>${montant(params.net)} €</strong>
+        </p>
+      </div>
+      <p style="color:#666;font-size:13px;line-height:1.7;">
+        Relevé ${escapeHtml(params.referenceReleve)}${factures.length ? ` · Facture${factures.length > 1 ? "s" : ""} ${factures.join(", ")}` : ""}
+      </p>
+      <a href="https://k-share.fr/shop/finances" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Voir mes finances
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
 export function emailContratSigne(commerceName: string): {
   subject: string;
   html: string;

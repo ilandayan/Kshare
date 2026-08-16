@@ -376,6 +376,12 @@ export async function recapitulatifAbonnements(periode: string): Promise<RecapAb
   for (const a of abonnements ?? []) {
     const identite = identites.get(a.commerce_id);
     if (!identite) continue;
+    // Un Starter ne reçoit jamais de facture d'abonnement. Le plan est vérifié
+    // des deux côtés : la ligne d'abonnement et le commerce lui-même. Une ligne
+    // restée en Pro après un retour au Starter aurait sinon facturé 29 € à un
+    // commerce qui ne paie rien.
+    if (identite.plan !== "pro") continue;
+    // Un abonnement offert ne donne lieu à aucun encaissement.
     if (a.status === "offered") continue;
     // L'abonnement se facture s'il courait pendant la période.
     if (new Date(a.created_at) >= fin) continue;

@@ -27,9 +27,12 @@
  * au CGI et de l'article L441-9 du code de commerce.
  */
 
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { jsPDF } from "jspdf";
+import {
+  BLEU, DEGRADE, GRIS_TEXTE, GRIS_CLAIR, ROUGE, BLANC_BLEUTE, HAUT_PIED, POLICE,
+  assainirTexte, formaterMontant, formatDate, formatDateCourte, pourcent,
+  chargerPolices, degradeHorizontal, poserLogo,
+} from "@/lib/pdf/charte";
 import {
   EMETTEUR,
   blocEmetteurEnTete,
@@ -68,168 +71,18 @@ export interface InvoicePdfParams {
   montantTva: number;
   /** Reste à payer. Zéro quand tout a été prélevé à la source. */
   resteAPayer: number;
+  /** Facture que celle-ci annule et remplace, le cas échéant. */
+  remplace?: { numero: string; emiseLe: string } | null;
 }
-
-const BLEU: [number, number, number] = [55, 68, 200];
-/** Dégradé de la marque, repris tel quel de l'en-tête de l'espace de gestion. */
-const DEGRADE: [number, number, number][] = [
-  [30, 42, 120], // #1e2a78
-  [55, 68, 200], // #3744C8
-  [91, 110, 245], // #5B6EF5
-];
-const GRIS_TEXTE: [number, number, number] = [51, 51, 51];
-const GRIS_CLAIR: [number, number, number] = [130, 130, 130];
-const ROUGE: [number, number, number] = [185, 28, 28];
-const BLANC_BLEUTE: [number, number, number] = [215, 220, 250];
 
 const TITRES: Record<NatureFacture, string> = {
   commission: "Facture de commission",
   subscription: "Facture d'abonnement",
 };
 
-/**
- * Police du document, embarquée. Noto Sans, licence SIL Open Font — voir
- * `public/fonts/OFL.txt`.
- *
- * Les fichiers vivent dans `public/` et non dans `src/` : Next ne déploie que
- * ce qu'il a tracé depuis les imports, et un `readFileSync` sur une source non
- * importée ne trouverait rien une fois en production. C'est le chemin qu'emprunte
- * déjà le logo du contrat.
- */
-const POLICE = "NotoSans";
-
-let policesCache: { normal: string; bold: string } | null | undefined;
-function chargerPolices(): { normal: string; bold: string } | null {
-  if (policesCache !== undefined) return policesCache;
-  try {
-    const dossier = path.join(process.cwd(), "public", "fonts");
-    policesCache = {
-      normal: readFileSync(path.join(dossier, "NotoSans-Regular.ttf")).toString("base64"),
-      bold: readFileSync(path.join(dossier, "NotoSans-Bold.ttf")).toString("base64"),
-    };
-  } catch {
-    // Sans police embarquée on retombe sur helvetica : la facture reste
-    // lisible, seule la devise redevient un code ISO.
-    policesCache = null;
-  }
-  return policesCache;
-}
-
-/** Le signe moins typographique casse les polices intégrées, et se lit mal en colonne. */
-const REMPLACEMENTS: Record<string, string> = {
-  "−": "-",
-  " ": " ",
-  " ": " ",
-};
-
-/** Ce qui doit disparaître faute de police embarquée : € et tirets longs. */
-const REPLIS_SANS_POLICE: Record<string, string> = {
-  "€": "EUR",
-  "–": "-",
-  "—": "-",
-  "‘": "'",
-  "’": "'",
-  "“": '"',
-  "”": '"',
-  "…": "...",
-};
-
-/**
- * Exporté pour être éprouvé directement : une fois la police embarquée, le
- * texte du PDF est écrit en identifiants de glyphes, illisible depuis le
- * fichier. Vérifier la règle ici vaut mieux que de la deviner à la sortie.
- */
-export function assainirTexte(texte: string, policeEmbarquee: boolean): string {
-  let sortie = "";
-  for (const c of texte) {
-    const remplacement = REMPLACEMENTS[c] ?? (policeEmbarquee ? undefined : REPLIS_SANS_POLICE[c]);
-    if (remplacement !== undefined) sortie += remplacement;
-    else if (policeEmbarquee || (c.codePointAt(0) ?? 0) <= 0xff) sortie += c;
-  }
-  return sortie;
-}
-
-/** Montant formaté. La devise dépend de la présence d'une police embarquée. */
-export function formaterMontant(v: number, devise: string): string {
-  return `${v < 0 ? "-" : ""}${Math.abs(v).toFixed(2).replace(".", ",")} ${devise}`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatDateCourte(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR");
-}
-
-function pourcent(v: number): string {
-  return `${v.toFixed(2).replace(".", ",")} %`;
-}
-
-/**
- * Trace un dégradé horizontal à trois bornes.
- *
- * jsPDF n'expose pas les motifs de dégradé du format PDF : on peint des bandes
- * verticales dont la couleur progresse. Elles se chevauchent d'un dixième de
- * millimètre, faute de quoi certains lecteurs laissent voir un filet blanc
- * entre deux bandes contiguës.
- */
-function degradeHorizontal(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  largeur: number,
-  hauteur: number,
-  bornes: [number, number, number][],
-) {
-  // 90 bandes : 2,3 mm de large, et deux niveaux d'écart au plus entre deux
-  // bandes voisines — invisible. Doubler leur nombre doublait le poids du
-  // fichier pour un gain que l'œil ne perçoit pas.
-  const BANDES = 90;
-  const pas = largeur / BANDES;
-
-  for (let i = 0; i < BANDES; i++) {
-    const t = i / (BANDES - 1);
-    // Deux segments : première borne → deuxième, puis deuxième → troisième.
-    const segment = t < 0.5 ? 0 : 1;
-    const local = segment === 0 ? t * 2 : (t - 0.5) * 2;
-    const a = bornes[segment];
-    const b = bornes[segment + 1];
-
-    doc.setFillColor(
-      Math.round(a[0] + (b[0] - a[0]) * local),
-      Math.round(a[1] + (b[1] - a[1]) * local),
-      Math.round(a[2] + (b[2] - a[2]) * local),
-    );
-    doc.rect(x + i * pas, y, pas + 0.1, hauteur, "F");
-  }
-}
-
-/**
- * Logo complet « Kshare », en blanc : il se détache sur le bandeau dégradé.
- * Chargé une fois pour toutes — une facture par commerce et par mois, c'est
- * autant de lectures disque inutiles sans cache.
- */
-const LOGO_LARGEUR = 34; // mm
-const LOGO_RATIO = 541 / 192;
-
-let logoCache: string | null | undefined;
-function logoDataUrl(): string | null {
-  if (logoCache !== undefined) return logoCache;
-  try {
-    const fichier = path.join(process.cwd(), "public", "logo-kshare-blanc.png");
-    logoCache = `data:image/png;base64,${readFileSync(fichier).toString("base64")}`;
-  } catch {
-    // Sans logo la facture reste valide : on ne fait pas échouer une émission
-    // pour un élément décoratif.
-    logoCache = null;
-  }
-  return logoCache;
-}
+// Réexportés : les tests éprouvent la règle d'assainissement à travers ce
+// module, et le socle graphique a été extrait après coup.
+export { assainirTexte, formaterMontant };
 
 export function generateInvoicePdf(params: InvoicePdfParams): Buffer {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -257,10 +110,6 @@ export function generateInvoicePdf(params: InvoicePdfParams): Buffer {
   // Une facture avec TVA n'existera qu'au jour de l'assujettissement ; d'ici là
   // le bloc de taxe reste absent plutôt que rempli de zéros.
   const avecTva = params.tauxTva > 0;
-  // Le pied de page porte les mentions obligatoires de l'émetteur : le corps du
-  // document ne doit jamais descendre dessous.
-  const HAUT_PIED = 262;
-
   let y = 0;
 
   /** Seul point d'écriture : rien ne doit atteindre la page sans assainissement. */
@@ -314,7 +163,7 @@ export function generateInvoicePdf(params: InvoicePdfParams): Buffer {
     doc.addPage();
     // Un simple liseré : le bandeau complet n'a de sens que sur la première
     // page, l'annexe n'a pas à se présenter deux fois.
-    degradeHorizontal(doc, 0, 0, pageWidth, 3, DEGRADE);
+    degradeHorizontal(doc, 0, 0, pageWidth, 3);
     y = 22;
   }
 
@@ -327,31 +176,9 @@ export function generateInvoicePdf(params: InvoicePdfParams): Buffer {
   // Le logo portant le nom, il n'est pas redoublé en texte : à droite, seuls la
   // nature du document et son numéro, qui est ce qu'on cherche quand on classe
   // une facture.
-  degradeHorizontal(doc, 0, 0, pageWidth, 34, DEGRADE);
+  degradeHorizontal(doc, 0, 0, pageWidth, 34);
 
-  const logo = logoDataUrl();
-  if (logo) {
-    try {
-      // Sans compression, jsPDF embarque l'image brute : 409 Ko par facture,
-      // contre 15 Ko ici. À raison d'une facture par commerce et par mois, la
-      // différence se compte en centaines de mégaoctets de stockage.
-      doc.addImage(
-        logo,
-        "PNG",
-        margin,
-        11,
-        LOGO_LARGEUR,
-        LOGO_LARGEUR / LOGO_RATIO,
-        undefined,
-        "SLOW",
-      );
-    } catch {
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      police("bold");
-      ecrire(EMETTEUR.nomCommercial, margin, 21);
-    }
-  } else {
+  if (!poserLogo(doc, margin, 11)) {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     police("bold");
@@ -408,6 +235,27 @@ export function generateInvoicePdf(params: InvoicePdfParams): Buffer {
   for (let i = 1; i < client.length; i++) ecrire(client[i], pageWidth / 2 + 9, y + 1 + i * 5);
 
   y += hauteurBloc + 8;
+
+  // ── Mention de remplacement ──
+  //
+  // En tête et non en pied : celui qui reçoit deux factures du même mois doit
+  // comprendre en une seconde laquelle fait foi. Une facture émise ne se
+  // modifie pas — elle s'annule, et celle-ci prend sa place.
+  if (params.remplace) {
+    doc.setFillColor(254, 242, 242);
+    doc.roundedRect(margin, y - 4, contentWidth, 12, 2, 2, "F");
+    doc.setTextColor(...ROUGE);
+    police("bold");
+    doc.setFontSize(9);
+    ecrire(
+      `Annule et remplace la facture ${params.remplace.numero} du ${formatDateCourte(params.remplace.emiseLe)}.`,
+      margin + 4,
+      y + 3,
+    );
+    doc.setTextColor(...GRIS_TEXTE);
+    police("normal");
+    y += 16;
+  }
 
   // ── Période ──
   doc.setFontSize(9.5);

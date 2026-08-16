@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { generateInvoicePdf } from "@/lib/pdf/generate-invoice-pdf";
 import { EMETTEUR, mentionsManquantes } from "@/lib/invoicing/emetteur";
 import {
   bornesPeriode,
@@ -18,6 +17,12 @@ import {
 import type { Json } from "@/types/database.types";
 import { sendEmailWithAttachment, emailFactureCommission } from "@/lib/resend";
 import { logAuditEvent } from "@/lib/audit-log";
+import {
+  archiverPdfFacture,
+  emettreReleve,
+  type FactureLigne,
+} from "@/lib/invoicing/emission";
+import { relevesPeriode } from "@/lib/invoicing/releve";
 
 export type FactureResult =
   | { success: true; message?: string }
@@ -319,7 +324,7 @@ export async function emettreFacture(factureId: string): Promise<FactureResult> 
     metadata: { number: facture.number, kind: facture.kind, amount: facture.amount_ttc },
   });
 
-  const chemin = await genererEtArchiverPdf(facture);
+  const chemin = await archiverPdfFacture(facture);
   revalidatePath("/kshare-crm/factures");
 
   return {
@@ -330,77 +335,7 @@ export async function emettreFacture(factureId: string): Promise<FactureResult> 
   };
 }
 
-type FactureLigne = {
-  id: string;
-  kind: NatureFacture;
-  number: string | null;
-  status: string;
-  commerce_id: string | null;
-  period_start: string;
-  period_end: string;
-  amount_ht: number;
-  vat_rate: number;
-  vat_amount: number;
-  amount_ttc: number;
-  due_amount: number;
-  issued_at: string | null;
-  pdf_url: string | null;
-  lines: LigneFacture[];
-  order_detail: LigneCommande[];
-  commerce_snapshot: {
-    name: string;
-    address: string | null;
-    postal_code: string | null;
-    city: string | null;
-    siret: string | null;
-    email: string | null;
-  } | null;
-};
 
-/** Produit le PDF, l'archive, et renvoie son chemin — `null` si l'archivage a échoué. */
-async function genererEtArchiverPdf(facture: FactureLigne): Promise<string | null> {
-  if (!facture.number || !facture.commerce_snapshot) return null;
-
-  const supabase = createAdminClient();
-  const snap = facture.commerce_snapshot;
-
-  const pdf = generateInvoicePdf({
-    numero: facture.number,
-    nature: facture.kind,
-    emiseLe: facture.issued_at ?? new Date().toISOString(),
-    periodeLibelle: libellePeriode(facture.period_start.slice(0, 7)),
-    periodeDebut: facture.period_start,
-    periodeFin: facture.period_end,
-    client: {
-      nom: snap.name,
-      adresse: snap.address,
-      codePostal: snap.postal_code,
-      ville: snap.city,
-      siret: snap.siret,
-      email: snap.email,
-    },
-    lignes: facture.lines ?? [],
-    commandes: facture.order_detail ?? [],
-    total: Number(facture.amount_ttc),
-    tauxTva: Number(facture.vat_rate),
-    montantTva: Number(facture.vat_amount),
-    resteAPayer: Number(facture.due_amount),
-  });
-
-  const chemin = `${facture.commerce_id}/${facture.number}.pdf`;
-  const { error } = await supabase.storage.from(BUCKET).upload(chemin, pdf, {
-    contentType: "application/pdf",
-    upsert: true,
-  });
-
-  if (error) {
-    console.error("[factures] Archivage du PDF impossible :", error);
-    return null;
-  }
-
-  await supabase.from("invoices").update({ pdf_url: chemin }).eq("id", facture.id);
-  return chemin;
-}
 
 /** Régénère le PDF d'une facture émise, sans toucher aux montants. */
 export async function regenererPdf(factureId: string): Promise<FactureResult> {
@@ -421,7 +356,7 @@ export async function regenererPdf(factureId: string): Promise<FactureResult> {
     return { success: false, error: "Un brouillon n'a pas encore de PDF." };
   }
 
-  const chemin = await genererEtArchiverPdf(facture);
+  const chemin = await archiverPdfFacture(facture);
   if (!chemin) return { success: false, error: "Génération du PDF impossible." };
 
   revalidatePath("/kshare-crm/factures");
@@ -484,7 +419,7 @@ export async function envoyerFacture(factureId: string): Promise<FactureResult> 
 
   let pdf: Buffer;
   if (erreurLecture || !fichier) {
-    const chemin = await genererEtArchiverPdf(facture);
+    const chemin = await archiverPdfFacture(facture);
     if (!chemin) return { success: false, error: "PDF introuvable et régénération impossible." };
     const { data: relu } = await supabase.storage.from(BUCKET).download(chemin);
     if (!relu) return { success: false, error: "PDF introuvable." };
@@ -552,4 +487,90 @@ export async function verifierEmetteur(): Promise<{
     manquantes: mentionsManquantes(),
     denomination: EMETTEUR.denominationLegale,
   };
+}
+
+/**
+ * Annule une facture émise et prépare celle qui la remplace.
+ *
+ * Une facture émise ne se corrige pas : elle s'annule, et un nouveau document
+ * la désigne. Le numéro d'origine reste consommé — c'est ce qui garantit que
+ * la suite reste sans trou — et les commandes redeviennent facturables pour
+ * que le remplaçant se recalcule sur des données à jour.
+ */
+export async function remplacerFacture(
+  factureId: string,
+  motif: string,
+): Promise<FactureResult> {
+  const ctx = await requireAdmin();
+  if (!ctx) return { success: false, error: "Non autorisé." };
+  if (!motif.trim()) return { success: false, error: "Un motif est obligatoire." };
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("remplacer_facture", {
+    p_invoice_id: factureId,
+    p_motif: motif.trim(),
+  });
+
+  if (error || !data) {
+    return { success: false, error: error?.message ?? "Remplacement impossible." };
+  }
+
+  const brouillon = data as unknown as FactureLigne;
+
+  logAuditEvent({
+    action: "crm.invoice_canceled",
+    actor_id: ctx.user.id,
+    target_id: factureId,
+    metadata: { motif: motif.trim(), remplacee_par: brouillon.id },
+  });
+
+  // Le brouillon reprend le contenu de l'original ; on le recalcule pour qu'il
+  // reflète l'état réel, qui a pu changer depuis — c'est souvent la raison même
+  // du remplacement.
+  await recalculerBrouillon(brouillon.id);
+
+  revalidatePath("/kshare-crm/factures");
+  return {
+    success: true,
+    message: "Facture annulée. Un brouillon rectifié est prêt : vérifiez-le, puis émettez-le.",
+  };
+}
+
+/** Annule un relevé de ventes et en émet un rectifié. */
+export async function remplacerReleve(releveId: string, motif: string): Promise<FactureResult> {
+  const ctx = await requireAdmin();
+  if (!ctx) return { success: false, error: "Non autorisé." };
+  if (!motif.trim()) return { success: false, error: "Un motif est obligatoire." };
+
+  const supabase = createAdminClient();
+  const { data: origine } = await supabase
+    .from("sales_statements")
+    .select("id, commerce_id, period_start, status")
+    .eq("id", releveId)
+    .single();
+
+  if (!origine) return { success: false, error: "Relevé introuvable." };
+  if (origine.status !== "issued") return { success: false, error: "Ce relevé est déjà annulé." };
+
+  const { error } = await supabase.rpc("remplacer_releve", {
+    p_statement_id: releveId,
+    p_motif: motif.trim(),
+  });
+  if (error) return { success: false, error: error.message };
+
+  // Recalculé sur les données du jour : c'est tout l'objet de la rectification.
+  const periode = origine.period_start.slice(0, 7);
+  const releve = (await relevesPeriode(periode)).find((r) => r.commerceId === origine.commerce_id);
+  if (!releve) {
+    return {
+      success: true,
+      message: "Relevé annulé. Ce commerce n'a plus de ventes sur la période, aucun remplaçant émis.",
+    };
+  }
+
+  const remplacant = await emettreReleve(releve, releveId);
+  if (!remplacant) return { success: false, error: "Le relevé rectifié n'a pas pu être émis." };
+
+  revalidatePath("/kshare-crm/factures");
+  return { success: true, message: `Relevé rectifié émis : ${remplacant.reference}.` };
 }
