@@ -1426,7 +1426,13 @@ export function emailNouvelleCommandeCommerce(params: {
   const euros = montantNet.toFixed(2).replace(".", ",") + " €";
 
   return {
-    subject: `Kshare — ${quantity > 1 ? `${quantity} paniers vendus` : "Un panier vendu"}, retrait ${jour} ${creneau}`,
+    // Le type dans l'objet : le commerçant doit savoir ce qu'il a à préparer
+    // sans ouvrir l'email, notamment sur la notification d'un téléphone.
+    subject: `Kshare — ${
+      quantity > 1
+        ? `${quantity} paniers ${typeLabel} vendus`
+        : `Un panier ${typeLabel} vendu`
+    }, retrait ${jour} ${creneau}`,
     html: wrapHtml(`
       <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${escapeHtml(commerceName)},</h2>
       <p style="color:#333;line-height:1.7;">
