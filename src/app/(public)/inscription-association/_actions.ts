@@ -85,6 +85,14 @@ export async function inscriptionAssociation(
   // Déduire le département à partir du code postal (2 premiers chiffres)
   const department = codePostal.slice(0, 2);
 
+  // Position de l'association : c'est elle qui décide des paniers dons qu'elle
+  // verra, dans un rayon de 50 km. Sans coordonnées, sa page reste vide sans
+  // qu'elle comprenne pourquoi — d'où le géocodage dès l'inscription. Un échec
+  // ne bloque pas la demande : l'espace de gestion signale les associations
+  // restées sans position et permet de les situer à la main.
+  const { geocoderAdresseOuNull } = await import("@/lib/geocode");
+  const coords = await geocoderAdresseOuNull(adresse, codePostal, ville);
+
   // Créer l'association SANS compte Auth (sera créé à la validation admin)
   const { data: asso, error: assoError } = await supabase
     .from("associations")
@@ -96,6 +104,9 @@ export async function inscriptionAssociation(
       contact: telephone,
       address: adresse,
       city: ville,
+      latitude: coords?.latitude ?? null,
+      longitude: coords?.longitude ?? null,
+      geocoded_at: coords ? new Date().toISOString() : null,
       department,
       zone_region: `RNA: ${rna} | CP: ${codePostal}`,
       status: "pending",

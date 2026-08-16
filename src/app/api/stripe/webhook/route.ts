@@ -431,11 +431,17 @@ async function handlePaymentIntentSucceeded(
   // l'application mobile, donc la quasi-totalité des ventes réelles.
   const { data: detail } = await supabase
     .from("orders")
-    .select("commerce_id, net_amount, qr_code_token, baskets(type, day, pickup_start, pickup_end)")
+    .select("commerce_id, net_amount, qr_code_token, is_donation, baskets(type, day, pickup_start, pickup_end)")
     .eq("id", order.id)
     .single();
 
-  if (detail?.commerce_id) {
+  // Jamais sur un don. Le paiement d'un don n'est encaissé que si une
+  // association confirme la récupération sur place ; sinon l'autorisation est
+  // relâchée. Annoncer au commerçant un montant qu'il ne percevra peut-être
+  // pas serait faux. Ce chemin ne traite déjà que les commandes en « created »,
+  // et un don naît en « pending_association » — mais la garantie ne doit pas
+  // tenir au seul enchaînement des statuts.
+  if (detail?.commerce_id && !detail.is_donation) {
     const panier = (detail as unknown as {
       baskets: { type: string; day: string; pickup_start: string; pickup_end: string } | null;
     }).baskets;
