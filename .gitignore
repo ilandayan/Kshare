@@ -46,3 +46,11 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Artefacts locaux de Claude Code.
+# Les worktrees étaient suivis comme des sous-modules : celui de « festive-hofstadter »
+# avait été supprimé du disque sans l'être de l'index, et chaque `git status` le
+# signalait depuis. Ils n'ont rien à faire dans le dépôt, pas plus que le verrou
+# des tâches planifiées, qui change à chaque exécution.
+.claude/worktrees/
+.claude/scheduled_tasks.lock
