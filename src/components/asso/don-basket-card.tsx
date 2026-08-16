@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin, Clock, Package, Navigation, Minus, Plus, Loader2, CheckCircle,
-  UtensilsCrossed, Milk, Leaf, Wine, Layers, ShoppingCart, Handshake,
+  UtensilsCrossed, Milk, Leaf, Wine, Layers, ShoppingCart, Handshake, Star,
   type LucideIcon,
 } from "lucide-react";
 import { reserverPanierDon } from "@/app/(asso)/asso/paniers-dons/[id]/_actions";
+import { formatDistance } from "@/lib/geo";
 import { toast } from "sonner";
 
 const TYPE_ICONS: Record<string, { label: string; Icon: LucideIcon }> = {
@@ -28,6 +29,10 @@ interface DonBasketCardProps {
     quantity_sold: number;
     quantity_reserved: number;
     description: string | null;
+    /** Distance depuis l'association, en kilomètres. */
+    distanceKm?: number | null;
+    /** Panier que le commerçant a réservé en priorité à cette association. */
+    exclusif?: boolean;
     commerce: {
       name: string;
       city: string;
@@ -88,7 +93,22 @@ export function DonBasketCard({ basket }: DonBasketCardProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div
+      className={`bg-white rounded-2xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
+        basket.exclusif ? "border-amber-300" : "border-[#e2e5f0]"
+      }`}
+    >
+      {/* Le commerçant vous a désignée. La mention dit aussi que la priorité
+          s'éteint, sans quoi rien ne presserait de venir. */}
+      {basket.exclusif && (
+        <div className="bg-[#FEF6DC] px-5 py-2.5 flex items-center gap-2">
+          <Star className="h-3.5 w-3.5 text-[#8A6D0B]" />
+          <span className="text-xs font-semibold text-[#8A6D0B]">
+            Réservé en priorité pour vous pendant 2 h
+          </span>
+        </div>
+      )}
+
       {/* Card header */}
       <div className="p-5 pb-4">
         <div className="flex items-start justify-between mb-4">
@@ -101,6 +121,11 @@ export function DonBasketCard({ basket }: DonBasketCardProps) {
               <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
                 <MapPin className="h-3 w-3" />
                 {c?.city}
+                {basket.distanceKm != null && (
+                  <span className="ml-1 font-medium text-gray-500">
+                    · {formatDistance(basket.distanceKm)}
+                  </span>
+                )}
                 {c?.hashgakha && (
                   <span className="ml-1 text-purple-600">· {c.hashgakha}</span>
                 )}

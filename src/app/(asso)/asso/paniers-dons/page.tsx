@@ -1,97 +1,120 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect }     from "next/navigation";
-import { Info, Handshake, MapPin, Heart } from "lucide-react";
+import { Info, Handshake, MapPin, Heart, AlertTriangle } from "lucide-react";
 import { DonBasketCard } from "@/components/asso/don-basket-card";
 import { ClientDonationCard } from "@/components/asso/client-donation-card";
-import { DEPARTMENTS } from "@/lib/constants";
+import { distanceKm, RAYON_DONS_KM } from "@/lib/geo";
+
+export const dynamic = "force-dynamic";
+
+/** Une journée de paniers, ou rien du tout si elle est vide. */
+function Section({
+  title,
+  items,
+}: {
+  title: string;
+  items: Array<{
+    id: string;
+    type: string;
+    pickup_start: string;
+    pickup_end: string;
+    quantity_total: number;
+    quantity_sold: number | null;
+    quantity_reserved: number | null;
+    description: string | null;
+    distance_km: number | null;
+    exclusif: boolean | null;
+    commerce_name: string | null;
+    commerce_city: string | null;
+    commerce_hashgakha: string | null;
+    commerce_address: string | null;
+  }>;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-8">
+      <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-4">
+        {title}
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {items.map((b) => (
+          <DonBasketCard
+            key={b.id}
+            basket={{
+              id: b.id,
+              type: b.type,
+              pickup_start: b.pickup_start,
+              pickup_end: b.pickup_end,
+              quantity_total: b.quantity_total,
+              quantity_sold: b.quantity_sold ?? 0,
+              quantity_reserved: b.quantity_reserved ?? 0,
+              description: b.description,
+              distanceKm: b.distance_km,
+              exclusif: b.exclusif ?? false,
+              commerce: {
+                name: b.commerce_name ?? "",
+                city: b.commerce_city ?? "",
+                hashgakha: b.commerce_hashgakha ?? "",
+                address: b.commerce_address ?? undefined,
+              },
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default async function PaniersDonsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
-  // Récupérer l'association et son département
   const { data: asso } = await supabase
     .from("associations")
-    .select("id, city, zone_region, department")
+    .select("id, city, zone_region, department, latitude, longitude")
     .eq("profile_id", user.id)
     .single();
 
   if (!asso) redirect("/");
 
-  // Récupérer les paniers dons publiés avec le code postal du commerce
-  const { data: baskets } = await supabase
-    .from("baskets")
-    .select("*, commerces(name, city, hashgakha, address, postal_code, commerce_type)")
-    .eq("status", "published")
-    .eq("is_donation", true)
-    .order("created_at", { ascending: false });
+  // Le rayon remplace le découpage départemental : un commerce de Levallois
+  // restait invisible pour une association du 75 à trois kilomètres, tandis
+  // qu'une association de Meaux, à cinquante, le voyait. Le tri se fait en base
+  // — rayon, exclusivité accordée par un commerçant, et classement.
+  const { data: baskets } = await supabase.rpc("dons_disponibles", {
+    p_rayon_km: RAYON_DONS_KM,
+  });
 
-  // Récupérer les dons clients en attente d'association
+  // Les dons de clients suivent la même règle, mais vivent dans `orders` : le
+  // filtre se fait ici, sur les coordonnées du commerce.
   const { data: pendingDonations } = await supabase
     .from("orders")
     .select(
-      "id, quantity, total_amount, pickup_start, pickup_end, donation_expires_at, basket_id, baskets(type, description), commerces:commerce_id(name, city, address, postal_code)"
+      "id, quantity, total_amount, pickup_start, pickup_end, donation_expires_at, basket_id, baskets(type, description), commerces:commerce_id(name, city, address, postal_code, latitude, longitude)"
     )
     .eq("status", "pending_association")
     .eq("is_donation", true)
     .order("created_at", { ascending: false });
 
-  // Filtrer par département : les 2 premiers chiffres du code postal du commerce
-  const filteredBaskets = asso.department
-    ? baskets?.filter((b) => {
-        const commerce = b.commerces as { postal_code?: string } | null;
-        return commerce?.postal_code?.slice(0, 2) === asso.department;
-      }) ?? []
-    : baskets ?? [];
+  const filteredBaskets = baskets ?? [];
 
-  // Filtrer aussi les dons clients par département
-  const filteredDonations = asso.department
-    ? pendingDonations?.filter((d) => {
-        const commerce = d.commerces as { postal_code?: string } | null;
-        return commerce?.postal_code?.slice(0, 2) === asso.department;
-      }) ?? []
-    : pendingDonations ?? [];
+  const filteredDonations = (pendingDonations ?? []).filter((d) => {
+    const commerce = d.commerces as { latitude?: number | null; longitude?: number | null } | null;
+    if (!asso.latitude || !asso.longitude) return false;
+    if (!commerce?.latitude || !commerce?.longitude) return false;
+    return (
+      distanceKm(asso.latitude, asso.longitude, commerce.latitude, commerce.longitude) <=
+      RAYON_DONS_KM
+    );
+  });
 
   const today    = filteredBaskets.filter((b) => b.day === "today");
   const tomorrow = filteredBaskets.filter((b) => b.day === "tomorrow");
 
-  // Nom du département pour l'affichage
-  const deptLabel = asso.department
-    ? DEPARTMENTS.find((d) => d.code === asso.department)?.label ?? `Département ${asso.department}`
-    : null;
-
-  function Section({ title, items }: { title: string; items: typeof today }) {
-    if (items.length === 0) return null;
-    return (
-      <div className="mb-8">
-        <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-4">{title}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {items.map((b) => {
-            const commerce = b.commerces as {
-              name: string; city: string; hashgakha: string; address?: string;
-            } | null;
-            return (
-              <DonBasketCard
-                key={b.id}
-                basket={{
-                  id: b.id,
-                  type: b.type,
-                  pickup_start: b.pickup_start,
-                  pickup_end: b.pickup_end,
-                  quantity_total: b.quantity_total,
-                  quantity_sold: b.quantity_sold ?? 0,
-                  quantity_reserved: b.quantity_reserved ?? 0,
-                  description: b.description,
-                  commerce,
-                }}
-              />
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+  // Sans coordonnées, la comparaison de distance échoue contre NULL et
+  // l'association ne voit rien du tout. Le silence serait incompréhensible.
+  const sansPosition = !asso.latitude || !asso.longitude;
 
   return (
     <div>
@@ -100,16 +123,30 @@ export default async function PaniersDonsPage() {
         <p className="text-sm text-gray-400 mt-0.5">Paniers offerts par les commerçants partenaires</p>
       </div>
 
-      {/* Zone géographique info */}
-      {deptLabel && (
+      {/* Zone géographique */}
+      {sansPosition ? (
+        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4 flex items-start gap-3 mb-6">
+          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-900">
+            <p className="font-semibold">Votre adresse n&apos;est pas encore située</p>
+            <p className="text-amber-800 mt-0.5">
+              Sans elle, nous ne pouvons pas savoir quels paniers sont proches de
+              vous, et cette page reste vide. Vérifiez votre adresse depuis votre{" "}
+              <a href="/asso/profil" className="underline font-medium">profil</a>.
+            </p>
+          </div>
+        </div>
+      ) : (
         <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm p-4 flex items-center gap-3 mb-6">
           <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
             <MapPin className="h-4 w-4 text-purple-600" />
           </div>
           <div className="text-sm">
             <span className="text-gray-500">Zone de récupération :</span>{" "}
-            <span className="font-semibold text-gray-900">{deptLabel}</span>
-            <span className="text-gray-400"> ({asso.department})</span>
+            <span className="font-semibold text-gray-900">
+              à moins de {RAYON_DONS_KM} km
+            </span>
+            {asso.city && <span className="text-gray-400"> de {asso.city}</span>}
           </div>
         </div>
       )}

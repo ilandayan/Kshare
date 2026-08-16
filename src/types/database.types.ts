@@ -2051,6 +2051,7 @@ export type Database = {
         Returns: {
           commerce_address: string
           commerce_city: string
+          commerce_hashgakha: string
           commerce_name: string
           commerce_postal_code: string
           commerce_type: string
@@ -2062,6 +2063,7 @@ export type Database = {
           pickup_end: string
           pickup_start: string
           quantity_reserved: number
+          quantity_sold: number
           quantity_total: number
           type: string
         }[]

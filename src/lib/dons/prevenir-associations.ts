@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, emailPanierDonDisponible } from "@/lib/resend";
+import { distanceKm, RAYON_DONS_KM } from "@/lib/geo";
 
 /**
  * Prévenir les associations qu'un panier don est disponible.
@@ -17,7 +18,7 @@ import { sendEmail, emailPanierDonDisponible } from "@/lib/resend";
  * déjà parti.
  */
 
-const RAYON_KM_DEFAUT = 50;
+const RAYON_KM_DEFAUT = RAYON_DONS_KM;
 
 interface AssociationDestinataire {
   id: string;
@@ -25,20 +26,6 @@ interface AssociationDestinataire {
   email: string;
   latitude: number;
   longitude: number;
-}
-
-/** Haversine, même formule que la fonction SQL `distance_km`. */
-export function distanceKm(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
-  const rad = (d: number) => (d * Math.PI) / 180;
-  const a =
-    Math.sin(rad(lat2 - lat1) / 2) ** 2 +
-    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(rad(lon2 - lon1) / 2) ** 2;
-  return 6371 * 2 * Math.asin(Math.sqrt(a));
 }
 
 async function chargerPanier(basketId: string) {
