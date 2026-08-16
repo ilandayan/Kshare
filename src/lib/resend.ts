@@ -1384,6 +1384,79 @@ export function emailDecisionSignalement(params: {
 }
 
 /**
+ * Prévient le commerçant qu'un panier vient d'être vendu.
+ *
+ * C'était le trou le plus grave de la chaîne : le client recevait bien sa
+ * confirmation, le commerçant rien du tout. Il ne découvrait la vente qu'en
+ * ouvrant son tableau de bord de lui-même, et un client pouvait donc se
+ * présenter devant une porte pour un panier que personne n'avait préparé.
+ *
+ * L'email dit d'abord l'heure du retrait : c'est la seule chose qui engage le
+ * commerçant dans l'immédiat.
+ */
+export function emailNouvelleCommandeCommerce(params: {
+  commerceName: string;
+  basketType: string;
+  quantity: number;
+  montantNet: number;
+  pickupDay: string;
+  pickupStart: string;
+  pickupEnd: string;
+  codeRetrait: string;
+}): { subject: string; html: string } {
+  const {
+    commerceName,
+    basketType,
+    quantity,
+    montantNet,
+    pickupDay,
+    pickupStart,
+    pickupEnd,
+    codeRetrait,
+  } = params;
+
+  const typeLabel = BASKET_TYPE_LABELS[basketType] ?? basketType;
+  const jour =
+    pickupDay === "today"
+      ? "aujourd'hui"
+      : pickupDay === "tomorrow"
+        ? "demain"
+        : pickupDay;
+  const creneau = `${pickupStart.substring(0, 5)} – ${pickupEnd.substring(0, 5)}`;
+  const euros = montantNet.toFixed(2).replace(".", ",") + " €";
+
+  return {
+    subject: `Kshare — ${quantity > 1 ? `${quantity} paniers vendus` : "Un panier vendu"}, retrait ${jour} ${creneau}`,
+    html: wrapHtml(`
+      <h2 style="color:#3744C8;margin:0 0 16px;">Bonjour ${escapeHtml(commerceName)},</h2>
+      <p style="color:#333;line-height:1.7;">
+        Vous venez de vendre
+        <strong>${quantity > 1 ? `${quantity} paniers ${escapeHtml(typeLabel)}` : `un panier ${escapeHtml(typeLabel)}`}</strong>.
+      </p>
+      <div style="background:#f8f9fc;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0 0 6px;color:#333;font-size:15px;">
+          🕒 <strong>Retrait ${escapeHtml(jour)}, ${escapeHtml(creneau)}</strong>
+        </p>
+        <p style="margin:0 0 6px;color:#333;font-size:14px;">
+          🔑 Code de retrait : <strong>${escapeHtml(codeRetrait)}</strong>
+        </p>
+        <p style="margin:0;color:#666;font-size:14px;">
+          Vous percevrez <strong>${escapeHtml(euros)}</strong>, commission déduite.
+        </p>
+      </div>
+      <p style="color:#333;line-height:1.7;">
+        Pensez à préparer le panier avant le début du créneau. Le client présentera
+        son QR code ou le code ci-dessus.
+      </p>
+      <a href="https://k-share.fr/shop/paniers/orders" style="display:inline-block;padding:12px 24px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Voir la commande
+      </a>
+      <p style="color:#888;font-size:13px;margin-top:24px;">L'équipe Kshare</p>
+    `),
+  };
+}
+
+/**
  * Prévient une association qu'un panier don vient d'être publié près d'elle.
  *
  * Un panier dont personne n'est averti finit à la poubelle : les associations ne

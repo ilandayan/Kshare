@@ -3,8 +3,14 @@ import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe/client";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from "@/lib/constants";
-import { sendEmail, emailPaiementEchoue, emailConfirmationCommande } from "@/lib/resend";
+import {
+  sendEmail,
+  emailPaiementEchoue,
+  emailConfirmationCommande,
+  emailNouvelleCommandeCommerce,
+} from "@/lib/resend";
 import type Stripe from "stripe";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -224,6 +230,60 @@ async function handleCheckoutSessionCompleted(
         console.error("[webhook] Failed to send confirmation email:", emailErr);
       }
     }
+
+    // Et au commerçant. Sans cet email il ne découvrait la vente qu'en ouvrant
+    // son tableau de bord, et un client pouvait se présenter devant une porte
+    // pour un panier que personne n'avait préparé.
+    if (order) {
+      await previenirCommerceVente(supabase, {
+        commerceId,
+        basket,
+        quantity: quantityNum,
+        montantNet: netAmountNum,
+        codeRetrait: pickupCode,
+      });
+    }
+  }
+}
+
+/**
+ * Envoie au commerçant l'avis de vente. Ne lève jamais : un email en échec ne
+ * doit pas faire échouer le webhook, sans quoi Stripe le rejouerait et la
+ * commande serait créée deux fois.
+ */
+async function previenirCommerceVente(
+  supabase: SupabaseClient,
+  params: {
+    commerceId: string;
+    basket: { type?: string | null; day?: string | null; pickup_start?: string | null; pickup_end?: string | null };
+    quantity: number;
+    montantNet: number;
+    codeRetrait: string;
+  },
+): Promise<void> {
+  try {
+    const { data: commerce } = await supabase
+      .from("commerces")
+      .select("name, email")
+      .eq("id", params.commerceId)
+      .single();
+
+    if (!commerce?.email) return;
+
+    const { subject, html } = emailNouvelleCommandeCommerce({
+      commerceName: commerce.name,
+      basketType: params.basket.type ?? "mix",
+      quantity: params.quantity,
+      montantNet: params.montantNet,
+      pickupDay: params.basket.day ?? "",
+      pickupStart: params.basket.pickup_start ?? "",
+      pickupEnd: params.basket.pickup_end ?? "",
+      codeRetrait: params.codeRetrait,
+    });
+
+    await sendEmail({ to: commerce.email, subject, html });
+  } catch (err) {
+    console.error("[webhook] Failed to notify commerce of sale:", err);
   }
 }
 
@@ -365,6 +425,28 @@ async function handlePaymentIntentSucceeded(
     } catch (emailErr) {
       console.error("[webhook] Failed to send confirmation email (mobile):", emailErr);
     }
+  }
+
+  // Et au commerçant. C'est ce chemin-là qu'empruntent les commandes de
+  // l'application mobile, donc la quasi-totalité des ventes réelles.
+  const { data: detail } = await supabase
+    .from("orders")
+    .select("commerce_id, net_amount, qr_code_token, baskets(type, day, pickup_start, pickup_end)")
+    .eq("id", order.id)
+    .single();
+
+  if (detail?.commerce_id) {
+    const panier = (detail as unknown as {
+      baskets: { type: string; day: string; pickup_start: string; pickup_end: string } | null;
+    }).baskets;
+
+    await previenirCommerceVente(supabase, {
+      commerceId: detail.commerce_id,
+      basket: panier ?? {},
+      quantity: quantityNum,
+      montantNet: detail.net_amount ?? 0,
+      codeRetrait: detail.qr_code_token ?? "",
+    });
   }
 
   console.info("[webhook] Mobile order confirmed:", order.id);

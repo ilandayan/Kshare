@@ -659,6 +659,58 @@ export type Database = {
           },
         ]
       }
+      donation_email_queue: {
+        Row: {
+          association_id: string
+          basket_id: string
+          created_at: string
+          id: string
+          send_after: string
+          sent_at: string | null
+          skipped_reason: string | null
+        }
+        Insert: {
+          association_id: string
+          basket_id: string
+          created_at?: string
+          id?: string
+          send_after: string
+          sent_at?: string | null
+          skipped_reason?: string | null
+        }
+        Update: {
+          association_id?: string
+          basket_id?: string
+          created_at?: string
+          id?: string
+          send_after?: string
+          sent_at?: string | null
+          skipped_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donation_email_queue_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donation_email_queue_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations_publiques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donation_email_queue_basket_id_fkey"
+            columns: ["basket_id"]
+            isOneToOne: false
+            referencedRelation: "baskets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           client_id: string
