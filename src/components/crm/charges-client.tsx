@@ -7,7 +7,7 @@ import { Wallet, Plus, Trash2, Loader2, Paperclip, Repeat, Info } from "lucide-r
 import {
   enregistrerCharge, supprimerCharge, lienJustificatif,
   CATEGORIES_CHARGE, LIBELLES_CHARGE, type CategorieCharge,
-} from "@/app/(crm)/crm/charges/_actions";
+} from "@/app/(crm)/kshare-crm/charges/_actions";
 
 export interface ChargeRow {
   id: string;
@@ -118,7 +118,7 @@ export function ChargesClient({ charges, annee, annees }: Props) {
         <div className="flex items-center gap-2">
           <select
             value={annee}
-            onChange={(e) => router.push(`/crm/charges?annee=${e.target.value}`)}
+            onChange={(e) => router.push(`/kshare-crm/charges?annee=${e.target.value}`)}
             className="px-4 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm font-medium text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3744C8]/30"
           >
             {annees.map((a) => (

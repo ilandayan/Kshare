@@ -53,7 +53,7 @@ export async function changerStatutLead(
   const { error } = await supabase.from("association_leads").update(maj).eq("id", leadId);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/crm/associations");
+  revalidatePath("/kshare-crm/associations");
   return { success: true };
 }
 
@@ -99,6 +99,6 @@ export async function geocoderAssociation(
     };
   }
 
-  revalidatePath("/crm/associations");
+  revalidatePath("/kshare-crm/associations");
   return { success: true };
 }

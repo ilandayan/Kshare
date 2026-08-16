@@ -10,7 +10,7 @@ import {
 import {
   televerserDocument, supprimerDocument, lienDocument,
   CATEGORIES_DOCUMENT, LIBELLES_CATEGORIE, type CategorieDocument,
-} from "@/app/(crm)/crm/documents/_actions";
+} from "@/app/(crm)/kshare-crm/documents/_actions";
 
 export interface DocumentRow {
   id: string;
@@ -199,7 +199,7 @@ export function DocumentsClient({ documents, filtre, conservationAnnees }: Props
       <div className="flex flex-wrap gap-1.5 mb-4">
         <Pastille
           actif={filtre === null}
-          onClick={() => router.push("/crm/documents")}
+          onClick={() => router.push("/kshare-crm/documents")}
         >
           Tous ({documents.length})
         </Pastille>
@@ -207,7 +207,7 @@ export function DocumentsClient({ documents, filtre, conservationAnnees }: Props
           <Pastille
             key={c}
             actif={filtre === c}
-            onClick={() => router.push(filtre === c ? "/crm/documents" : `/crm/documents?categorie=${c}`)}
+            onClick={() => router.push(filtre === c ? "/kshare-crm/documents" : `/kshare-crm/documents?categorie=${c}`)}
           >
             {LIBELLES_CATEGORIE[c]} ({compteurs[c] ?? 0})
           </Pastille>

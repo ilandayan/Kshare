@@ -79,7 +79,7 @@ export async function changerStatutProspect(
     created_by: ctx.user.id,
   });
 
-  revalidatePath("/crm");
+  revalidatePath("/kshare-crm");
   return { success: true };
 }
 
@@ -112,7 +112,7 @@ export async function ajouterActivite(
       .eq("id", prospectId);
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/kshare-crm");
   return { success: true };
 }
 
@@ -143,7 +143,7 @@ export async function planifierRelance(
     });
   }
 
-  revalidatePath("/crm");
+  revalidatePath("/kshare-crm");
   return { success: true };
 }
 
@@ -173,6 +173,6 @@ export async function modifierProspect(
 
   if (error) return { success: false, error: "Erreur lors de l'enregistrement." };
 
-  revalidatePath("/crm");
+  revalidatePath("/kshare-crm");
   return { success: true };
 }

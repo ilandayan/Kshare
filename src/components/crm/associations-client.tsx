@@ -6,7 +6,7 @@ import {
   changerStatutLead,
   geocoderAssociation,
   type StatutLead,
-} from "@/app/(crm)/crm/associations/_actions";
+} from "@/app/(crm)/kshare-crm/associations/_actions";
 
 interface Lead {
   id: string;

@@ -44,7 +44,7 @@ export function ChiffresClient({ donnees, nbMois }: Props) {
 
         <select
           value={nbMois}
-          onChange={(e) => router.push(`/crm/chiffres?mois=${e.target.value}`)}
+          onChange={(e) => router.push(`/kshare-crm/chiffres?mois=${e.target.value}`)}
           className="px-4 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm font-medium text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3744C8]/30"
         >
           {PERIODES.map((p) => (

@@ -66,7 +66,7 @@ export function UrssafClient({ annee, annees, trimestres, bareme }: Props) {
 
         <select
           value={annee}
-          onChange={(e) => router.push(`/crm/urssaf?annee=${e.target.value}`)}
+          onChange={(e) => router.push(`/kshare-crm/urssaf?annee=${e.target.value}`)}
           className="px-4 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm font-medium text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3744C8]/30"
         >
           {annees.map((a) => (

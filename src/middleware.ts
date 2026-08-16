@@ -74,7 +74,7 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
     // Transmettre le rôle pour afficher le bon variant de connexion
-    if (pathname.startsWith("/kshare-admin")) {
+    if (pathname.startsWith("/kshare-admin") || pathname.startsWith("/kshare-crm")) {
       url.searchParams.set("role", "admin");
     } else if (pathname.startsWith("/asso")) {
       url.searchParams.set("role", "association");
@@ -115,8 +115,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Admin routes — admin uniquement
-    if (pathname.startsWith("/kshare-admin") && role !== "admin") {
+    // Admin routes — admin uniquement.
+    //
+    // L'espace de gestion `/kshare-crm` est ajouté ici : il n'était protégé que
+    // par la garde de son layout. Elle suffisait, mais la défense tenait à un
+    // seul fichier, et une page ajoutée hors de ce layout serait passée au
+    // travers.
+    if (
+      (pathname.startsWith("/kshare-admin") || pathname.startsWith("/kshare-crm")) &&
+      role !== "admin"
+    ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 

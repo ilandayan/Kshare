@@ -21,6 +21,7 @@ export default function robots(): MetadataRoute.Robots {
           "/asso/",
           "/client/",
           "/kshare-admin/",
+          "/kshare-crm/",
           "/api/",
           "/connexion",
           "/inscription-commercant",

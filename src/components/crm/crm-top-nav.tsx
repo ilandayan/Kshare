@@ -9,15 +9,15 @@ import { usePathname } from "next/navigation";
  * marche.
  */
 const TABS = [
-  { label: "Prospection", href: "/crm" },
-  { label: "Associations", href: "/crm/associations" },
-  { label: "Clients", href: "/crm/clients" },
-  { label: "Chiffres", href: "/crm/chiffres" },
-  { label: "Seuils", href: "/crm/seuils" },
-  { label: "Factures", href: "/crm/factures" },
-  { label: "Charges", href: "/crm/charges" },
-  { label: "URSSAF", href: "/crm/urssaf" },
-  { label: "Documents", href: "/crm/documents" },
+  { label: "Prospection", href: "/kshare-crm" },
+  { label: "Associations", href: "/kshare-crm/associations" },
+  { label: "Clients", href: "/kshare-crm/clients" },
+  { label: "Chiffres", href: "/kshare-crm/chiffres" },
+  { label: "Seuils", href: "/kshare-crm/seuils" },
+  { label: "Factures", href: "/kshare-crm/factures" },
+  { label: "Charges", href: "/kshare-crm/charges" },
+  { label: "URSSAF", href: "/kshare-crm/urssaf" },
+  { label: "Documents", href: "/kshare-crm/documents" },
 ];
 
 export function CrmTopNav() {
@@ -28,8 +28,8 @@ export function CrmTopNav() {
       <div className="flex items-center gap-1 h-12 flex-nowrap whitespace-nowrap">
         {TABS.map((tab) => {
           const isActive =
-            tab.href === "/crm"
-              ? pathname === "/crm"
+            tab.href === "/kshare-crm"
+              ? pathname === "/kshare-crm"
               : pathname === tab.href || pathname.startsWith(tab.href + "/");
 
           return (

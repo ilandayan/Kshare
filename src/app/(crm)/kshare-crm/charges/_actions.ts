@@ -139,8 +139,8 @@ export async function enregistrerCharge(formData: FormData): Promise<ChargeResul
     return { success: false, error: `Enregistrement impossible : ${error.message}` };
   }
 
-  revalidatePath("/crm/charges");
-  revalidatePath("/crm/chiffres");
+  revalidatePath("/kshare-crm/charges");
+  revalidatePath("/kshare-crm/chiffres");
   return { success: true, message: "Charge enregistrée." };
 }
 
@@ -161,8 +161,8 @@ export async function supprimerCharge(id: string): Promise<ChargeResult> {
   const { error } = await supabase.from("charges").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/crm/charges");
-  revalidatePath("/crm/chiffres");
+  revalidatePath("/kshare-crm/charges");
+  revalidatePath("/kshare-crm/chiffres");
   return { success: true, message: "Charge supprimée." };
 }
 

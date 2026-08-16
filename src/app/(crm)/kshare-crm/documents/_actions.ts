@@ -145,7 +145,7 @@ export async function televerserDocument(formData: FormData): Promise<DocumentRe
     return { success: false, error: `Enregistrement impossible : ${error.message}` };
   }
 
-  revalidatePath("/crm/documents");
+  revalidatePath("/kshare-crm/documents");
   return { success: true, message: "Document ajouté." };
 }
 
@@ -169,7 +169,7 @@ export async function supprimerDocument(id: string): Promise<DocumentResult> {
   const { error } = await supabase.from("crm_documents").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/crm/documents");
+  revalidatePath("/kshare-crm/documents");
   return { success: true, message: "Document supprimé." };
 }
 

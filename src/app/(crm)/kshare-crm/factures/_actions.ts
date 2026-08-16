@@ -142,7 +142,7 @@ export async function preparerFactures(periode: string): Promise<FactureResult> 
   const { error } = await supabase.from("invoices").insert(aCreer as never);
   if (error) return { success: false, error: `Création impossible : ${error.message}` };
 
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
   return {
     success: true,
     message: `${aCreer.length} brouillon${aCreer.length > 1 ? "s" : ""} créé${aCreer.length > 1 ? "s" : ""}.`,
@@ -226,7 +226,7 @@ export async function recalculerBrouillon(factureId: string): Promise<FactureRes
       .eq("status", "draft");
 
     if (error) return { success: false, error: error.message };
-    revalidatePath("/crm/factures");
+    revalidatePath("/kshare-crm/factures");
     return { success: true, message: "Brouillon recalculé." };
   }
 
@@ -261,7 +261,7 @@ export async function recalculerBrouillon(factureId: string): Promise<FactureRes
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
   return { success: true, message: "Brouillon recalculé." };
 }
 
@@ -278,7 +278,7 @@ export async function supprimerBrouillon(factureId: string): Promise<FactureResu
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
   return { success: true, message: "Brouillon supprimé." };
 }
 
@@ -320,7 +320,7 @@ export async function emettreFacture(factureId: string): Promise<FactureResult> 
   });
 
   const chemin = await genererEtArchiverPdf(facture);
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
 
   return {
     success: true,
@@ -424,7 +424,7 @@ export async function regenererPdf(factureId: string): Promise<FactureResult> {
   const chemin = await genererEtArchiverPdf(facture);
   if (!chemin) return { success: false, error: "Génération du PDF impossible." };
 
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
   return { success: true, message: "PDF régénéré." };
 }
 
@@ -455,7 +455,7 @@ export async function annulerFacture(factureId: string, motif: string): Promise<
     metadata: { motif: motif.trim() },
   });
 
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
   return { success: true, message: "Facture annulée." };
 }
 
@@ -515,7 +515,7 @@ export async function envoyerFacture(factureId: string): Promise<FactureResult> 
     .update({ sent_at: new Date().toISOString() })
     .eq("id", factureId);
 
-  revalidatePath("/crm/factures");
+  revalidatePath("/kshare-crm/factures");
   return { success: true, message: `Facture envoyée à ${destinataire}.` };
 }
 

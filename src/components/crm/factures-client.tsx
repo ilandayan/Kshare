@@ -10,7 +10,7 @@ import {
 import {
   preparerFactures, emettreFacture, recalculerBrouillon, supprimerBrouillon,
   annulerFacture, envoyerFacture, regenererPdf, lienFacture,
-} from "@/app/(crm)/crm/factures/_actions";
+} from "@/app/(crm)/kshare-crm/factures/_actions";
 import type { RecapCommission, RecapAbonnement, FactureExistante } from "@/lib/invoicing/compute";
 
 interface Props {
@@ -105,7 +105,7 @@ export function FacturesClient({
 
         <select
           value={periode}
-          onChange={(e) => router.push(`/crm/factures?periode=${e.target.value}`)}
+          onChange={(e) => router.push(`/kshare-crm/factures?periode=${e.target.value}`)}
           className="px-4 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm font-medium text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3744C8]/30"
         >
           {periodes.map((p) => (

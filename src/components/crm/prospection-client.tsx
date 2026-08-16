@@ -10,7 +10,7 @@ import {
 import {
   changerStatutProspect, ajouterActivite, planifierRelance, modifierProspect,
   type StatutProspect,
-} from "@/app/(crm)/crm/_actions";
+} from "@/app/(crm)/kshare-crm/_actions";
 
 export interface ProspectRow {
   id: string;
@@ -297,7 +297,7 @@ export function ProspectionClient({
     // Tout changement de filtre ramène en première page, sinon on atterrit sur
     // une page vide.
     if (!("page" in modif)) p.delete("page");
-    router.push(`/crm?${p.toString()}`);
+    router.push(`/kshare-crm?${p.toString()}`);
   }
 
   const pages = Math.max(1, Math.ceil(total / parPage));

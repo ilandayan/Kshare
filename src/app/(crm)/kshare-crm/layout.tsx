@@ -40,7 +40,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-[#F4F5F9] flex flex-col">
       <header className="bg-gradient-to-r from-[#1e2a78] via-[#3744C8] to-[#5B6EF5] sticky top-0 z-40 shadow-md">
         <div className="px-6 h-16 flex items-center justify-between">
-          <Link href="/crm" className="flex items-center gap-3">
+          <Link href="/kshare-crm" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden">
               <Image
                 src="/logo-k-blanc.png"
