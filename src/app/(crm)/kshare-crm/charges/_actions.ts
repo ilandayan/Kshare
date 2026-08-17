@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  CATEGORIES_CHARGE,
+  type CategorieCharge,
+} from "@/lib/crm/categories";
 
 export type ChargeResult =
   | { success: true; message?: string }
@@ -13,33 +17,6 @@ const BUCKET = "crm-documents";
 const TAILLE_MAX = 20 * 1024 * 1024;
 const TYPES_ACCEPTES = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"];
 
-export const CATEGORIES_CHARGE = [
-  "hebergement",
-  "logiciel",
-  "banque",
-  "marketing",
-  "materiel",
-  "honoraires",
-  "assurance",
-  "deplacement",
-  "telecom",
-  "autre",
-] as const;
-
-export type CategorieCharge = (typeof CATEGORIES_CHARGE)[number];
-
-export const LIBELLES_CHARGE: Record<CategorieCharge, string> = {
-  hebergement: "Hébergement / infrastructure",
-  logiciel: "Logiciels et abonnements",
-  banque: "Frais bancaires",
-  marketing: "Marketing et communication",
-  materiel: "Matériel",
-  honoraires: "Honoraires",
-  assurance: "Assurance",
-  deplacement: "Déplacements",
-  telecom: "Téléphonie et internet",
-  autre: "Autre",
-};
 
 async function requireAdmin() {
   const supabase = await createClient();

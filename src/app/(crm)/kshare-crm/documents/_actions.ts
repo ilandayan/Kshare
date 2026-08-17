@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  CATEGORIES_DOCUMENT,
+  type CategorieDocument,
+} from "@/lib/crm/categories";
 
 export type DocumentResult =
   | { success: true; message?: string }
@@ -29,29 +33,6 @@ const TYPES_ACCEPTES = [
   "text/csv",
 ];
 
-export const CATEGORIES_DOCUMENT = [
-  "juridique",
-  "fiscal",
-  "social",
-  "banque",
-  "assurance",
-  "fournisseur",
-  "contrat",
-  "autre",
-] as const;
-
-export type CategorieDocument = (typeof CATEGORIES_DOCUMENT)[number];
-
-export const LIBELLES_CATEGORIE: Record<CategorieDocument, string> = {
-  juridique: "Juridique",
-  fiscal: "Fiscal",
-  social: "Social / URSSAF",
-  banque: "Banque",
-  assurance: "Assurance",
-  fournisseur: "Fournisseur",
-  contrat: "Contrat",
-  autre: "Autre",
-};
 
 async function requireAdmin() {
   const supabase = await createClient();

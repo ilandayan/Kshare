@@ -11,7 +11,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { label: "Prospection", href: "/kshare-crm" },
   { label: "Associations", href: "/kshare-crm/associations" },
-  { label: "Clients", href: "/kshare-crm/clients" },
+  { label: "Commerces", href: "/kshare-crm/clients" },
   { label: "Chiffres", href: "/kshare-crm/chiffres" },
   { label: "Seuils", href: "/kshare-crm/seuils" },
   { label: "Factures", href: "/kshare-crm/factures" },

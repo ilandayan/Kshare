@@ -21,13 +21,13 @@ export default async function AssociationsPage() {
 
   const admin = createAdminClient();
 
-  // Les signalements des commerçants, à traiter.
+  // Les recommandations des commerçants, à traiter.
   const { data: leads } = await admin
     .from("association_leads")
     .select("id, name, contact_name, email, phone, address, status, notes, created_at, commerce_id")
     .order("created_at", { ascending: false });
 
-  // Le nom du commerce qui a signalé : sans lui on ne sait pas à qui reparler.
+  // Le nom du commerce qui recommande : sans lui on ne sait pas à qui reparler.
   const commerceIds = [...new Set((leads ?? []).map((l) => l.commerce_id).filter(Boolean))];
   const { data: commerces } = commerceIds.length
     ? await admin.from("commerces").select("id, name").in("id", commerceIds as string[])
@@ -43,7 +43,7 @@ export default async function AssociationsPage() {
     <div className="p-6">
       <h1 className="text-2xl font-bold text-foreground mb-1">Associations</h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Celles qui sont inscrites, et celles que les commerçants nous signalent.
+        Celles qui sont inscrites, et celles que les commerçants nous recommandent.
       </p>
 
       <AssociationsClient
