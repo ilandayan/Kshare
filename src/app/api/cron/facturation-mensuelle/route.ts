@@ -4,6 +4,7 @@ import { sendEmailWithAttachment, notifyAdmin, emailDocumentsMensuels } from "@/
 import { recapitulatifCommissions, recapitulatifAbonnements, libellePeriode, type LigneFacture } from "@/lib/invoicing/compute";
 import { relevesPeriode } from "@/lib/invoicing/releve";
 import { archiverPdfFacture, emettreReleve, emetteurPret, type FactureLigne } from "@/lib/invoicing/emission";
+import { plateformeLancee } from "@/lib/platform-config";
 import type { Json } from "@/types/database.types";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     demandee && /^\d{4}-(0[1-9]|1[0-2])$/.test(demandee)
       ? demandee
       : `${precedent.getUTCFullYear()}-${String(precedent.getUTCMonth() + 1).padStart(2, "0")}`;
+
+  // Rien ne sort avant l'ouverture officielle. Une facture partie trop tôt ne
+  // se rattrape pas : elle s'annule, s'explique, et entame la confiance d'un
+  // commerce qui n'a encore rien vendu. Le mois manqué se rejoue à la main
+  // avec `?periode=`.
+  if (!(await plateformeLancee())) {
+    console.info(
+      `[cron/facturation] Plateforme non lancée — facturation de ${periode} suspendue.`,
+    );
+    return NextResponse.json({ statut: "plateforme_non_lancee", periode }, { status: 200 });
+  }
 
   const { pret, manquantes } = emetteurPret();
   if (!pret) {

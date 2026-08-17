@@ -23,6 +23,7 @@ import {
   type FactureLigne,
 } from "@/lib/invoicing/emission";
 import { relevesPeriode } from "@/lib/invoicing/releve";
+import { plateformeLancee } from "@/lib/platform-config";
 
 export type FactureResult =
   | { success: true; message?: string }
@@ -297,6 +298,17 @@ export async function supprimerBrouillon(factureId: string): Promise<FactureResu
 export async function emettreFacture(factureId: string): Promise<FactureResult> {
   const ctx = await requireAdmin();
   if (!ctx) return { success: false, error: "Non autorisé." };
+
+  // Même règle que pour le cron : tant que la plateforme n'est pas ouverte,
+  // aucun document ne prend de numéro. Les brouillons, eux, restent permis —
+  // ils ne consomment rien et servent justement à vérifier avant l'ouverture.
+  if (!(await plateformeLancee())) {
+    return {
+      success: false,
+      error:
+        "La plateforme n'est pas encore lancée : aucune facture ne peut être émise. Les brouillons restent consultables.",
+    };
+  }
 
   const manquantes = mentionsManquantes();
   if (manquantes.length > 0) {

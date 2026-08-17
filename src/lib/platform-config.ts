@@ -24,6 +24,28 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
   return data ?? { launched: false, launch_date: null, launched_at: null, launched_by: null };
 }
 
+/**
+ * La plateforme est-elle officiellement lancée ?
+ *
+ * Lue avec la clé de service, contrairement à `getPlatformConfig` qui s'appuie
+ * sur la session : le cron de facturation n'a pas de session, et c'est
+ * précisément lui qu'il faut retenir. Rien ne doit être émis ni envoyé à un
+ * commerce avant l'ouverture — une facture partie trop tôt ne se rattrape pas,
+ * elle s'annule et s'explique.
+ */
+export async function plateformeLancee(): Promise<boolean> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("platform_config")
+    .select("launched")
+    .eq("id", true)
+    .maybeSingle();
+
+  // Au moindre doute — ligne absente, lecture en échec — on considère que le
+  // lancement n'a pas eu lieu. Le défaut prudent est de ne rien envoyer.
+  return data?.launched === true;
+}
+
 /** Comptes "validés" mais qui sont des seeds @kshare.fr — autorisés à publier en pre-launch (démo) */
 const DEMO_DOMAINS = ["@kshare.fr"];
 
