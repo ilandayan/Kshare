@@ -220,16 +220,32 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
     y += 6.5;
   };
 
-  rangee("Ventes encaissées TTC", params.ventes);
-  if (params.remboursements > 0) {
-    rangee("dont remboursements déduits", -params.remboursements, { rouge: true });
-  }
-  rangee("Commission Kshare", -params.commission, { rouge: true });
+  const filet = () => {
+    doc.setDrawColor(220, 222, 235);
+    doc.setLineWidth(0.3);
+    doc.line(margin + 4, y - 2, pageWidth - margin - 4, y - 2);
+    y += 3;
+  };
 
-  doc.setDrawColor(220, 222, 235);
-  doc.setLineWidth(0.3);
-  doc.line(margin + 4, y - 2, pageWidth - margin - 4, y - 2);
-  y += 3;
+  // Un sous-total explicite plutôt qu'un « dont » : écrit ainsi, le
+  // remboursement se soustrait sous les yeux du lecteur. La formulation
+  // précédente l'obligeait à deviner qu'il avait déjà été retranché du total
+  // au-dessus, et se lisait comme une seconde déduction.
+  //
+  // Les ventes initiales se déduisent des deux autres montants — chaque ligne
+  // vaut son prix d'origine moins ce qui a été rendu — plutôt que d'être
+  // stockées une troisième fois et de pouvoir diverger.
+  if (params.remboursements > 0) {
+    rangee("Ventes initiales TTC", params.ventes + params.remboursements);
+    rangee("Remboursements", -params.remboursements, { rouge: true });
+    filet();
+    rangee("Ventes encaissées TTC", params.ventes, { gras: true });
+  } else {
+    rangee("Ventes encaissées TTC", params.ventes);
+  }
+
+  rangee("Commission Kshare", -params.commission, { rouge: true });
+  filet();
   rangee("Net versé par Kshare", params.net, { gras: true });
   y += 4;
 
