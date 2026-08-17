@@ -64,7 +64,7 @@ export function AssociationsClient({ leads, associations }: Props) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState<string | null>(null);
 
-  // Les signalements non traités d'abord : c'est la file de travail.
+  // Les recommandations non traitées d'abord : c'est la file de travail.
   const aTraiter = leads.filter((l) => l.status === "new");
   const traites = leads.filter((l) => l.status !== "new");
 
@@ -142,10 +142,10 @@ export function AssociationsClient({ leads, associations }: Props) {
         </section>
       )}
 
-      {/* ── Signalements ───────────────────────────────────────────── */}
+      {/* ── Recommandations ────────────────────────────────────────── */}
       <section className="rounded-2xl border border-[#e2e5f0] bg-white p-6">
         <h2 className="mb-1 font-semibold text-foreground">
-          Signalées par les commerçants
+          Recommandées par les commerçants
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
           {aTraiter.length === 0
@@ -155,7 +155,7 @@ export function AssociationsClient({ leads, associations }: Props) {
 
         {leads.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Aucun commerçant n&apos;a encore signalé d&apos;association.
+            Aucun commerçant n&apos;a encore recommandé d&apos;association.
           </p>
         ) : (
           <ul className="divide-y divide-[#e2e5f0]">
@@ -203,7 +203,7 @@ export function AssociationsClient({ leads, associations }: Props) {
                     </div>
 
                     <p className="mt-1.5 text-xs text-muted-foreground">
-                      Signalée le {formatDate(l.created_at)}
+                      Recommandée le {formatDate(l.created_at)}
                       {l.commerce_name && ` par ${l.commerce_name}`}
                     </p>
                   </div>

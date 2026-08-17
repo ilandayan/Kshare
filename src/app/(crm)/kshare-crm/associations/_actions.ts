@@ -28,10 +28,10 @@ export const STATUTS_LEAD = ["new", "contacted", "registered", "rejected"] as co
 export type StatutLead = (typeof STATUTS_LEAD)[number];
 
 /**
- * Fait avancer une association signalée par un commerçant.
+ * Fait avancer une association recommandée par un commerçant.
  *
  * `handled_at` se pose dès qu'on sort de « transmise » : sans cette date, on ne
- * distingue plus un signalement d'hier d'un signalement de trois mois qu'on a
+ * distingue plus une recommandation d'hier d'une recommandation de trois mois
  * oublié de rappeler.
  */
 export async function changerStatutLead(

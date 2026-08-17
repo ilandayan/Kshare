@@ -90,7 +90,7 @@ export function ClientsClient({ clients, seuilPro }: Props) {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Users className="h-6 w-6 text-[#3744C8]" />
-            Clients
+            Commerces
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Les commerces inscrits, ce qu&apos;ils rapportent, et ce qui les bloque.

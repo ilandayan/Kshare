@@ -8,9 +8,15 @@ import {
   Table as TableIcon, Archive,
 } from "lucide-react";
 import {
-  televerserDocument, supprimerDocument, lienDocument,
-  CATEGORIES_DOCUMENT, LIBELLES_CATEGORIE, type CategorieDocument,
+  televerserDocument,
+  supprimerDocument,
+  lienDocument,
 } from "@/app/(crm)/kshare-crm/documents/_actions";
+import {
+  CATEGORIES_DOCUMENT,
+  LIBELLES_CATEGORIE,
+  type CategorieDocument,
+} from "@/lib/crm/categories";
 
 export interface DocumentRow {
   id: string;

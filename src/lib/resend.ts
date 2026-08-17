@@ -750,13 +750,18 @@ export function emailDocumentsMensuels(params: {
       }
       <div style="background:#f7f8ff;border:1px solid #e2e5f0;border-radius:12px;padding:18px;margin:18px 0;">
         <p style="margin:0 0 10px;color:#3744C8;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
-          Chiffre d'affaires à déclarer
+          Chiffre d'affaires TTC
         </p>
         <p style="margin:0;color:#111;font-size:26px;font-weight:700;">${montant(params.ventes)} €</p>
         <p style="margin:10px 0 0;color:#555;font-size:13px;line-height:1.6;">
           C'est le prix de vente de vos paniers, et non le montant viré sur votre compte.
           La commission de <strong>${montant(params.commission)} €</strong> est une charge de votre
           exploitation, justifiée par la facture jointe : elle ne réduit pas votre recette.
+        </p>
+        <p style="margin:10px 0 0;color:#555;font-size:13px;line-height:1.6;">
+          Ce montant est <strong>toutes taxes comprises</strong>. Si vous êtes assujetti à la TVA,
+          c'est à vous d'en extraire la taxe : la ventilation des taux applicables aux produits
+          composant chaque panier relève de votre responsabilité.
         </p>
         <p style="margin:10px 0 0;color:#555;font-size:13px;">
           Net versé par Kshare : <strong>${montant(params.net)} €</strong>

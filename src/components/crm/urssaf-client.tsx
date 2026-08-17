@@ -234,14 +234,27 @@ export function UrssafClient({ annee, annees, trimestres, bareme }: Props) {
           />
         </dl>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
           <input
             type="checkbox"
             checked={versementLiberatoire}
             onChange={(e) => setVersementLiberatoire(e.target.checked)}
-            className="rounded cursor-pointer"
+            className="rounded cursor-pointer mt-0.5"
           />
-          J&apos;ai opté pour le versement libératoire de l&apos;impôt sur le revenu
+          <span>
+            J&apos;ai opté pour le versement libératoire de l&apos;impôt sur le revenu
+            {/* L'option se prend à la création ou avant le 30 septembre pour
+                l'année suivante, et beaucoup ne savent plus s'ils l'ont. Le
+                moyen le plus sûr de trancher est de regarder son propre
+                décompte : avec l'option, l'impôt y figure à côté des
+                cotisations. */}
+            <span className="block text-xs text-gray-500 mt-0.5">
+              Dans le doute, ouvrez une déclaration passée sur votre compte Urssaf : si le
+              versement libératoire s&apos;applique, une ligne d&apos;impôt sur le revenu
+              figure à côté des cotisations sociales. Sinon, vous ne payez que les cotisations
+              et l&apos;impôt se règle avec votre déclaration de revenus.
+            </span>
+          </span>
         </label>
 
         <p className="text-xs text-gray-400 mt-4">

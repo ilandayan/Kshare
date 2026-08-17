@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import type { LigneVente } from "@/lib/invoicing/releve";
 
 beforeAll(() => {
   process.env.KSHARE_NOM_COMMERCIAL = "Kshare";
@@ -19,7 +20,7 @@ const commerce = {
   email: "contact@boucherie-cohen.fr",
 };
 
-const lignes = [
+const lignes: LigneVente[] = [
   {
     reference: "#a1b2c3d4",
     date: "2026-07-03T12:00:00.000Z",
@@ -28,7 +29,7 @@ const lignes = [
     vente: 18,
     commission: 3.24,
     net: 14.76,
-    don: false,
+    nature: "vente",
   },
   {
     reference: "#c9d0e1f2",
@@ -38,7 +39,7 @@ const lignes = [
     vente: 0,
     commission: 0,
     net: 0,
-    don: false,
+    nature: "vente",
   },
 ];
 
@@ -67,7 +68,8 @@ describe("Relevé de ventes en PDF", () => {
       remboursements: 11.8,
       net: 14.76,
       paniers: 2,
-      dons: 0,
+      donsClients: 0,
+      donsCommerce: 0,
       lignes,
     });
 
@@ -93,7 +95,8 @@ describe("Relevé de ventes en PDF", () => {
       remboursements: 0,
       net: 14.76,
       paniers: 1,
-      dons: 0,
+      donsClients: 0,
+      donsCommerce: 0,
       lignes: [lignes[0]],
       // Celui qui reçoit deux relevés du même mois doit savoir lequel fait foi.
       remplace: { reference: "RV-2026-07-a1b2c3d4", emisLe: "2026-08-01T07:00:00.000Z" },
@@ -105,7 +108,7 @@ describe("Relevé de ventes en PDF", () => {
   it("supporte un détail qui déborde sur plusieurs pages", async () => {
     const { generateStatementPdf } = await import("@/lib/pdf/generate-statement-pdf");
 
-    const nombreuses = Array.from({ length: 150 }, (_, i) => ({
+    const nombreuses: LigneVente[] = Array.from({ length: 150 }, (_, i) => ({
       reference: `#${String(i).padStart(8, "0")}`,
       date: "2026-07-10T12:00:00.000Z",
       montantInitial: 12,
@@ -113,7 +116,7 @@ describe("Relevé de ventes en PDF", () => {
       vente: 12,
       commission: 2.16,
       net: 9.84,
-      don: false,
+      nature: "vente",
     }));
 
     const pdf = generateStatementPdf({
@@ -128,8 +131,65 @@ describe("Relevé de ventes en PDF", () => {
       remboursements: 0,
       net: 1476,
       paniers: 150,
-      dons: 0,
+      donsClients: 0,
+      donsCommerce: 0,
       lignes: nombreuses,
+    });
+
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  });
+});
+
+describe("Les deux natures de don", () => {
+  it("distingue le panier offert par un client de celui offert par le commerce", async () => {
+    const { generateStatementPdf } = await import("@/lib/pdf/generate-statement-pdf");
+
+    // Un don client est un panier payé plein tarif, sans commission : c'est du
+    // chiffre d'affaires pour le commerce. Un don du commerce est à zéro euro.
+    // Les confondre lui montrerait des recettes qu'il n'a pas eues.
+    const donClient: LigneVente = {
+      reference: "#11112222",
+      date: "2026-07-12T12:00:00.000Z",
+      montantInitial: 12.5,
+      rembourse: 0,
+      vente: 12.5,
+      commission: 0,
+      net: 12.5,
+      nature: "don_client",
+    };
+    const donCommerce: LigneVente = {
+      reference: "#33334444",
+      date: "2026-07-18T12:00:00.000Z",
+      montantInitial: 0,
+      rembourse: 0,
+      vente: 0,
+      commission: 0,
+      net: 0,
+      nature: "don_commerce",
+    };
+
+    // Ni l'un ni l'autre ne porte de commission.
+    expect(donClient.commission).toBe(0);
+    expect(donCommerce.commission).toBe(0);
+    // Mais seul le don client fait entrer de l'argent.
+    expect(donClient.net).toBeGreaterThan(0);
+    expect(donCommerce.net).toBe(0);
+
+    const pdf = generateStatementPdf({
+      reference: "RV-2026-07-a1b2c3d4",
+      emisLe: "2026-08-01T07:00:00.000Z",
+      periodeLibelle: "juillet 2026",
+      debut: "2026-07-01",
+      fin: "2026-07-31",
+      commerce,
+      ventes: 30.5,
+      commission: 3.24,
+      remboursements: 0,
+      net: 27.26,
+      paniers: 1,
+      donsClients: 1,
+      donsCommerce: 1,
+      lignes: [lignes[0], donClient, donCommerce],
     });
 
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");

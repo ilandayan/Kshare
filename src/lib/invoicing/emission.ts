@@ -163,7 +163,7 @@ export async function emettreReleve(
       refunds_total: releve.remboursements,
       net_total: releve.net,
       orders_count: releve.paniers,
-      donations_count: releve.dons,
+      donations_count: releve.donsClients + releve.donsCommerce,
       lines: releve.lignes as unknown as Json,
       commerce_snapshot: {
         name: releve.nom,
@@ -202,7 +202,8 @@ export async function emettreReleve(
     remboursements: releve.remboursements,
     net: releve.net,
     paniers: releve.paniers,
-    dons: releve.dons,
+    donsClients: releve.donsClients,
+    donsCommerce: releve.donsCommerce,
     lignes: releve.lignes as LigneVente[],
     remplace,
   });

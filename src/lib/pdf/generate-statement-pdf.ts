@@ -39,7 +39,10 @@ export interface StatementPdfParams {
   remboursements: number;
   net: number;
   paniers: number;
-  dons: number;
+  /** Paniers achetés par un client puis offerts : payés, sans commission. */
+  donsClients: number;
+  /** Paniers offerts par le commerce : aucun mouvement d'argent. */
+  donsCommerce: number;
   lignes: LigneVente[];
   /** Référence du relevé que celui-ci annule et remplace, le cas échéant. */
   remplace?: { reference: string; emisLe: string } | null;
@@ -185,7 +188,7 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
   doc.setTextColor(255, 255, 255);
   police("normal");
   doc.setFontSize(8.5);
-  ecrire("CHIFFRE D'AFFAIRES À DÉCLARER", margin + 6, y + 8);
+  ecrire("CHIFFRE D'AFFAIRES TTC", margin + 6, y + 8);
   police("bold");
   doc.setFontSize(16);
   ecrire(euros(params.ventes), margin + 6, y + 17);
@@ -193,13 +196,16 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
   police("normal");
   doc.setFontSize(8);
   doc.setTextColor(...BLANC_BLEUTE);
-  ecrire(
-    `${params.paniers} panier${params.paniers > 1 ? "s" : ""} vendu${params.paniers > 1 ? "s" : ""}` +
-      (params.dons > 0 ? ` · ${params.dons} don${params.dons > 1 ? "s" : ""}` : ""),
-    pageWidth - margin - 6,
-    y + 8,
-    { align: "right" },
-  );
+  const compteurs = [
+    `${params.paniers} panier${params.paniers > 1 ? "s" : ""} vendu${params.paniers > 1 ? "s" : ""}`,
+    params.donsClients > 0
+      ? `${params.donsClients} offert${params.donsClients > 1 ? "s" : ""} par des clients`
+      : "",
+    params.donsCommerce > 0
+      ? `${params.donsCommerce} don${params.donsCommerce > 1 ? "s" : ""} de votre part`
+      : "",
+  ].filter(Boolean);
+  ecrire(compteurs.join(" · "), pageWidth - margin - 6, y + 8, { align: "right" });
   ecrire("commission déduite ci-dessous", pageWidth - margin - 6, y + 17, { align: "right" });
   y += 30;
 
@@ -220,21 +226,44 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
     y += 6.5;
   };
 
-  rangee("Ventes encaissées", params.ventes);
-  if (params.remboursements > 0) {
-    rangee("dont remboursements déduits", -params.remboursements, { rouge: true });
-  }
-  rangee("Commission Kshare", -params.commission, { rouge: true });
+  const filet = () => {
+    doc.setDrawColor(220, 222, 235);
+    doc.setLineWidth(0.3);
+    doc.line(margin + 4, y - 2, pageWidth - margin - 4, y - 2);
+    y += 3;
+  };
 
-  doc.setDrawColor(220, 222, 235);
-  doc.setLineWidth(0.3);
-  doc.line(margin + 4, y - 2, pageWidth - margin - 4, y - 2);
-  y += 3;
+  // Un sous-total explicite plutôt qu'un « dont » : écrit ainsi, le
+  // remboursement se soustrait sous les yeux du lecteur. La formulation
+  // précédente l'obligeait à deviner qu'il avait déjà été retranché du total
+  // au-dessus, et se lisait comme une seconde déduction.
+  //
+  // Les ventes initiales se déduisent des deux autres montants — chaque ligne
+  // vaut son prix d'origine moins ce qui a été rendu — plutôt que d'être
+  // stockées une troisième fois et de pouvoir diverger.
+  if (params.remboursements > 0) {
+    rangee("Ventes initiales TTC", params.ventes + params.remboursements);
+    rangee("Remboursements", -params.remboursements, { rouge: true });
+    filet();
+    rangee("Ventes encaissées TTC", params.ventes, { gras: true });
+  } else {
+    rangee("Ventes encaissées TTC", params.ventes);
+  }
+
+  rangee("Commission Kshare", -params.commission, { rouge: true });
+  filet();
   rangee("Net versé par Kshare", params.net, { gras: true });
   y += 4;
 
-  // ── L'avertissement qui justifie le document ──
-  saut(24);
+  // ── Les deux avertissements qui justifient le document ──
+  //
+  // Le premier sur l'assiette, le second sur la TVA. Les montants sont ceux
+  // payés par les clients, donc toutes taxes comprises : un commerce assujetti
+  // qui reporterait ce chiffre tel quel en base hors taxe se tromperait de
+  // 5,5 à 20 %. Kshare ne peut pas faire la ventilation à sa place — un panier
+  // surprise mêle des produits à des taux différents, et son contenu n'est
+  // connu que du commerce.
+  saut(40);
   doc.setFillColor(255, 251, 235);
   doc.roundedRect(margin, y - 4, contentWidth, 20, 2, 2, "F");
   police("bold");
@@ -255,6 +284,33 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
     y + 12.5,
   );
   y += 26;
+
+  saut(30);
+  doc.setFillColor(240, 244, 255);
+  doc.roundedRect(margin, y - 4, contentWidth, 25, 2, 2, "F");
+  police("bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...BLEU);
+  ecrire("Tous les montants de ce relevé sont TTC.", margin + 4, y + 2);
+  police("normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...GRIS_TEXTE);
+  ecrire(
+    "Le prix des paniers est celui que vous avez fixé, toutes taxes comprises. Si vous êtes assujetti",
+    margin + 4,
+    y + 8,
+  );
+  ecrire(
+    "à la TVA, c'est à vous d'en extraire la taxe : la ventilation des taux applicables aux produits",
+    margin + 4,
+    y + 12.5,
+  );
+  ecrire(
+    "composant chaque panier relève de votre responsabilité, l'article 5 du contrat le rappelle.",
+    margin + 4,
+    y + 17,
+  );
+  y += 31;
 
   // ── Détail des ventes ──
   if (params.lignes.length > 0) {
@@ -284,7 +340,7 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
       police("bold");
       ecrire("COMMANDE", xRef, y + 5);
       ecrire("DATE", centreDate, y + 5, { align: "center" });
-      ecrire("VENTE", centreInitial, y + 5, { align: "center" });
+      ecrire("VENTE TTC", centreInitial, y + 5, { align: "center" });
       ecrire("COMMISSION", centreCommission, y + 5, { align: "center" });
       ecrire("NET", droiteNet, y + 5, { align: "right" });
       y += 7;
@@ -313,7 +369,17 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
       const touchee = l.rembourse > 0;
       doc.setFontSize(8);
       doc.setTextColor(...(touchee ? ROUGE : GRIS_TEXTE));
-      ecrire(l.reference + (l.don ? "  (don)" : ""), xRef, y + 4.2);
+      // Un don client est une vente payée sans commission ; un don du commerce
+      // ne fait entrer aucun argent. Les nommer distinctement évite au
+      // commerçant de chercher pourquoi deux lignes « don » ne se ressemblent
+      // pas.
+      const suffixe =
+        l.nature === "don_client"
+          ? "  (offert par un client)"
+          : l.nature === "don_commerce"
+            ? "  (votre don)"
+            : "";
+      ecrire(l.reference + suffixe, xRef, y + 4.2);
       ecrire(formatDateCourte(l.date), centreDate, y + 4.2, { align: "center" });
       ecrire(euros(l.vente), centreInitial, y + 4.2, { align: "center" });
       ecrire(euros(l.commission), centreCommission, y + 4.2, { align: "center" });

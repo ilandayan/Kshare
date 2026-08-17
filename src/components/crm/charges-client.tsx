@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Wallet, Plus, Trash2, Loader2, Paperclip, Repeat, Info } from "lucide-react";
 import {
-  enregistrerCharge, supprimerCharge, lienJustificatif,
-  CATEGORIES_CHARGE, LIBELLES_CHARGE, type CategorieCharge,
+  enregistrerCharge,
+  supprimerCharge,
+  lienJustificatif,
 } from "@/app/(crm)/kshare-crm/charges/_actions";
+import {
+  CATEGORIES_CHARGE,
+  LIBELLES_CHARGE,
+  type CategorieCharge,
+} from "@/lib/crm/categories";
 
 export interface ChargeRow {
   id: string;
