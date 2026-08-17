@@ -6,6 +6,7 @@ import {
   commissionEnAttenteDeDecision,
 } from "@/lib/invoicing/compute";
 import { mentionsManquantes, EMETTEUR, CONSERVATION_ANNEES } from "@/lib/invoicing/emetteur";
+import { plateformeLancee } from "@/lib/platform-config";
 import { FacturesClient } from "@/components/crm/factures-client";
 
 export const dynamic = "force-dynamic";
@@ -35,11 +36,12 @@ export default async function FacturesPage({
   const periodes = periodesDisponibles();
   const periode = demandee && periodes.includes(demandee) ? demandee : periodes[0];
 
-  const [commissions, abonnements, orphelines, enAttente] = await Promise.all([
+  const [commissions, abonnements, orphelines, enAttente, lancee] = await Promise.all([
     recapitulatifCommissions(periode),
     recapitulatifAbonnements(periode),
     commandesSansDateDeCapture(),
     commissionEnAttenteDeDecision(),
+    plateformeLancee(),
   ]);
 
   return (
@@ -52,6 +54,7 @@ export default async function FacturesPage({
       emetteurNom={EMETTEUR.nomCommercial}
       commandesOrphelines={orphelines}
       enAttente={enAttente}
+      plateformeLancee={lancee}
       conservationAnnees={CONSERVATION_ANNEES}
     />
   );

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   FileText, Loader2, Download, Send, Ban, RefreshCw, Trash2, Check,
-  AlertTriangle, Archive, Receipt, CreditCard, ChevronDown, ChevronUp, Clock,
+  AlertTriangle, Archive, Receipt, CreditCard, ChevronDown, ChevronUp, Clock, Lock,
 } from "lucide-react";
 import {
   preparerFactures, emettreFacture, recalculerBrouillon, supprimerBrouillon,
@@ -25,6 +25,8 @@ interface Props {
   commandesOrphelines: number;
   /** Commission suspendue par un signalement, en attente d'arbitrage. */
   enAttente: { commandes: number; commission: number };
+  /** Rien ne s'émet tant que l'ouverture officielle n'a pas eu lieu. */
+  plateformeLancee: boolean;
 }
 
 type Agir = (
@@ -53,6 +55,7 @@ export function FacturesClient({
   conservationAnnees,
   commandesOrphelines,
   enAttente,
+  plateformeLancee,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -115,6 +118,25 @@ export function FacturesClient({
           ))}
         </select>
       </div>
+
+      {/* Avant l'ouverture, aucun document ne prend de numéro. Le dire ici
+          plutôt que de laisser le bouton échouer : une émission refusée sans
+          explication ressemble à une panne. */}
+      {!plateformeLancee && (
+        <div className="mb-5 rounded-2xl border border-[#3744C8]/25 bg-[#f7f8ff] p-4 flex gap-3">
+          <Lock className="h-5 w-5 text-[#3744C8] shrink-0 mt-0.5" />
+          <div className="text-sm text-gray-700">
+            <p className="font-semibold text-gray-900">
+              Plateforme non lancée : aucune émission possible.
+            </p>
+            <p className="mt-1">
+              Vous pouvez préparer et vérifier les brouillons — ils ne consomment aucun numéro.
+              L&apos;émission et l&apos;envoi automatique du 1er reprendront après l&apos;ouverture
+              officielle.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* L'identité de l'émetteur conditionne la régularité des factures :
           on le dit avant que l'utilisateur clique sur « Émettre ». */}
@@ -233,7 +255,7 @@ export function FacturesClient({
             key={r.commerceId}
             recap={r}
             enCours={enCours}
-            bloque={emetteurIncomplet.length > 0}
+            bloque={emetteurIncomplet.length > 0 || !plateformeLancee}
             onAgir={agir}
             onTelecharger={telecharger}
           />
@@ -252,7 +274,7 @@ export function FacturesClient({
             key={a.commerceId}
             recap={a}
             enCours={enCours}
-            bloque={emetteurIncomplet.length > 0}
+            bloque={emetteurIncomplet.length > 0 || !plateformeLancee}
             onAgir={agir}
             onTelecharger={telecharger}
           />
