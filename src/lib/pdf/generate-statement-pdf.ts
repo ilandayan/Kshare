@@ -39,7 +39,10 @@ export interface StatementPdfParams {
   remboursements: number;
   net: number;
   paniers: number;
-  dons: number;
+  /** Paniers achetés par un client puis offerts : payés, sans commission. */
+  donsClients: number;
+  /** Paniers offerts par le commerce : aucun mouvement d'argent. */
+  donsCommerce: number;
   lignes: LigneVente[];
   /** Référence du relevé que celui-ci annule et remplace, le cas échéant. */
   remplace?: { reference: string; emisLe: string } | null;
@@ -193,13 +196,16 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
   police("normal");
   doc.setFontSize(8);
   doc.setTextColor(...BLANC_BLEUTE);
-  ecrire(
-    `${params.paniers} panier${params.paniers > 1 ? "s" : ""} vendu${params.paniers > 1 ? "s" : ""}` +
-      (params.dons > 0 ? ` · ${params.dons} don${params.dons > 1 ? "s" : ""}` : ""),
-    pageWidth - margin - 6,
-    y + 8,
-    { align: "right" },
-  );
+  const compteurs = [
+    `${params.paniers} panier${params.paniers > 1 ? "s" : ""} vendu${params.paniers > 1 ? "s" : ""}`,
+    params.donsClients > 0
+      ? `${params.donsClients} offert${params.donsClients > 1 ? "s" : ""} par des clients`
+      : "",
+    params.donsCommerce > 0
+      ? `${params.donsCommerce} don${params.donsCommerce > 1 ? "s" : ""} de votre part`
+      : "",
+  ].filter(Boolean);
+  ecrire(compteurs.join(" · "), pageWidth - margin - 6, y + 8, { align: "right" });
   ecrire("commission déduite ci-dessous", pageWidth - margin - 6, y + 17, { align: "right" });
   y += 30;
 
@@ -363,7 +369,17 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
       const touchee = l.rembourse > 0;
       doc.setFontSize(8);
       doc.setTextColor(...(touchee ? ROUGE : GRIS_TEXTE));
-      ecrire(l.reference + (l.don ? "  (don)" : ""), xRef, y + 4.2);
+      // Un don client est une vente payée sans commission ; un don du commerce
+      // ne fait entrer aucun argent. Les nommer distinctement évite au
+      // commerçant de chercher pourquoi deux lignes « don » ne se ressemblent
+      // pas.
+      const suffixe =
+        l.nature === "don_client"
+          ? "  (offert par un client)"
+          : l.nature === "don_commerce"
+            ? "  (votre don)"
+            : "";
+      ecrire(l.reference + suffixe, xRef, y + 4.2);
       ecrire(formatDateCourte(l.date), centreDate, y + 4.2, { align: "center" });
       ecrire(euros(l.vente), centreInitial, y + 4.2, { align: "center" });
       ecrire(euros(l.commission), centreCommission, y + 4.2, { align: "center" });

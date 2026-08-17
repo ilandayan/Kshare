@@ -28,8 +28,19 @@ export interface LigneVente {
   commission: number;
   /** Ce que le commerce a effectivement perçu. */
   net: number;
-  don: boolean;
+  nature: NatureVente;
 }
+
+/**
+ * Les trois façons dont un panier quitte le commerce.
+ *
+ * La distinction n'est pas cosmétique : un **don client** est un panier acheté
+ * puis offert — le commerce est payé son prix entier, sans commission. Un **don
+ * du commerce** est un panier qu'il offre lui-même, à zéro euro. Les confondre
+ * reviendrait à lui montrer des recettes qu'il n'a pas eues, ou à masquer
+ * celles qu'il a eues.
+ */
+export type NatureVente = "vente" | "don_client" | "don_commerce";
 
 export interface Releve {
   commerceId: string;
@@ -49,7 +60,10 @@ export interface Releve {
   remboursements: number;
   net: number;
   paniers: number;
-  dons: number;
+  /** Paniers achetés par un client puis offerts : payés, sans commission. */
+  donsClients: number;
+  /** Paniers offerts par le commerce lui-même : aucun mouvement d'argent. */
+  donsCommerce: number;
   lignes: LigneVente[];
 }
 
@@ -68,6 +82,7 @@ type CommandeReleve = {
   commission_refunded: number | null;
   service_fee_amount: number | null;
   is_donation: boolean;
+  baskets: { is_donation: boolean } | null;
 };
 
 /**
@@ -86,7 +101,7 @@ async function commandesDuMois(debut: Date, fin: Date): Promise<CommandeReleve[]
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, commerce_id, captured_at, total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, service_fee_amount, is_donation, commerces!inner(is_demo)",
+        "id, commerce_id, captured_at, total_amount, captured_amount, refunded_amount, commission_amount, commission_refunded, service_fee_amount, is_donation, commerces!inner(is_demo), baskets(is_donation)",
       )
       .eq("commerces.is_demo", false)
       .in("capture_status", ["captured", "partially_captured"])
@@ -131,6 +146,14 @@ export async function relevesPeriode(periode: string): Promise<Releve[]> {
     const vente = arrondi(initial - rembourse);
     const commission = arrondi(Number(o.commission_amount) - Number(o.commission_refunded ?? 0));
 
+    // Un panier publié comme don par le commerce porte le drapeau côté panier ;
+    // un panier ordinaire acheté puis offert ne le porte que côté commande.
+    const nature: NatureVente = o.baskets?.is_donation
+      ? "don_commerce"
+      : o.is_donation
+        ? "don_client"
+        : "vente";
+
     const lignes = parCommerce.get(o.commerce_id) ?? [];
     lignes.push({
       reference: referenceCommande(o.id),
@@ -140,7 +163,7 @@ export async function relevesPeriode(periode: string): Promise<Releve[]> {
       vente,
       commission,
       net: arrondi(vente - commission),
-      don: o.is_donation,
+      nature,
     });
     parCommerce.set(o.commerce_id, lignes);
   }
@@ -178,8 +201,9 @@ export async function relevesPeriode(periode: string): Promise<Releve[]> {
       fraisService,
       remboursements,
       net: arrondi(ventes - commission),
-      paniers: lignes.filter((l) => !l.don).length,
-      dons: lignes.filter((l) => l.don).length,
+      paniers: lignes.filter((l) => l.nature === "vente").length,
+      donsClients: lignes.filter((l) => l.nature === "don_client").length,
+      donsCommerce: lignes.filter((l) => l.nature === "don_commerce").length,
       lignes,
     });
   }
