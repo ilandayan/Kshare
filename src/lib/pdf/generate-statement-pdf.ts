@@ -185,7 +185,7 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
   doc.setTextColor(255, 255, 255);
   police("normal");
   doc.setFontSize(8.5);
-  ecrire("CHIFFRE D'AFFAIRES À DÉCLARER", margin + 6, y + 8);
+  ecrire("CHIFFRE D'AFFAIRES TTC", margin + 6, y + 8);
   police("bold");
   doc.setFontSize(16);
   ecrire(euros(params.ventes), margin + 6, y + 17);
@@ -220,7 +220,7 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
     y += 6.5;
   };
 
-  rangee("Ventes encaissées", params.ventes);
+  rangee("Ventes encaissées TTC", params.ventes);
   if (params.remboursements > 0) {
     rangee("dont remboursements déduits", -params.remboursements, { rouge: true });
   }
@@ -233,8 +233,15 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
   rangee("Net versé par Kshare", params.net, { gras: true });
   y += 4;
 
-  // ── L'avertissement qui justifie le document ──
-  saut(24);
+  // ── Les deux avertissements qui justifient le document ──
+  //
+  // Le premier sur l'assiette, le second sur la TVA. Les montants sont ceux
+  // payés par les clients, donc toutes taxes comprises : un commerce assujetti
+  // qui reporterait ce chiffre tel quel en base hors taxe se tromperait de
+  // 5,5 à 20 %. Kshare ne peut pas faire la ventilation à sa place — un panier
+  // surprise mêle des produits à des taux différents, et son contenu n'est
+  // connu que du commerce.
+  saut(40);
   doc.setFillColor(255, 251, 235);
   doc.roundedRect(margin, y - 4, contentWidth, 20, 2, 2, "F");
   police("bold");
@@ -255,6 +262,33 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
     y + 12.5,
   );
   y += 26;
+
+  saut(30);
+  doc.setFillColor(240, 244, 255);
+  doc.roundedRect(margin, y - 4, contentWidth, 25, 2, 2, "F");
+  police("bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...BLEU);
+  ecrire("Tous les montants de ce relevé sont TTC.", margin + 4, y + 2);
+  police("normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...GRIS_TEXTE);
+  ecrire(
+    "Le prix des paniers est celui que vous avez fixé, toutes taxes comprises. Si vous êtes assujetti",
+    margin + 4,
+    y + 8,
+  );
+  ecrire(
+    "à la TVA, c'est à vous d'en extraire la taxe : la ventilation des taux applicables aux produits",
+    margin + 4,
+    y + 12.5,
+  );
+  ecrire(
+    "composant chaque panier relève de votre responsabilité, l'article 5 du contrat le rappelle.",
+    margin + 4,
+    y + 17,
+  );
+  y += 31;
 
   // ── Détail des ventes ──
   if (params.lignes.length > 0) {
@@ -284,7 +318,7 @@ export function generateStatementPdf(params: StatementPdfParams): Buffer {
       police("bold");
       ecrire("COMMANDE", xRef, y + 5);
       ecrire("DATE", centreDate, y + 5, { align: "center" });
-      ecrire("VENTE", centreInitial, y + 5, { align: "center" });
+      ecrire("VENTE TTC", centreInitial, y + 5, { align: "center" });
       ecrire("COMMISSION", centreCommission, y + 5, { align: "center" });
       ecrire("NET", droiteNet, y + 5, { align: "right" });
       y += 7;
