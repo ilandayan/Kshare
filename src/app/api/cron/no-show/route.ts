@@ -32,7 +32,18 @@ function parisWallTimeToUtc(dateStr: string, timeStr: string): Date {
 }
 
 /**
- * Cron quotidien de fin de journée (22h) : encaissement et no-shows.
+ * Encaissement des retraits confirmés et des no-shows, toutes les 15 minutes.
+ *
+ * Cette route tournait autrefois une fois par nuit, à 22h. Rien ne l'imposait :
+ * elle compare `pickup_end` à l'instant présent et lit le statut de la commande,
+ * elle n'a jamais rien eu à attendre de la fin de journée. C'était l'offre
+ * Vercel Hobby qui interdisait toute cadence plus fine — contrainte levée par le
+ * passage à pg_cron (migration 20260820000001).
+ *
+ * Un créneau clos à 10h attendait donc douze heures avant que le commerce ne
+ * soit payé de son panier préparé, et un retrait confirmé le matin restait en
+ * autorisation toute la journée. L'encaissement suit désormais l'événement qui
+ * le justifie, à un quart d'heure près.
  *
  * Depuis le passage en capture différée, la réservation ne fait qu'autoriser le
  * paiement. Ce cron l'encaisse, dans les deux cas où c'est dû :
