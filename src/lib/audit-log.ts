@@ -21,6 +21,7 @@ export type AuditAction =
   | "admin.platform_launched"
   | "admin.launch_emails_sent"
   | "admin.delete_user"
+  | "admin.commerce_acces_ouvert"
   | "admin.refund_order"
   | "crm.invoice_issued"
   | "crm.invoice_canceled"

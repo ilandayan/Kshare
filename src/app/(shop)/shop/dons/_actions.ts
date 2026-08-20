@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export type DonActionResult = { success: true } | { success: false; error: string };
 
@@ -22,7 +23,7 @@ async function monCommerce() {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   if (!commerce) return null;

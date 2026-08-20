@@ -7,6 +7,7 @@ const DashboardCharts = dynamic(
 );
 import { TrendingUp, ShoppingBag, Heart, Euro, Star } from "lucide-react";
 import { CAPTURES_ENCAISSEES } from "@/lib/revenus";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 /* ── Period helpers ────────────────────────────────────────────── */
 function getPeriodStart(period: string, commerceCreatedAt?: string): Date {
@@ -77,7 +78,7 @@ export default async function DashboardPage({
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id, name, commission_rate, created_at, average_rating, total_ratings")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
   if (!commerce) redirect("/inscription-commercant");
 

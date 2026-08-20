@@ -388,6 +388,45 @@ export type Database = {
         }
         Relationships: []
       }
+      commerce_acces: {
+        Row: {
+          commerce_id: string
+          created_at: string
+          id: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          commerce_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          role?: string
+        }
+        Update: {
+          commerce_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_acces_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_acces_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commerces: {
         Row: {
           address: string
@@ -2608,6 +2647,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      mes_commerces: { Args: never; Returns: string[] }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, ShoppingBag, Pencil, Trash2, UtensilsCrossed, Milk, Leaf, Wine, Layers, ShoppingCart, Handshake, Heart, type LucideIcon } from "lucide-react";
 import { BASKET_TYPES } from "@/lib/constants";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 const TYPE_ICONS: Record<string, { label: string; Icon: LucideIcon }> = {
   bassari: { label: "Bassari", Icon: UtensilsCrossed },
@@ -153,7 +154,7 @@ export default async function PaniersPage() {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id, status")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
   if (!commerce) redirect("/inscription-commercant");
 

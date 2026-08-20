@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect }     from "next/navigation";
 import { ShopOrdersClient } from "@/components/shop/shop-orders-client";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 function formatOrderNumber(id: string, createdAt: string): string {
   const year = new Date(createdAt).getFullYear();
@@ -21,7 +22,7 @@ export default async function OrdersPage() {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
   if (!commerce) redirect("/connexion");
 

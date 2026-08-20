@@ -11,6 +11,7 @@ import { AlertTriangle } from "lucide-react";
 import { ShopTopNav } from "@/components/shop/shop-top-nav";
 import { ShopUserMenu } from "@/components/shop/shop-user-menu";
 import { ShopOrdersBadge } from "@/components/shop/shop-orders-badge";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
     .select(
       "id, name, status, contract_signed_at, stripe_charges_enabled, stripe_details_submitted"
     )
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   // ── Blocage contrat : rediriger vers /shop/contrat si non signé ──

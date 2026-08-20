@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export type ScanResult =
   | {
@@ -44,7 +45,7 @@ export async function rechercherParCode(
     const { data: commerce, error: commerceError } = await supabase
       .from("commerces")
       .select("id")
-      .eq("profile_id", user.id)
+      .in("id", await mesCommerceIds(supabase))
       .single();
 
     if (commerceError) {

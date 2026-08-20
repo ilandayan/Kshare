@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Euro, ShoppingBag, TrendingUp, Gift } from "lucide-react";
 import { CAPTURES_ENCAISSEES } from "@/lib/revenus";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export default async function StatistiquesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connexion");
 
-  const { data: commerce } = await supabase.from("commerces").select("id, commission_rate").eq("profile_id", user.id).single();
+  const { data: commerce } = await supabase.from("commerces").select("id, commission_rate").in("id", await mesCommerceIds(supabase)).single();
   if (!commerce) redirect("/inscription-commercant");
 
   // Mêmes règles que le tableau de bord et que la facture : seules les

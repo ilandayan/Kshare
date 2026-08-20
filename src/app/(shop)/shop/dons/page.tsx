@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DonsClient } from "@/components/shop/dons-client";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function DonsPage() {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id, name, preferred_association_id")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   if (!commerce) redirect("/inscription-commercant");

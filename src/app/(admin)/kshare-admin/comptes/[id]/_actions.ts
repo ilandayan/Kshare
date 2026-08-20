@@ -516,3 +516,123 @@ export async function demanderComplements(
   revalidatePath(`/kshare-admin/comptes/${id}`);
   return { success: true };
 }
+
+/**
+ * Ouvre un second compte sur un magasin.
+ *
+ * Un magasin a un propriétaire — celui qui signe le contrat et perçoit les
+ * virements — et, depuis la migration 20260821000002, des comptes délégués
+ * pour l'équipe. Le délégué publie des paniers, traite les commandes et scanne
+ * les retraits ; il ne peut ni modifier la fiche du commerce, ni toucher aux
+ * coordonnées bancaires, ni signer quoi que ce soit.
+ *
+ * Le rôle du profil est basculé sur `commerce` : sans lui le middleware
+ * renverrait la personne hors de `/shop` avant même que le RLS n'ait son mot à
+ * dire. On refuse en revanche de déclasser un compte qui exploite déjà son
+ * propre magasin, ou un compte d'administration.
+ */
+export async function ouvrirCompteMagasin(
+  commerceId: string,
+  email: string,
+): Promise<AccountActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Accès refusé." };
+
+  const { data: moi } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (moi?.role !== "admin") return { success: false, error: "Accès refusé." };
+
+  const adresse = email.trim().toLowerCase();
+  if (!adresse) return { success: false, error: "Indiquez une adresse e-mail." };
+
+  const admin = createAdminClient();
+
+  const { data: profil } = await admin
+    .from("profiles")
+    .select("id, role, full_name")
+    .ilike("email", adresse)
+    .maybeSingle();
+
+  if (!profil) {
+    return {
+      success: false,
+      error: `Aucun compte Kshare pour ${adresse}. La personne doit d'abord créer son compte.`,
+    };
+  }
+
+  if (profil.role === "admin") {
+    return { success: false, error: "Un compte d'administration ne peut pas être délégué." };
+  }
+
+  const { data: sonMagasin } = await admin
+    .from("commerces")
+    .select("id")
+    .eq("profile_id", profil.id)
+    .maybeSingle();
+
+  if (sonMagasin) {
+    return {
+      success: false,
+      error: "Ce compte exploite déjà son propre magasin ; il ne peut pas être délégué à un autre.",
+    };
+  }
+
+  const { error } = await admin
+    .from("commerce_acces")
+    .insert({ commerce_id: commerceId, profile_id: profil.id, role: "equipe" });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { success: false, error: "Ce compte a déjà accès à ce magasin." };
+    }
+    return { success: false, error: error.message };
+  }
+
+  if (profil.role !== "commerce") {
+    await admin.from("profiles").update({ role: "commerce" }).eq("id", profil.id);
+  }
+
+  await logAuditEvent({
+    action: "admin.commerce_acces_ouvert",
+    target_id: commerceId,
+    metadata: { profil: profil.id, email: adresse },
+  });
+
+  revalidatePath(`/kshare-admin/comptes/${commerceId}`);
+  return { success: true };
+}
+
+/** Retire un compte délégué. Le propriétaire n'est jamais concerné. */
+export async function fermerCompteMagasin(accesId: string): Promise<AccountActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Accès refusé." };
+
+  const { data: moi } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (moi?.role !== "admin") return { success: false, error: "Accès refusé." };
+
+  const admin = createAdminClient();
+  const { data: acces } = await admin
+    .from("commerce_acces")
+    .select("commerce_id")
+    .eq("id", accesId)
+    .maybeSingle();
+
+  const { error } = await admin.from("commerce_acces").delete().eq("id", accesId);
+  if (error) return { success: false, error: error.message };
+
+  if (acces) revalidatePath(`/kshare-admin/comptes/${acces.commerce_id}`);
+  return { success: true };
+}
