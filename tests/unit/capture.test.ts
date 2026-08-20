@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { montantsCommande, montantsCapture } from "@/lib/stripe/capture";
+import { montantsCommande, montantsCapture, decisionCapture } from "@/lib/stripe/capture";
 
 /**
  * Panier à 13,80 € : commission 18 %, frais de service 1,5 % + 0,79 €.
@@ -60,5 +60,69 @@ describe("montantsCapture", () => {
     const { captureCents, captureFeeCents } = montantsCapture(commande, 0.33);
     expect(Number.isInteger(captureCents)).toBe(true);
     expect(Number.isInteger(captureFeeCents)).toBe(true);
+  });
+});
+
+/**
+ * Quand encaisser : la confirmation du client ouvre un délai de grâce, la fin
+ * du créneau déclenche le no-show. Le doute profite toujours au client.
+ */
+const MAINTENANT = new Date("2026-08-20T15:00:00Z").getTime();
+const HEURE = 60 * 60 * 1000;
+
+const enAttente = {
+  status: "paid",
+  picked_up_at: null,
+  // 20 août : Paris est à UTC+2, le créneau se ferme donc à 16 h UTC.
+  pickup_date: "2026-08-20",
+  pickup_end: "18:00",
+};
+
+describe("decisionCapture", () => {
+  it("patiente pendant les deux heures qui suivent la confirmation", () => {
+    const commande = {
+      ...enAttente,
+      status: "picked_up",
+      picked_up_at: new Date(MAINTENANT - HEURE).toISOString(),
+    };
+    expect(decisionCapture(commande, MAINTENANT)).toBe("grace");
+  });
+
+  it("encaisse une fois le délai de grâce écoulé", () => {
+    const commande = {
+      ...enAttente,
+      status: "picked_up",
+      picked_up_at: new Date(MAINTENANT - 3 * HEURE).toISOString(),
+    };
+    expect(decisionCapture(commande, MAINTENANT)).toBe("capturer");
+  });
+
+  it("n'encaisse pas avant la fin du créneau si personne n'est venu", () => {
+    // 15 h UTC, soit 17 h à Paris : le créneau court jusqu'à 18 h.
+    expect(decisionCapture(enAttente, MAINTENANT)).toBe("attendre");
+  });
+
+  it("constate le no-show dès le créneau écoulé, sans attendre la nuit", () => {
+    const apresLeCreneau = MAINTENANT + 2 * HEURE; // 17 h UTC, 19 h à Paris
+    expect(decisionCapture(enAttente, apresLeCreneau)).toBe("no_show");
+  });
+
+  it("s'en remet au créneau quand l'horodatage de retrait manque", () => {
+    const sansHorodatage = { ...enAttente, status: "picked_up" };
+    expect(decisionCapture(sansHorodatage, MAINTENANT)).toBe("attendre");
+    expect(decisionCapture(sansHorodatage, MAINTENANT + 2 * HEURE)).toBe("capturer");
+  });
+
+  it("patiente plutôt que d'encaisser sur une date inexploitable", () => {
+    for (const pickup_date of ["today", "tomorrow", null]) {
+      expect(decisionCapture({ ...enAttente, pickup_date }, MAINTENANT)).toBe("attendre");
+    }
+    expect(decisionCapture({ ...enAttente, pickup_end: null }, MAINTENANT)).toBe("attendre");
+  });
+
+  it("ne se laisse pas berner par un horodatage illisible", () => {
+    const illisible = { ...enAttente, status: "picked_up", picked_up_at: "jamais" };
+    // Sans grâce mesurable, on retombe sur le créneau — jamais sur une capture.
+    expect(decisionCapture(illisible, MAINTENANT)).toBe("attendre");
   });
 });

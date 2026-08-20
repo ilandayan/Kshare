@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   capturerCommande,
   commandesAvecSignalementOuvert,
+  decisionCapture,
   type OrderForCapture,
 } from "@/lib/stripe/capture";
 
@@ -10,26 +11,7 @@ export const dynamic = "force-dynamic";
 
 /** Colonnes nécessaires au calcul des montants de capture. */
 const COLONNES_CAPTURE =
-  "id, basket_id, pickup_date, pickup_end, status, stripe_payment_intent_id, total_amount, service_fee_amount, commission_amount, capture_status";
-
-/**
- * Convertit une date + heure murale « Europe/Paris » en instant UTC exact.
- * Gère automatiquement l'heure d'été/hiver (offset +1 ou +2).
- */
-function parisWallTimeToUtc(dateStr: string, timeStr: string): Date {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const [hh, mm] = timeStr.split(":").map(Number);
-  const utcGuess = Date.UTC(y, m - 1, d, hh, mm, 0);
-  // Offset Europe/Paris à cet instant (en ms)
-  const parisMs = new Date(
-    new Date(utcGuess).toLocaleString("en-US", { timeZone: "Europe/Paris" }),
-  ).getTime();
-  const utcMs = new Date(
-    new Date(utcGuess).toLocaleString("en-US", { timeZone: "UTC" }),
-  ).getTime();
-  const offset = parisMs - utcMs;
-  return new Date(utcGuess - offset);
-}
+  "id, basket_id, pickup_date, pickup_end, picked_up_at, status, stripe_payment_intent_id, total_amount, service_fee_amount, commission_amount, capture_status";
 
 /**
  * Encaissement des retraits confirmés et des no-shows, toutes les 15 minutes.
@@ -92,12 +74,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     status: string;
     pickup_date: string | null;
     pickup_end: string | null;
+    picked_up_at: string | null;
   })[];
 
   // Un signalement ouvert suspend la capture jusqu'à décision de l'admin.
   const signalees = await commandesAvecSignalementOuvert(commandes.map((o) => o.id));
 
   let capturees = 0;
+  let enGrace = 0;
   let noShows = 0;
   let echecs = 0;
   let suspendues = 0;
@@ -108,19 +92,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       continue;
     }
 
-    const retraitConfirme = order.status === "picked_up";
-    let creneauEcoule = false;
+    const decision = decisionCapture(order, nowMs);
 
-    if (!retraitConfirme) {
-      const { pickup_date: pickupDate, pickup_end: pickupEnd } = order;
-      if (!pickupDate || !pickupEnd) continue;
-      // Format hérité, jamais résolu en date réelle : on ne peut rien en déduire.
-      if (pickupDate === "today" || pickupDate === "tomorrow") continue;
-
-      // pickup_end est une heure murale « Europe/Paris » → instant UTC exact
-      creneauEcoule = parisWallTimeToUtc(pickupDate, pickupEnd).getTime() < nowMs;
-      if (!creneauEcoule) continue;
+    if (decision === "grace") {
+      enGrace++;
+      continue;
     }
+    if (decision === "attendre") continue;
 
     const resultat = await capturerCommande(order);
 
@@ -132,7 +110,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Le no-show est constaté après encaissement : le commerce est payé, mais
     // la commande doit refléter que le panier n'a pas été retiré.
-    if (!retraitConfirme) {
+    if (decision === "no_show") {
       const { error: updateErr } = await supabase
         .from("orders")
         .update({ status: "no_show" })
@@ -146,6 +124,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     capturees,
     noShows,
     suspendues,
+    enGrace,
     echecs,
   });
 }
