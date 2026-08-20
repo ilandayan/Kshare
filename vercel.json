@@ -1,32 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/expire-donations",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/no-show",
-      "schedule": "0 22 * * *"
-    },
-    {
-      "path": "/api/cron/subscription-reminders",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-payout",
-      "schedule": "0 6 * * 2"
-    },
-    {
-      "path": "/api/cron/auto-launch",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/launch-emails",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/facturation-mensuelle",
-      "schedule": "0 7 1 * *"
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
