@@ -19,8 +19,14 @@ import {
   PALIERS_DEFAUT,
   type Palier,
 } from "@/lib/groupes";
+import { libellePeriode } from "@/lib/invoicing/compute";
+import { generateGroupRecapPdf } from "@/lib/pdf/generate-group-recap-pdf";
+import { sendEmailWithAttachment } from "@/lib/resend";
 import type { Releve } from "@/lib/invoicing/releve";
 import type { Json } from "@/types/database.types";
+
+/** Les récapitulatifs sont archivés avec les autres documents de facturation. */
+const BUCKET = "invoices";
 
 export type ResultatGroupe = {
   groupe: string;
@@ -30,6 +36,8 @@ export type ResultatGroupe = {
   tauxApplique: number | null;
   tauxSuivant: number;
   reference?: string;
+  /** Le récapitulatif a-t-il pu partir chez la centrale ? */
+  envoye?: boolean;
   deja?: boolean;
   erreur?: string;
 };
@@ -60,7 +68,7 @@ export async function passeGroupes(
 
   const { data: groupes, error } = await supabase
     .from("groupes")
-    .select("id, nom, paliers, taux_courant")
+    .select("id, nom, siren, contact_nom, contact_email, paliers, taux_courant")
     .eq("actif", true);
 
   if (error) {
@@ -132,13 +140,12 @@ export async function passeGroupes(
       }
 
       const recap = await emettreRecap(
-        groupe.id,
+        groupe,
         periode,
         bornes,
         lignes,
         caConsolide,
         commissionTotale,
-        groupe.taux_courant,
         tauxSuivant,
       );
 
@@ -150,6 +157,7 @@ export async function passeGroupes(
         tauxApplique: groupe.taux_courant,
         tauxSuivant,
         reference: recap.reference,
+        envoye: recap.envoye,
         deja: Boolean(dejaCalcule) && recap.deja,
       });
     } catch (e) {
@@ -183,42 +191,177 @@ function lisibleOuDefaut(brut: unknown): readonly Palier[] {
   return paliers.length > 0 ? paliers : PALIERS_DEFAUT;
 }
 
-/** Le récapitulatif de la centrale, émis une seule fois par période. */
+/** L'enseigne, telle que la passe mensuelle la lit. */
+type Enseigne = {
+  id: string;
+  nom: string;
+  siren: string | null;
+  contact_nom: string | null;
+  contact_email: string | null;
+  taux_courant: number | null;
+};
+
+/**
+ * Le récapitulatif de la centrale : enregistré, mis en PDF, archivé, envoyé.
+ *
+ * Émis une seule fois par période. Relancé, le cron retrouve l'existant et
+ * n'envoie rien : une centrale qui recevrait deux récapitulatifs du même mois
+ * douterait des deux.
+ */
 async function emettreRecap(
-  groupeId: string,
+  groupe: Enseigne,
   periode: string,
   bornes: { debut: string; fin: string },
   lignes: LigneMagasin[],
   caTotal: number,
   commissionTotal: number,
-  tauxApplique: number | null,
   tauxSuivant: number,
-): Promise<{ reference: string; deja: boolean }> {
+): Promise<{ reference: string; deja: boolean; envoye: boolean }> {
   const supabase = createAdminClient();
-  const reference = referenceRecap(periode, groupeId);
+  const reference = referenceRecap(periode, groupe.id);
 
   const { data: existant } = await supabase
     .from("groupe_recaps")
-    .select("id, reference")
-    .eq("groupe_id", groupeId)
+    .select("id, reference, sent_at")
+    .eq("groupe_id", groupe.id)
     .eq("period_start", bornes.debut)
     .maybeSingle();
 
-  if (existant) return { reference: existant.reference, deja: true };
+  if (existant) {
+    return { reference: existant.reference, deja: true, envoye: Boolean(existant.sent_at) };
+  }
 
-  await supabase.from("groupe_recaps").insert({
+  const emisLe = new Date().toISOString();
+
+  const { data: enregistre } = await supabase
+    .from("groupe_recaps")
+    .insert({
+      reference,
+      groupe_id: groupe.id,
+      period_start: bornes.debut,
+      period_end: bornes.fin,
+      ca_total: caTotal,
+      commission_total: commissionTotal,
+      magasins: lignes as unknown as Json,
+      taux_applique: groupe.taux_courant,
+      taux_suivant: tauxSuivant,
+      issued_at: emisLe,
+    })
+    .select("id")
+    .single();
+
+  const pdf = generateGroupRecapPdf({
     reference,
-    groupe_id: groupeId,
-    period_start: bornes.debut,
-    period_end: bornes.fin,
-    ca_total: caTotal,
-    commission_total: commissionTotal,
-    magasins: lignes as unknown as Json,
-    taux_applique: tauxApplique,
-    taux_suivant: tauxSuivant,
+    emisLe,
+    periodeLibelle: libellePeriode(periode),
+    periodeSuivanteLibelle: libellePeriode(periodeSuivante(periode)),
+    debut: bornes.debut,
+    fin: bornes.fin,
+    groupe: {
+      nom: groupe.nom,
+      siren: groupe.siren,
+      contactNom: groupe.contact_nom,
+      contactEmail: groupe.contact_email,
+    },
+    caTotal,
+    commissionTotal,
+    tauxApplique: groupe.taux_courant,
+    tauxSuivant,
+    magasins: lignes.map((l) => ({
+      nom: l.nom,
+      ventes: l.ventes,
+      commission: l.commission,
+      paniers: l.paniers,
+    })),
   });
 
-  return { reference, deja: false };
+  const chemin = `groupes/${groupe.id}/${reference}.pdf`;
+  const { error: erreurUpload } = await supabase.storage
+    .from(BUCKET)
+    .upload(chemin, pdf, { contentType: "application/pdf", upsert: true });
+
+  if (erreurUpload) {
+    console.error("[groupes] archivage du récapitulatif impossible :", erreurUpload);
+  } else if (enregistre) {
+    await supabase.from("groupe_recaps").update({ pdf_url: chemin }).eq("id", enregistre.id);
+  }
+
+  // Sans adresse de contact, le document reste archivé et consultable depuis
+  // l'espace enseigne : il n'y a pas d'échec, seulement pas d'envoi.
+  if (!groupe.contact_email) {
+    return { reference, deja: false, envoye: false };
+  }
+
+  const envoye = await sendEmailWithAttachment({
+    to: groupe.contact_email,
+    ...emailRecapGroupe({
+      enseigne: groupe.nom,
+      periode: libellePeriode(periode),
+      periodeSuivante: libellePeriode(periodeSuivante(periode)),
+      magasins: lignes.length,
+      caTotal,
+      tauxApplique: groupe.taux_courant,
+      tauxSuivant,
+    }),
+    attachments: [{ filename: `${reference}.pdf`, content: pdf }],
+  });
+
+  if (envoye && enregistre) {
+    await supabase
+      .from("groupe_recaps")
+      .update({ sent_at: new Date().toISOString() })
+      .eq("id", enregistre.id);
+  }
+
+  return { reference, deja: false, envoye };
+}
+
+const echapper = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** Le message qui accompagne le récapitulatif chez la centrale. */
+function emailRecapGroupe(params: {
+  enseigne: string;
+  periode: string;
+  periodeSuivante: string;
+  magasins: number;
+  caTotal: number;
+  tauxApplique: number | null;
+  tauxSuivant: number;
+}): { subject: string; html: string } {
+  const montant = (v: number) => v.toFixed(2).replace(".", ",");
+  const enseigne = echapper(params.enseigne);
+
+  // Le changement de taux est dit dès l'objet : c'est la seule information du
+  // message qui appelle une décision, et personne n'ouvre toutes ses pièces
+  // jointes.
+  const changement =
+    params.tauxApplique !== null && params.tauxSuivant !== params.tauxApplique
+      ? ` — commission ${params.tauxSuivant} % à compter de ${params.periodeSuivante}`
+      : "";
+
+  return {
+    subject: `Kshare — Récapitulatif ${enseigne}, ${params.periode}${changement}`,
+    html: `
+      <p>Bonjour,</p>
+      <p>
+        Voici le récapitulatif de votre enseigne pour ${echapper(params.periode)} :
+        <strong>${montant(params.caTotal)} €</strong> de ventes sur
+        ${params.magasins} magasin${params.magasins > 1 ? "s" : ""}.
+      </p>
+      <p>
+        La commission applicable à compter de ${echapper(params.periodeSuivante)} est de
+        <strong>${params.tauxSuivant} %</strong>, pour l'ensemble de vos points de vente.
+        Elle découle du chiffre d'affaires consolidé du mois écoulé et ne varie pas
+        en cours de mois.
+      </p>
+      <p>
+        Chaque magasin reçoit par ailleurs son relevé de ventes et sa facture,
+        établis à son nom. Le récapitulatif ci-joint est un document de synthèse.
+      </p>
+      <p>Bien à vous,<br>L'équipe Kshare</p>
+    `,
+  };
 }
 
 /** Le volet « enseignes » du compte rendu envoyé à l'admin après le cron. */
@@ -237,10 +380,15 @@ export function compteRenduGroupes(periode: string, resultats: ResultatGroupe[])
           : r.tauxSuivant === r.tauxApplique
             ? `taux inchangé à ${r.tauxSuivant} %`
             : `taux ${r.tauxApplique} % → <strong>${r.tauxSuivant} %</strong>`;
+      const recap = r.deja
+        ? " <em>(déjà calculé)</em>"
+        : r.envoye
+          ? " · récapitulatif envoyé"
+          : ` · <span style="color:#b45309;">récapitulatif non envoyé</span>`;
       return (
         `<li><strong>${r.nom}</strong> — ${r.magasins} magasins, ` +
         `${r.caConsolide.toFixed(2)} € consolidés · ${evolution} à partir de ${aPartirDe}` +
-        (r.deja ? " <em>(déjà calculé)</em>" : "") +
+        recap +
         `</li>`
       );
     })
