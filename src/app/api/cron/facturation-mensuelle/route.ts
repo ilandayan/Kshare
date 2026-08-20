@@ -5,6 +5,7 @@ import { recapitulatifCommissions, recapitulatifAbonnements, libellePeriode, typ
 import { relevesPeriode } from "@/lib/invoicing/releve";
 import { archiverPdfFacture, emettreReleve, emetteurPret, type FactureLigne } from "@/lib/invoicing/emission";
 import { plateformeLancee } from "@/lib/platform-config";
+import { passeGroupes, compteRenduGroupes, type ResultatGroupe } from "@/lib/invoicing/groupes-mensuel";
 import type { Json } from "@/types/database.types";
 
 export const dynamic = "force-dynamic";
@@ -74,6 +75,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const supabase = createAdminClient();
   const bornes = bornesDocument(periode);
+
+  // Les enseignes sont traitees apres les magasins : leur taux se deduit des
+  // ventes consolidees, qu'il faut donc avoir etablies.
+  let groupes: ResultatGroupe[] = [];
 
   const resultats: Array<{
     commerce: string;
@@ -199,6 +204,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         resultats.push({ commerce: nom, factures: [], envoye: false, erreur: message });
       }
     }
+
+    // Un echec ici ne doit pas invalider des factures deja emises et envoyees.
+    try {
+      groupes = await passeGroupes(periode, releves, bornes);
+    } catch (erreur) {
+      console.error("[cron/facturation] passe groupes :", erreur);
+    }
   } catch (erreur) {
     const message = erreur instanceof Error ? erreur.message : "Erreur inconnue";
     console.error("[cron/facturation] Échec global :", message);
@@ -212,7 +224,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const echecs = resultats.filter((r) => r.erreur || !r.envoye);
   await notifyAdmin({
     subject: `Kshare — Facturation de ${libellePeriode(periode)} : ${resultats.length - echecs.length}/${resultats.length} envoyés`,
-    html: compteRendu(periode, resultats),
+    html: compteRendu(periode, resultats) + compteRenduGroupes(periode, groupes),
   });
 
   return NextResponse.json({
@@ -220,6 +232,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     traites: resultats.length,
     envoyes: resultats.length - echecs.length,
     resultats,
+    groupes,
   });
 }
 
