@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, ClipboardList, Wallet, ScanLine } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, ClipboardList, Wallet, ScanLine, Users } from "lucide-react";
 
 const TABS = [
   { label: "Tableau de bord",  href: "/shop/dashboard",       icon: LayoutDashboard },
@@ -10,16 +10,21 @@ const TABS = [
   { label: "Commandes",         href: "/shop/paniers/orders",  icon: ClipboardList },
   { label: "Scanner retrait",   href: "/shop/scan",            icon: ScanLine },
   { label: "Finances",          href: "/shop/finances",        icon: Wallet },
+  { label: "Équipe",            href: "/shop/equipe",          icon: Users },
 ] as const;
 
+/** Onglets reserves au proprietaire du magasin. */
+const RESERVES = ["/shop/finances", "/shop/equipe"];
+
 /**
- * `voitLesComptes` est faux pour un employe : l'onglet Finances disparait.
- * Ce n'est qu'un confort — le RLS refuse deja les donnees financieres a ce
- * role — mais un onglet qui mene a une page vide passe pour une panne.
+ * `voitLesComptes` est faux pour un employe : Finances et Equipe disparaissent.
+ * Ce n'est qu'un confort — le RLS refuse deja les chiffres a ce role, et la
+ * page Equipe le renvoie au tableau de bord — mais un onglet qui mene nulle
+ * part passe pour une panne.
  */
 export function ShopTopNav({ voitLesComptes = true }: { voitLesComptes?: boolean }) {
   const pathname = usePathname();
-  const onglets = TABS.filter((t) => voitLesComptes || t.href !== "/shop/finances");
+  const onglets = TABS.filter((t) => voitLesComptes || !RESERVES.includes(t.href));
 
   return (
     <div className="bg-white border-b border-[#e2e5f0] px-6 overflow-x-auto">
