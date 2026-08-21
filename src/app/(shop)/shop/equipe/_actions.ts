@@ -32,6 +32,31 @@ async function monMagasin() {
   return { supabase, user, commerce };
 }
 
+/**
+ * Fabrique l'identifiant de connexion à partir du nom donné.
+ *
+ * Le commerçant ne fournit pas d'adresse : demander une boîte pour l'équipe du
+ * soir, c'est demander d'en créer une, et l'ajout n'aurait jamais lieu.
+ * L'identifiant est donc dérivé du nom et du magasin, sur un sous-domaine qui
+ * ne reçoit rien. Il n'est jamais écrit à cette adresse, mais Supabase exige
+ * une adresse valide pour un compte à mot de passe.
+ */
+function identifiantPour(nom: string, magasin: string, suffixe = 0): string {
+  const simplifier = (t: string) =>
+    t
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 24);
+
+  const personne = simplifier(nom) || "equipe";
+  const boutique = simplifier(magasin) || "magasin";
+  const numero = suffixe > 0 ? `-${suffixe}` : "";
+  return `${personne}${numero}.${boutique}@equipe.k-share.fr`;
+}
+
 /** Refuse les mots de passe qu'on regrette d'avoir acceptés. */
 function motDePasseAcceptable(mdp: string): string | null {
   if (mdp.length < LONGUEUR_MINIMALE) {
@@ -61,13 +86,10 @@ export async function creerCompteEmploye(formData: FormData): Promise<Resultat> 
   if (!ctx) return { success: false, error: "Seul le responsable du magasin peut ajouter un compte." };
 
   const nom = String(formData.get("nom") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const motDePasse = String(formData.get("mot_de_passe") ?? "");
 
-  if (!nom) return { success: false, error: "Indiquez le nom de la personne." };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { success: false, error: "Cette adresse e-mail n'est pas valide." };
-  }
+  if (!nom) return { success: false, error: "Indiquez un nom : « David », « Équipe du soir »…" };
+  if (nom.length > 60) return { success: false, error: "Ce nom est trop long." };
 
   const faible = motDePasseAcceptable(motDePasse);
   if (faible) return { success: false, error: faible };
@@ -90,25 +112,33 @@ export async function creerCompteEmploye(formData: FormData): Promise<Resultat> 
 
   const admin = createAdminClient();
 
-  const { data: cree, error: erreurCreation } = await admin.auth.admin.createUser({
-    email,
-    password: motDePasse,
-    // Le commerçant remet le mot de passe en main propre : lui imposer de
-    // confirmer son adresse bloquerait un compte dont personne ne relève la
-    // boîte, souvent une adresse de service.
-    email_confirm: true,
-    user_metadata: { full_name: nom, role: "commerce" },
-  });
+  // Deux magasins peuvent employer un David, et un commerce peut recréer un
+  // compte après en avoir supprimé un : on numérote jusqu'à trouver libre.
+  let email = "";
+  let cree: Awaited<ReturnType<typeof admin.auth.admin.createUser>>["data"] | null = null;
+  let dernierMessage = "";
 
-  if (erreurCreation || !cree?.user) {
-    const message = erreurCreation?.message ?? "";
-    if (/already|exist|registered/i.test(message)) {
-      return {
-        success: false,
-        error: "Cette adresse a déjà un compte Kshare. Utilisez-en une autre, ou demandez à l'administrateur de rattacher le compte existant.",
-      };
+  for (let essai = 0; essai < 5; essai++) {
+    email = identifiantPour(nom, ctx.commerce.name, essai);
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password: motDePasse,
+      // Personne ne relève cette boîte : exiger une confirmation bloquerait le
+      // compte au premier jour.
+      email_confirm: true,
+      user_metadata: { full_name: nom, role: "commerce" },
+    });
+
+    if (!error && data?.user) {
+      cree = data;
+      break;
     }
-    return { success: false, error: message || "La création du compte a échoué." };
+    dernierMessage = error?.message ?? "";
+    if (!/already|exist|registered/i.test(dernierMessage)) break;
+  }
+
+  if (!cree?.user) {
+    return { success: false, error: dernierMessage || "La création du compte a échoué." };
   }
 
   // Rattachement par le client de session : c'est le RLS qui vérifie que le
@@ -129,7 +159,10 @@ export async function creerCompteEmploye(formData: FormData): Promise<Resultat> 
   }
 
   revalidatePath(CHEMIN);
-  return { success: true, message: `Compte créé. Communiquez l'adresse et le mot de passe à ${nom}.` };
+  return {
+    success: true,
+    message: `Compte créé. Identifiant : ${email} — communiquez-le avec le mot de passe.`,
+  };
 }
 
 /** Redonne un mot de passe à un employé qui l'a perdu. */

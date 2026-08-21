@@ -80,7 +80,10 @@ export default function EquipeClient({
           <CardContent className="space-y-4">
             <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
               <div className="text-sm text-slate-900 font-medium">{employe.nom ?? "—"}</div>
-              <div className="text-sm text-slate-600 mt-0.5">{employe.email}</div>
+              <div className="text-xs uppercase tracking-wide text-slate-400 mt-2">
+                Identifiant de connexion
+              </div>
+              <div className="text-sm text-slate-700 font-mono break-all">{employe.email}</div>
               <div className="text-xs text-slate-400 mt-1">
                 Créé le{" "}
                 {new Date(employe.depuis).toLocaleDateString("fr-FR", {
@@ -148,8 +151,13 @@ export default function EquipeClient({
               action={(formData) => agir(() => creerCompteEmploye(formData), "Compte créé.")}
               className="space-y-3"
             >
-              <Input name="nom" placeholder="Nom de la personne, ou « Équipe du soir »" required />
-              <Input name="email" type="email" placeholder="Adresse e-mail du compte" required />
+              <div>
+                <Input name="nom" placeholder="David, Équipe du soir…" required maxLength={60} />
+                <p className="text-xs text-slate-500 mt-1">
+                  Un prénom ou un libellé suffit. Nous en tirons un identifiant de connexion,
+                  que nous vous afficherons : aucune adresse e-mail à créer.
+                </p>
+              </div>
               <div>
                 <Input
                   name="mot_de_passe"
@@ -173,7 +181,8 @@ export default function EquipeClient({
 
       <p className="text-xs text-slate-500">
         Un seul compte par magasin, partagé par l&apos;équipe. Si quelqu&apos;un quitte le
-        commerce, changez simplement le mot de passe.
+        commerce, changez simplement le mot de passe. Ce compte sert à se connecter sur
+        k-share.fr, comme le vôtre.
       </p>
     </div>
   );

@@ -107,6 +107,13 @@ export async function updateBasket(
     .eq("commerce_id", commerceId);
 
   if (error) {
+    // Le créneau d'un panier déjà commandé est figé par un déclencheur en base
+    // (migration 20260821000008). Son message dit précisément ce qui bloque :
+    // le masquer derrière une erreur générique laisserait le commerçant
+    // ressayer sans comprendre.
+    if (error.code === "23514") {
+      return { success: false, error: error.message };
+    }
     return { success: false, error: "Erreur lors de la mise à jour du panier." };
   }
 
