@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       analytics_events: {
@@ -363,6 +388,45 @@ export type Database = {
         }
         Relationships: []
       }
+      commerce_acces: {
+        Row: {
+          commerce_id: string
+          created_at: string
+          id: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          commerce_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          role?: string
+        }
+        Update: {
+          commerce_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_acces_commerce_id_fkey"
+            columns: ["commerce_id"]
+            isOneToOne: false
+            referencedRelation: "commerces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_acces_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commerces: {
         Row: {
           address: string
@@ -378,6 +442,7 @@ export type Database = {
           created_at: string
           description: string | null
           email: string
+          groupe_id: string | null
           hashgakha: string
           iban: string | null
           id: string
@@ -432,6 +497,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email: string
+          groupe_id?: string | null
           hashgakha: string
           iban?: string | null
           id?: string
@@ -486,6 +552,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string
+          groupe_id?: string | null
           hashgakha?: string
           iban?: string | null
           id?: string
@@ -527,6 +594,13 @@ export type Database = {
           validated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commerces_groupe_id_fkey"
+            columns: ["groupe_id"]
+            isOneToOne: false
+            referencedRelation: "groupes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commerces_preferred_association_id_fkey"
             columns: ["preferred_association_id"]
@@ -746,6 +820,187 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      groupe_acces: {
+        Row: {
+          created_at: string
+          groupe_id: string
+          id: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          groupe_id: string
+          id?: string
+          profile_id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          groupe_id?: string
+          id?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groupe_acces_groupe_id_fkey"
+            columns: ["groupe_id"]
+            isOneToOne: false
+            referencedRelation: "groupes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groupe_acces_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groupe_recaps: {
+        Row: {
+          ca_total: number
+          commission_total: number
+          created_at: string
+          groupe_id: string
+          id: string
+          issued_at: string
+          magasins: Json
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          reference: string
+          sent_at: string | null
+          status: string
+          taux_applique: number | null
+          taux_suivant: number | null
+        }
+        Insert: {
+          ca_total?: number
+          commission_total?: number
+          created_at?: string
+          groupe_id: string
+          id?: string
+          issued_at?: string
+          magasins?: Json
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          reference: string
+          sent_at?: string | null
+          status?: string
+          taux_applique?: number | null
+          taux_suivant?: number | null
+        }
+        Update: {
+          ca_total?: number
+          commission_total?: number
+          created_at?: string
+          groupe_id?: string
+          id?: string
+          issued_at?: string
+          magasins?: Json
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          reference?: string
+          sent_at?: string | null
+          status?: string
+          taux_applique?: number | null
+          taux_suivant?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groupe_recaps_groupe_id_fkey"
+            columns: ["groupe_id"]
+            isOneToOne: false
+            referencedRelation: "groupes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groupe_taux_historique: {
+        Row: {
+          applique_le: string
+          ca_consolide: number
+          groupe_id: string
+          id: string
+          magasins: number
+          periode: string
+          taux: number
+          taux_precedent: number | null
+        }
+        Insert: {
+          applique_le?: string
+          ca_consolide: number
+          groupe_id: string
+          id?: string
+          magasins: number
+          periode: string
+          taux: number
+          taux_precedent?: number | null
+        }
+        Update: {
+          applique_le?: string
+          ca_consolide?: number
+          groupe_id?: string
+          id?: string
+          magasins?: number
+          periode?: string
+          taux?: number
+          taux_precedent?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groupe_taux_historique_groupe_id_fkey"
+            columns: ["groupe_id"]
+            isOneToOne: false
+            referencedRelation: "groupes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groupes: {
+        Row: {
+          actif: boolean
+          contact_email: string | null
+          contact_nom: string | null
+          created_at: string
+          id: string
+          nom: string
+          paliers: Json
+          siren: string | null
+          taux_courant: number | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          contact_email?: string | null
+          contact_nom?: string | null
+          created_at?: string
+          id?: string
+          nom: string
+          paliers?: Json
+          siren?: string | null
+          taux_courant?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          contact_email?: string | null
+          contact_nom?: string | null
+          created_at?: string
+          id?: string
+          nom?: string
+          paliers?: Json
+          siren?: string | null
+          taux_courant?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -2142,6 +2397,8 @@ export type Database = {
         }[]
       }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
+      declencher_cron: { Args: { p_route: string }; Returns: number }
+      declencher_dons_differes: { Args: never; Returns: number }
       disablelongtransactions: { Args: never; Returns: string }
       distance_km: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
@@ -2383,12 +2640,15 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      groupes_diriges: { Args: never; Returns: string[] }
       increment_basket_sold: {
         Args: { p_basket_id: string; p_quantity: number }
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      mes_commerces: { Args: never; Returns: string[] }
+      mes_commerces_geres: { Args: never; Returns: string[] }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
@@ -3289,6 +3549,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       association_status: [

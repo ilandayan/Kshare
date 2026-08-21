@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BasketEditForm from "./_form";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -18,7 +19,7 @@ export default async function EditBasketPage({ params }: PageProps) {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   if (!commerce) redirect("/inscription-commercant");

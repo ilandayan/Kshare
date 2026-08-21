@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BASKET_TYPES_BY_COMMERCE } from "@/lib/constants";
 import { NouveauPanierForm } from "./NouveauPanierForm";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export default async function NouveauPanierPage() {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export default async function NouveauPanierPage() {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("commerce_type")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   const commerceType = commerce?.commerce_type ?? null;

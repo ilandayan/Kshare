@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AbonnementClient from "./AbonnementClient";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 export default async function AbonnementPage() {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export default async function AbonnementPage() {
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id, subscription_status, subscription_plan, last_plan_change_at")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   if (!commerce) redirect("/connexion");

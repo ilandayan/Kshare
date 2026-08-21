@@ -262,3 +262,79 @@ export async function commandesAvecSignalementOuvert(
 
   return new Set((data ?? []).map((t) => t.order_id).filter(Boolean) as string[]);
 }
+
+/**
+ * Délai laissé au client pour signaler un problème après avoir confirmé son
+ * retrait, avant que l'autorisation ne soit encaissée.
+ *
+ * Le client confirme devant le commerçant, mais n'ouvre son sac qu'une fois
+ * rentré : le litige naît après la confirmation, pas pendant. Tant que
+ * l'autorisation n'est pas capturée, l'admin la relâche sans frais ou n'en
+ * prélève qu'une partie ; après capture il faut rembourser, et Stripe ne rend
+ * pas sa commission. Ces deux heures ne coûtent rien : le virement au commerce
+ * est hebdomadaire, capturer plus tôt ne le paie pas plus vite.
+ */
+export const DELAI_GRACE_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Convertit une date + heure murale « Europe/Paris » en instant UTC exact.
+ * Gère automatiquement l'heure d'été/hiver (offset +1 ou +2).
+ */
+export function parisWallTimeToUtc(dateStr: string, timeStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const [hh, mm] = timeStr.split(":").map(Number);
+  const utcGuess = Date.UTC(y, m - 1, d, hh, mm, 0);
+  const parisMs = new Date(
+    new Date(utcGuess).toLocaleString("en-US", { timeZone: "Europe/Paris" }),
+  ).getTime();
+  const utcMs = new Date(
+    new Date(utcGuess).toLocaleString("en-US", { timeZone: "UTC" }),
+  ).getTime();
+  return new Date(utcGuess - (parisMs - utcMs));
+}
+
+/** Ce qu'il convient de faire d'une commande en attente de capture. */
+export type DecisionCapture = "capturer" | "no_show" | "grace" | "attendre";
+
+export type CommandePourDecision = {
+  status: string;
+  picked_up_at: string | null;
+  pickup_date: string | null;
+  pickup_end: string | null;
+};
+
+/**
+ * Faut-il encaisser cette commande maintenant ?
+ *
+ * Deux chemins mènent à la capture : le client a confirmé son retrait et le
+ * délai de grâce est écoulé, ou le créneau est passé sans qu'il vienne — le
+ * commerce a préparé le panier, il doit être payé.
+ *
+ * Le doute profite toujours au client : une date inexploitable renvoie
+ * « attendre », jamais « capturer ».
+ */
+export function decisionCapture(
+  order: CommandePourDecision,
+  nowMs: number,
+): DecisionCapture {
+  const retraitConfirme = order.status === "picked_up";
+  const confirmeLe = order.picked_up_at
+    ? new Date(order.picked_up_at).getTime()
+    : Number.NaN;
+
+  if (retraitConfirme && !Number.isNaN(confirmeLe)) {
+    return confirmeLe + DELAI_GRACE_MS > nowMs ? "grace" : "capturer";
+  }
+
+  // Retrait non confirmé, ou horodatage inexploitable : le délai de grâce est
+  // incalculable. On s'en remet à la fin du créneau, toujours postérieure.
+  const { pickup_date: pickupDate, pickup_end: pickupEnd } = order;
+  if (!pickupDate || !pickupEnd) return "attendre";
+  // Format hérité, jamais résolu en date réelle : on ne peut rien en déduire.
+  if (pickupDate === "today" || pickupDate === "tomorrow") return "attendre";
+
+  const fin = parisWallTimeToUtc(pickupDate, pickupEnd).getTime();
+  if (Number.isNaN(fin) || fin >= nowMs) return "attendre";
+
+  return retraitConfirme ? "capturer" : "no_show";
+}

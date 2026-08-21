@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import AccountActions from "./_account-actions";
+import ComptesMagasin from "./_comptes-magasin";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -74,6 +75,29 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
       .single();
 
     if (!commerce) notFound();
+
+    const { data: proprietaire } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", (await supabase.from("commerces").select("profile_id").eq("id", id).single()).data?.profile_id ?? "")
+      .maybeSingle();
+
+    const { data: delegations } = await supabase
+      .from("commerce_acces")
+      .select("id, profile_id")
+      .eq("commerce_id", id);
+
+    const { data: profilsDelegues } = delegations?.length
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", delegations.map((d) => d.profile_id))
+      : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
+
+    const delegues = (delegations ?? []).map((d) => {
+      const p = (profilsDelegues ?? []).find((x) => x.id === d.profile_id);
+      return { id: d.id, nom: p?.full_name ?? null, email: p?.email ?? null };
+    });
 
     // Generate signed URLs for documents
     const [kbisSignedUrl, idDocSignedUrl, contractSignedUrl] = await Promise.all([
@@ -201,6 +225,15 @@ export default async function CompteDetailPage({ params, searchParams }: PagePro
               )}
             </CardContent>
           </Card>
+
+          <ComptesMagasin
+            commerceId={id}
+            proprietaire={{
+              nom: proprietaire?.full_name ?? null,
+              email: proprietaire?.email ?? commerce.email,
+            }}
+            delegues={delegues}
+          />
 
           <AccountActions
             id={id}

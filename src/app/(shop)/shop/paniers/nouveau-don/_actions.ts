@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BASKET_TYPES_BY_COMMERCE } from "@/lib/constants";
 import { checkPublicationAllowed } from "@/lib/platform-config";
 import type { Database } from "@/types/database.types";
+import { mesCommerceIds } from "@/lib/commerce-courant";
 
 type BasketType = Database["public"]["Enums"]["basket_type"];
 type BasketDay = Database["public"]["Enums"]["basket_day"];
@@ -35,7 +36,7 @@ export async function createDonationBasket(
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id, status, commerce_type, email")
-    .eq("profile_id", user.id)
+    .in("id", await mesCommerceIds(supabase))
     .single();
 
   if (!commerce) return { success: false, error: "Commerce introuvable." };

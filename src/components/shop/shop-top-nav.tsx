@@ -12,13 +12,19 @@ const TABS = [
   { label: "Finances",          href: "/shop/finances",        icon: Wallet },
 ] as const;
 
-export function ShopTopNav() {
+/**
+ * `voitLesComptes` est faux pour un employe : l'onglet Finances disparait.
+ * Ce n'est qu'un confort — le RLS refuse deja les donnees financieres a ce
+ * role — mais un onglet qui mene a une page vide passe pour une panne.
+ */
+export function ShopTopNav({ voitLesComptes = true }: { voitLesComptes?: boolean }) {
   const pathname = usePathname();
+  const onglets = TABS.filter((t) => voitLesComptes || t.href !== "/shop/finances");
 
   return (
     <div className="bg-white border-b border-[#e2e5f0] px-6 overflow-x-auto">
       <div className="flex items-center gap-1 flex-nowrap whitespace-nowrap">
-        {TABS.map((tab) => {
+        {onglets.map((tab) => {
           const active =
             tab.href === "/shop/paniers"
               ? pathname === "/shop/paniers"
