@@ -16,22 +16,23 @@ type Employe = {
 type Retour = { success: true; message?: string } | { success: false; error: string };
 
 /**
- * Les comptes de l'équipe, créés par le responsable du magasin.
+ * Le compte employé du magasin, créé par son responsable.
  *
- * Il choisit lui-même le mot de passe et le transmet de vive voix : pas
- * d'invitation par e-mail à attendre en fin de journée, au moment précis où il
- * faut publier les invendus.
+ * Un seul compte, partagé par l'équipe : une adresse, un mot de passe, qu'il
+ * choisit lui-même et transmet de vive voix. Pas d'invitation par courriel à
+ * attendre en fin de journée, au moment précis où il faut publier les invendus,
+ * et pas de liste de comptes nominatifs à tenir à jour.
  */
 export default function EquipeClient({
   magasin,
-  employes,
+  employe,
 }: {
   magasin: string;
-  employes: Employe[];
+  employe: Employe | null;
 }) {
   const [message, setMessage] = useState<{ texte: string; erreur: boolean } | null>(null);
   const [enCours, demarrer] = useTransition();
-  const [reinitialise, setReinitialise] = useState<string | null>(null);
+  const [changeMdp, setChangeMdp] = useState(false);
   const [nouveauMdp, setNouveauMdp] = useState("");
 
   const agir = (action: () => Promise<Retour>, defaut: string) =>
@@ -43,18 +44,18 @@ export default function EquipeClient({
           : { texte: r.error, erreur: true },
       );
       if (r.success) {
-        setReinitialise(null);
+        setChangeMdp(false);
         setNouveauMdp("");
       }
     });
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Comptes de l&apos;équipe</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Compte de l&apos;équipe</h1>
         <p className="text-slate-600 mt-1">
-          Donnez un accès propre aux personnes qui publient les paniers et scannent les
-          retraits chez {magasin}. Elles ne verront ni vos chiffres, ni vos coordonnées
+          Un accès distinct du vôtre pour les personnes qui publient les paniers et scannent
+          les retraits chez {magasin}. Elles ne verront ni vos chiffres, ni vos coordonnées
           bancaires, ni votre contrat.
         </p>
       </div>
@@ -71,113 +72,109 @@ export default function EquipeClient({
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Ajouter une personne</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            action={(formData) => agir(() => creerCompteEmploye(formData), "Compte créé.")}
-            className="grid gap-3 sm:grid-cols-2"
-          >
-            <Input name="nom" placeholder="Nom et prénom" required />
-            <Input name="email" type="email" placeholder="Adresse e-mail" required />
-            <div className="sm:col-span-2">
-              <Input
-                name="mot_de_passe"
-                type="text"
-                placeholder="Mot de passe que vous lui communiquerez"
-                required
-                minLength={8}
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Au moins 8 caractères, avec des lettres et des chiffres. Il reste affiché
-                pendant la saisie : c&apos;est vous qui le transmettez, autant le relire.
-              </p>
+      {employe ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Compte actif</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
+              <div className="text-sm text-slate-900 font-medium">{employe.nom ?? "—"}</div>
+              <div className="text-sm text-slate-600 mt-0.5">{employe.email}</div>
+              <div className="text-xs text-slate-400 mt-1">
+                Créé le{" "}
+                {new Date(employe.depuis).toLocaleDateString("fr-FR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </div>
             </div>
-            <div className="sm:col-span-2">
+
+            {changeMdp ? (
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  value={nouveauMdp}
+                  onChange={(e) => setNouveauMdp(e.target.value)}
+                  placeholder="Nouveau mot de passe"
+                  autoFocus
+                />
+                <p className="text-xs text-slate-500">
+                  Au moins 8 caractères, lettres et chiffres mêlés.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    disabled={!nouveauMdp || enCours}
+                    onClick={() =>
+                      agir(
+                        () => redefinirMotDePasse(employe.id, nouveauMdp),
+                        "Mot de passe changé.",
+                      )
+                    }
+                  >
+                    Enregistrer
+                  </Button>
+                  <Button variant="ghost" onClick={() => setChangeMdp(false)}>
+                    Annuler
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="outline" disabled={enCours} onClick={() => setChangeMdp(true)}>
+                  Changer le mot de passe
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={enCours}
+                  onClick={() =>
+                    agir(() => retirerCompteEmploye(employe.id), "Accès retiré.")
+                  }
+                >
+                  Supprimer l&apos;accès
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Créer le compte</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              action={(formData) => agir(() => creerCompteEmploye(formData), "Compte créé.")}
+              className="space-y-3"
+            >
+              <Input name="nom" placeholder="Nom de la personne, ou « Équipe du soir »" required />
+              <Input name="email" type="email" placeholder="Adresse e-mail du compte" required />
+              <div>
+                <Input
+                  name="mot_de_passe"
+                  type="text"
+                  placeholder="Mot de passe que vous communiquerez"
+                  required
+                  minLength={8}
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Au moins 8 caractères, lettres et chiffres mêlés. Il reste lisible pendant
+                  la saisie : c&apos;est vous qui le transmettez, autant le relire.
+                </p>
+              </div>
               <Button type="submit" disabled={enCours}>
                 {enCours ? "Création…" : "Créer le compte"}
               </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {employes.length === 0
-              ? "Aucun compte pour le moment"
-              : `${employes.length} compte${employes.length > 1 ? "s" : ""}`}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {employes.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Vous êtes seul à accéder au magasin. Tant que c&apos;est le cas, votre
-              identifiant sert aussi à publier les paniers.
-            </p>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {employes.map((e) => (
-                <li key={e.id} className="py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm">
-                      <span className="text-slate-900 font-medium">{e.nom ?? "—"}</span>
-                      {e.email && <span className="text-slate-500"> · {e.email}</span>}
-                    </span>
-                    <span className="flex gap-1 shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={enCours}
-                        onClick={() => setReinitialise(reinitialise === e.id ? null : e.id)}
-                      >
-                        Mot de passe
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={enCours}
-                        onClick={() =>
-                          agir(() => retirerCompteEmploye(e.id), "Accès retiré.")
-                        }
-                      >
-                        Retirer
-                      </Button>
-                    </span>
-                  </div>
-
-                  {reinitialise === e.id && (
-                    <div className="flex gap-2 mt-3">
-                      <Input
-                        type="text"
-                        value={nouveauMdp}
-                        onChange={(ev) => setNouveauMdp(ev.target.value)}
-                        placeholder="Nouveau mot de passe"
-                        className="flex-1"
-                      />
-                      <Button
-                        size="sm"
-                        disabled={!nouveauMdp || enCours}
-                        onClick={() =>
-                          agir(
-                            () => redefinirMotDePasse(e.id, nouveauMdp),
-                            "Mot de passe changé.",
-                          )
-                        }
-                      >
-                        Changer
-                      </Button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <p className="text-xs text-slate-500">
+        Un seul compte par magasin, partagé par l&apos;équipe. Si quelqu&apos;un quitte le
+        commerce, changez simplement le mot de passe.
+      </p>
     </div>
   );
 }

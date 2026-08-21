@@ -44,12 +44,13 @@ function motDePasseAcceptable(mdp: string): string | null {
 }
 
 /**
- * Crée le compte d'un employé, mot de passe compris.
+ * Crée le compte employé du magasin, mot de passe compris.
  *
- * C'est le commerçant qui choisit le mot de passe et le transmet à son équipe :
- * pas d'invitation par e-mail à attendre, pas de boîte partagée à surveiller.
- * En fin de journée, quand il faut publier les invendus, ce détour aurait suffi
- * à faire renoncer.
+ * Un seul par magasin : une adresse, un mot de passe, remis à qui s'occupe des
+ * paniers le soir. C'est le commerçant qui le choisit et le transmet — pas
+ * d'invitation par e-mail à attendre, pas de boîte partagée à surveiller. En
+ * fin de journée, quand il faut publier les invendus, ce détour aurait suffi à
+ * faire renoncer.
  *
  * Le rôle passe par les métadonnées du compte : le déclencheur
  * `handle_new_user` ne retient que client, commerce ou association, ce qui
@@ -70,6 +71,22 @@ export async function creerCompteEmploye(formData: FormData): Promise<Resultat> 
 
   const faible = motDePasseAcceptable(motDePasse);
   if (faible) return { success: false, error: faible };
+
+  // La contrainte d'unicité en base tranche en dernier ressort ; ce contrôle
+  // n'est là que pour dire pourquoi, plutôt que de laisser remonter une
+  // violation de contrainte.
+  const { data: deja } = await ctx.supabase
+    .from("commerce_acces")
+    .select("id")
+    .eq("commerce_id", ctx.commerce.id)
+    .maybeSingle();
+
+  if (deja) {
+    return {
+      success: false,
+      error: "Votre magasin a déjà un compte employé. Changez son mot de passe, ou retirez-le avant d'en créer un autre.",
+    };
+  }
 
   const admin = createAdminClient();
 
@@ -104,11 +121,15 @@ export async function creerCompteEmploye(formData: FormData): Promise<Resultat> 
     // Sans rattachement, le compte n'ouvrirait sur rien : on le retire plutôt
     // que de laisser un accès orphelin au magasin.
     await admin.auth.admin.deleteUser(cree.user.id);
-    return { success: false, error: erreurAcces.message };
+    const message =
+      erreurAcces.code === "23505"
+        ? "Votre magasin a déjà un compte employé."
+        : erreurAcces.message;
+    return { success: false, error: message };
   }
 
   revalidatePath(CHEMIN);
-  return { success: true, message: `Compte créé pour ${nom}. Communiquez-lui son mot de passe.` };
+  return { success: true, message: `Compte créé. Communiquez l'adresse et le mot de passe à ${nom}.` };
 }
 
 /** Redonne un mot de passe à un employé qui l'a perdu. */

@@ -173,7 +173,11 @@ function CarteEnseigne({
           <p className="text-sm text-slate-500 mt-1">
             {enseigne.siren ? `SIREN ${enseigne.siren} · ` : ""}
             {enseigne.magasins.length} magasin{enseigne.magasins.length > 1 ? "s" : ""}
-            {enseigne.contactEmail ? ` · ${enseigne.contactEmail}` : " · aucun contact"}
+            {/* Le nom seul vaut mieux que « aucun contact » : il est souvent saisi
+                avant qu'on ait l'adresse a laquelle envoyer le recapitulatif. */}
+            {[enseigne.contactNom, enseigne.contactEmail].filter(Boolean).join(" · ")
+              ? ` · ${[enseigne.contactNom, enseigne.contactEmail].filter(Boolean).join(" · ")}`
+              : " · aucun contact"}
           </p>
         </div>
         <Badge variant={enseigne.tauxCourant === null ? "secondary" : "default"}>
