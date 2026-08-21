@@ -16,9 +16,10 @@ export type CompteDelegue = {
  * Les comptes qui peuvent exploiter le magasin, à côté de son propriétaire.
  *
  * L'équipe du soir compose et publie les paniers : elle a besoin d'un accès
- * propre, pas de l'identifiant du gérant. Le délégué ne peut en revanche ni
- * modifier la fiche, ni toucher aux coordonnées bancaires, ni signer le
- * contrat.
+ * propre, pas de l'identifiant du gérant — lequel donne accès à l'IBAN.
+ *
+ * L'employé exploite sans voir aucun montant, et ne touche ni à la fiche du
+ * commerce ni au contrat.
  */
 export default function ComptesMagasin({
   commerceId,
@@ -70,22 +71,28 @@ export default function ComptesMagasin({
                 <span className="text-slate-900">{d.nom ?? "—"}</span>
                 {d.email && <span className="text-slate-500"> · {d.email}</span>}
               </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={enCours}
-                onClick={() => agir(() => fermerCompteMagasin(d.id), "Accès retiré.")}
-              >
-                Retirer
-              </Button>
+              <span className="flex items-center gap-3">
+                <span className="text-xs uppercase tracking-wide text-slate-400">
+                  Employé
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={enCours}
+                  onClick={() => agir(() => fermerCompteMagasin(d.id), "Accès retiré.")}
+                >
+                  Retirer
+                </Button>
+              </span>
             </div>
           ))}
         </div>
 
         <p className="text-xs text-slate-500">
-          Un compte délégué publie des paniers, traite les commandes et scanne les retraits.
-          Il ne peut pas modifier la fiche du commerce, ni les coordonnées bancaires, ni
-          signer le contrat.
+          Un <strong>employé</strong> publie des paniers, traite les commandes et scanne les
+          retraits, sans voir aucun montant. Il ne touche ni à la fiche du commerce, ni aux
+          coordonnées bancaires, ni au contrat : cela reste au propriétaire, qui est le
+          responsable du magasin.
         </p>
 
         <div className="flex gap-2">
@@ -98,7 +105,9 @@ export default function ComptesMagasin({
           />
           <Button
             disabled={!email || enCours}
-            onClick={() => agir(() => ouvrirCompteMagasin(commerceId, email), "Compte ajouté.")}
+            onClick={() =>
+              agir(() => ouvrirCompteMagasin(commerceId, email), "Ajouté comme employé.")
+            }
           >
             Ajouter
           </Button>

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 import { createClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
 import { ShopTopNav } from "@/components/shop/shop-top-nav";
+import { monAccesMagasin, voitLesComptes } from "@/lib/commerce-courant";
 import { ShopUserMenu } from "@/components/shop/shop-user-menu";
 import { ShopOrdersBadge } from "@/components/shop/shop-orders-badge";
 import { mesCommerceIds } from "@/lib/commerce-courant";
@@ -40,6 +41,9 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   if (!commerce?.contract_signed_at && !pathname.endsWith("/shop/contrat")) {
     redirect("/shop/contrat");
   }
+
+  const acces = await monAccesMagasin(supabase, user.id);
+  const comptesVisibles = voitLesComptes(acces?.role ?? null);
 
   const commerceName = commerce?.name ?? "Mon commerce";
   const userInitial = (profile?.full_name ?? commerceName).charAt(0).toUpperCase();
@@ -75,7 +79,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       </header>
 
       {/* ── Tab navigation ── */}
-      <ShopTopNav />
+      <ShopTopNav voitLesComptes={comptesVisibles} />
 
       {/* ── Pending validation banner ── */}
       {commerce?.status === "pending" && (

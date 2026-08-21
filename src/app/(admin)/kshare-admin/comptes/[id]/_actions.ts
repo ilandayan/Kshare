@@ -521,10 +521,12 @@ export async function demanderComplements(
  * Ouvre un second compte sur un magasin.
  *
  * Un magasin a un propriétaire — celui qui signe le contrat et perçoit les
- * virements — et, depuis la migration 20260821000002, des comptes délégués
- * pour l'équipe. Le délégué publie des paniers, traite les commandes et scanne
- * les retraits ; il ne peut ni modifier la fiche du commerce, ni toucher aux
- * coordonnées bancaires, ni signer quoi que ce soit.
+ * virements, et qui est aussi le responsable du magasin — et des comptes
+ * **employés**. L'employé publie des paniers, traite les commandes et scanne
+ * les retraits, sans voir aucun montant.
+ *
+ * Il ne peut pas modifier la fiche du commerce, donc pas l'IBAN, ni signer quoi
+ * que ce soit : cela reste au propriétaire.
  *
  * Le rôle du profil est basculé sur `commerce` : sans lui le middleware
  * renverrait la personne hors de `/shop` avant même que le RLS n'ait son mot à
@@ -585,7 +587,7 @@ export async function ouvrirCompteMagasin(
 
   const { error } = await admin
     .from("commerce_acces")
-    .insert({ commerce_id: commerceId, profile_id: profil.id, role: "equipe" });
+    .insert({ commerce_id: commerceId, profile_id: profil.id, role: "employe" });
 
   if (error) {
     if (error.code === "23505") {

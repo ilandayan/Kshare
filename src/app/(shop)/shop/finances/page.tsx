@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCommerceLedgerSummary, getCommerceBalance } from "@/lib/stripe/ledger";
 import { FinanceDashboard } from "@/components/shop/finance-dashboard";
-import { mesCommerceIds } from "@/lib/commerce-courant";
+import { mesCommerceGeresIds } from "@/lib/commerce-courant";
 
 function getPeriodStart(period: string): Date {
   const now = new Date();
@@ -63,7 +63,7 @@ export default async function FinancesPage({
   const { data: commerce } = await supabase
     .from("commerces")
     .select("id, subscription_plan, commission_rate")
-    .in("id", await mesCommerceIds(supabase))
+    .in("id", await mesCommerceGeresIds(supabase))
     .single();
 
   if (!commerce) redirect("/connexion");
