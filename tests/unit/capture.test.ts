@@ -102,7 +102,13 @@ describe("decisionCapture", () => {
     expect(decisionCapture(enAttente, MAINTENANT)).toBe("attendre");
   });
 
-  it("constate le no-show dès le créneau écoulé, sans attendre la nuit", () => {
+  it("laisse une demi-heure au retardataire avant de le déclarer absent", () => {
+    // Créneau clos à 16 h UTC ; à 16 h 20 le client peut encore confirmer.
+    const vingtMinutesApres = MAINTENANT + HEURE + 20 * 60 * 1000;
+    expect(decisionCapture(enAttente, vingtMinutesApres)).toBe("attendre");
+  });
+
+  it("constate le no-show passé la tolérance, sans attendre la nuit", () => {
     const apresLeCreneau = MAINTENANT + 2 * HEURE; // 17 h UTC, 19 h à Paris
     expect(decisionCapture(enAttente, apresLeCreneau)).toBe("no_show");
   });

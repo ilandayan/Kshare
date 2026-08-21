@@ -277,6 +277,20 @@ export async function commandesAvecSignalementOuvert(
 export const DELAI_GRACE_MS = 2 * 60 * 60 * 1000;
 
 /**
+ * Tolérance accordée au client arrivé après la fin de son créneau.
+ *
+ * Tant que la route tournait à 22h, un retardataire avait toute la soirée pour
+ * confirmer son retrait. En la passant au quart d'heure, le no-show tombait à
+ * la seconde où le créneau se fermait : le client qui se présentait avec cinq
+ * minutes de retard repartait avec son panier, mais son application refusait la
+ * confirmation — la commande était déjà close, et il était compté absent.
+ *
+ * Une demi-heure suffit à couvrir le retard ordinaire sans faire attendre le
+ * commerce, qui est payé dans les deux cas.
+ */
+export const DELAI_RETARD_MS = 30 * 60 * 1000;
+
+/**
  * Convertit une date + heure murale « Europe/Paris » en instant UTC exact.
  * Gère automatiquement l'heure d'été/hiver (offset +1 ou +2).
  */
@@ -334,7 +348,11 @@ export function decisionCapture(
   if (pickupDate === "today" || pickupDate === "tomorrow") return "attendre";
 
   const fin = parisWallTimeToUtc(pickupDate, pickupEnd).getTime();
-  if (Number.isNaN(fin) || fin >= nowMs) return "attendre";
+  if (Number.isNaN(fin)) return "attendre";
 
-  return retraitConfirme ? "capturer" : "no_show";
+  // Le retrait confirmé n'attend pas cette tolérance : elle ne protège que le
+  // client qui n'a pas encore pu confirmer.
+  if (retraitConfirme) return fin < nowMs ? "capturer" : "attendre";
+
+  return fin + DELAI_RETARD_MS < nowMs ? "no_show" : "attendre";
 }
