@@ -128,18 +128,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Utilisateur connecté sur /connexion → rediriger vers son espace
-    if (pathname === "/connexion") {
-      const redirectMap: Record<string, string> = {
-        commerce:    "/shop/dashboard",
-        association: "/asso/dashboard",
-        admin:       "/kshare-admin",
-        client:      "/client/paniers",
-      };
-      return NextResponse.redirect(
-        new URL(redirectMap[role] ?? "/", request.url)
-      );
-    }
+    // Un utilisateur deja connecte qui demande /connexion n'est PAS renvoye vers
+    // son espace.
+    //
+    // Cette redirection existait par confort, et elle enfermait : quelqu'un
+    // connecte avec un compte commerce ne pouvait plus atteindre le formulaire
+    // pour passer sur son compte admin. /kshare-admin le renvoyait a l'accueil
+    // faute du bon role, et /connexion le renvoyait au tableau de bord
+    // commercant. Aucune porte de sortie, sans rapport avec ses identifiants.
+    //
+    // La page affiche desormais qui est connecte et propose de changer de
+    // compte. La redirection apres connexion, elle, reste faite par la page,
+    // qui connait le role obtenu.
   }
 
   // Ajouter le pathname dans les headers pour lecture dans les layouts

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -74,6 +74,25 @@ function ConnexionContent() {
   const [loading, setLoading]           = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Qui est deja connecte, le cas echeant. Le middleware ne renvoie plus
+  // personne d'ici : quelqu'un qui arrive sur cette page avec une session
+  // ouverte veut le plus souvent changer de compte, et le lui dire vaut mieux
+  // que de le rediriger en silence.
+  const [sessionOuverte, setSessionOuverte] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setSessionOuverte(data.user?.email ?? null);
+    });
+  }, []);
+
+  const seDeconnecter = async () => {
+    await createClient().auth.signOut();
+    // Rechargement complet : les cookies d'auth doivent repartir cote serveur.
+    window.location.href = "/connexion";
+  };
+
   const {
     register,
     handleSubmit,
@@ -134,6 +153,25 @@ function ConnexionContent() {
       {/* ── Centered card ── */}
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-[420px]">
+          {sessionOuverte && (
+            <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+              <p className="text-sm text-amber-900">
+                Vous êtes déjà connecté avec <strong>{sessionOuverte}</strong>.
+              </p>
+              <p className="text-xs text-amber-800 mt-1">
+                Pour ouvrir un autre espace, déconnectez-vous d&apos;abord : un seul compte
+                peut être actif à la fois dans un même navigateur.
+              </p>
+              <button
+                type="button"
+                onClick={seDeconnecter}
+                className="mt-3 text-sm font-semibold text-amber-900 underline underline-offset-2"
+              >
+                Se déconnecter
+              </button>
+            </div>
+          )}
+
           <div className="bg-white rounded-3xl shadow-sm border border-[#e2e5f0]/60 px-8 pt-10 pb-8">
 
             {/* Header */}
