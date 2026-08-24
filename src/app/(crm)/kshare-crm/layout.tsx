@@ -6,14 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { CrmTopNav } from "@/components/crm/crm-top-nav";
 
 export const metadata: Metadata = {
-  title: "Kshare — Gestion",
+  title: "Kshare — CRM",
   robots: { index: false, follow: false },
   // Manifeste propre a cet espace : « Ajouter a l'ecran d'accueil » installe une
   // icone qui ouvre directement ici, et non le site public. La portee reste « / »
   // volontairement — sinon un passage vers l'administration, ou une redirection
   // vers /connexion a l'expiration de la session, sortirait de l'application.
   manifest: "/manifest-crm.json",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Kshare Gestion" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Kshare CRM" },
 };
 
 /**
@@ -58,7 +58,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
             </div>
             <div>
               <div className="font-bold text-white text-base leading-tight">Kshare</div>
-              <div className="text-xs text-white/70 leading-tight">Gestion</div>
+              <div className="text-xs text-white/70 leading-tight">CRM</div>
             </div>
           </Link>
           <Link

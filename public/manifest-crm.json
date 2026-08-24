@@ -1,6 +1,6 @@
 {
-  "name": "Kshare Gestion",
-  "short_name": "Kshare Gestion",
+  "name": "Kshare CRM",
+  "short_name": "Kshare CRM",
   "description": "Prospection, chiffres, factures et obligations de Kshare.",
   "start_url": "/kshare-crm",
   "scope": "/",
