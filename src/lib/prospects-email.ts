@@ -318,7 +318,7 @@ export function buildProspectAdminNotification(params: {
           <a href="mailto:${s.email}?subject=Kshare — Bienvenue ${s.firstName}" style="display:inline-block;padding:10px 18px;background:#3744C8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin-right:8px;">
             Répondre
           </a>
-          <a href="https://k-share.fr/kshare-admin/prospects" style="display:inline-block;padding:10px 18px;background:#fff;color:#3744C8;border:1px solid #3744C8;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
+          <a href="https://k-share.fr/kshare-crm" style="display:inline-block;padding:10px 18px;background:#fff;color:#3744C8;border:1px solid #3744C8;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
             Voir dans l'admin
           </a>
         </div>

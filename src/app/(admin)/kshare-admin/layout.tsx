@@ -4,6 +4,12 @@ import Link          from "next/link";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
+  // Manifeste propre a cet espace : « Ajouter a l'ecran d'accueil » installe une
+  // icone qui ouvre directement ici, et non le site public. La portee reste « / »
+  // volontairement — sinon un passage vers l'autre espace, ou une redirection
+  // vers /connexion a l'expiration de la session, sortirait de l'application.
+  manifest: "/manifest-admin.json",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Kshare Admin" },
 };
 import Image         from "next/image";
 import { createClient } from "@/lib/supabase/server";
@@ -39,7 +45,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <div className="text-xs text-white/70 leading-tight">Administration</div>
             </div>
           </Link>
-          <AdminUserMenu adminName={adminName} />
+          <div className="flex items-center gap-5">
+            {/* Pendant du lien « Administration → » que porte deja l'en-tete du
+                CRM : les deux espaces se repondent, on n'a plus a retenir
+                l'adresse de l'autre. */}
+            <Link
+              href="/kshare-crm"
+              className="text-sm font-medium text-white/80 hover:text-white transition-colors"
+            >
+              Gestion →
+            </Link>
+            <AdminUserMenu adminName={adminName} />
+          </div>
         </div>
       </header>
 

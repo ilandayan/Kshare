@@ -12,7 +12,6 @@ const TABS = [
   { label: "Finance",         href: "/kshare-admin/finance" },
   { label: "Support",         href: "/kshare-admin/support" },
   { label: "Enseignes",       href: "/kshare-admin/enseignes" },
-  { label: "Prospects",       href: "/kshare-admin/prospects" },
   { label: "Lancement",       href: "/kshare-admin/lancement" },
 ];
 

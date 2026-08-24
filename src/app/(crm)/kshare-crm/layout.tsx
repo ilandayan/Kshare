@@ -8,6 +8,12 @@ import { CrmTopNav } from "@/components/crm/crm-top-nav";
 export const metadata: Metadata = {
   title: "Kshare — Gestion",
   robots: { index: false, follow: false },
+  // Manifeste propre a cet espace : « Ajouter a l'ecran d'accueil » installe une
+  // icone qui ouvre directement ici, et non le site public. La portee reste « / »
+  // volontairement — sinon un passage vers l'administration, ou une redirection
+  // vers /connexion a l'expiration de la session, sortirait de l'application.
+  manifest: "/manifest-crm.json",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Kshare Gestion" },
 };
 
 /**
