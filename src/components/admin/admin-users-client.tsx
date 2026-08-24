@@ -238,77 +238,79 @@ function ClientsTab({ rows }: { rows: ClientRow[] }) {
         <FilterButtons active={filter} onChange={setFilter} />
       </div>
       <div className="bg-white rounded-2xl border border-[#e2e5f0] shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead><tr className="border-b border-[#e2e5f0]">
-            {["CLIENT","CONTACT","INSCRIPTION","STATISTIQUES","DERNIÈRE ACTIVITÉ","STATUT","ACTIONS"].map((h) => (
-              <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">{h}</th>
-            ))}
-          </tr></thead>
-          <tbody className="divide-y divide-[#f0f1f5]">
-            {filtered.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-sm">Aucun client trouvé</td></tr>
-            ) : filtered.map((r) => (
-              <Fragment key={r.id}>
-                <tr className="hover:bg-[#fafbff] transition-colors group">
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar initials={r.initials} />
-                      <div><div className="font-semibold text-sm text-[#3744C8]">{r.fullName}</div><div className="text-xs text-gray-400"><MapPin className="h-3 w-3 inline mr-0.5" />{r.city}</div></div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4"><div className="text-xs text-gray-600"><Mail className="h-3 w-3 inline mr-0.5" />{r.email}</div><div className="text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 inline mr-0.5" />{r.phone}</div></td>
-                  <td className="px-5 py-4 text-sm text-gray-500">{r.inscriptionDate}</td>
-                  <td className="px-5 py-4"><div className="text-xs text-gray-600"><ShoppingBag className="h-3 w-3 inline mr-0.5" />{r.basketCount} <span className="text-pink-500 ml-1"><Handshake className="h-3 w-3 inline mr-0.5" />{r.donationsAmount}€</span></div></td>
-                  <td className="px-5 py-4 text-xs text-gray-400"><Clock className="h-3 w-3 inline mr-0.5" />{r.lastActivity}</td>
-                  <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} className={`p-1.5 transition-colors cursor-pointer ${expandedId === r.id ? "text-[#3744C8]" : "text-gray-400 hover:text-[#3744C8]"}`} title="Voir"><Eye className="h-4 w-4" /></button>
-                      {r.status === "suspendu" ? (
-                        <button onClick={() => setConfirmAction({ type: "unsuspend", id: r.id, name: r.fullName })} className="p-1.5 text-orange-400 hover:text-green-600 transition-colors cursor-pointer" title="Réactiver"><RotateCcw className="h-4 w-4" /></button>
-                      ) : (
-                        <button onClick={() => setConfirmAction({ type: "suspend", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors cursor-pointer" title="Suspendre"><Ban className="h-4 w-4" /></button>
-                      )}
-                      <button onClick={() => setConfirmAction({ type: "delete", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-                {expandedId === r.id && (
-                  <tr className="bg-[#fafbff]">
-                    <td colSpan={7} className="px-5 py-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
-                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Identité</div>
-                          <div className="space-y-1.5">
-                            <div className="font-medium text-gray-900">{r.fullName}</div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1"><Mail className="h-3 w-3" />{r.email}</div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1"><Phone className="h-3 w-3" />{r.phone}</div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="h-3 w-3" />{r.city}</div>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
-                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Statistiques</div>
-                          <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-gray-500">Paniers achetés</span><span className="font-semibold text-gray-900">{r.basketCount}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Total dons</span><span className="font-semibold text-pink-600">{r.donationsAmount.toFixed(2)}€</span></div>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
-                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Compte</div>
-                          <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-gray-500">Inscription</span><span className="font-medium text-gray-900">{r.inscriptionDate}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Dernière activité</span><span className="font-medium text-gray-900">{r.lastActivity}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Statut</span><StatusBadge status={r.status} /></div>
-                          </div>
-                        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead><tr className="border-b border-[#e2e5f0]">
+              {["CLIENT","CONTACT","INSCRIPTION","STATISTIQUES","DERNIÈRE ACTIVITÉ","STATUT","ACTIONS"].map((h) => (
+                <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">{h}</th>
+              ))}
+            </tr></thead>
+            <tbody className="divide-y divide-[#f0f1f5]">
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-sm">Aucun client trouvé</td></tr>
+              ) : filtered.map((r) => (
+                <Fragment key={r.id}>
+                  <tr className="hover:bg-[#fafbff] transition-colors group">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar initials={r.initials} />
+                        <div><div className="font-semibold text-sm text-[#3744C8]">{r.fullName}</div><div className="text-xs text-gray-400"><MapPin className="h-3 w-3 inline mr-0.5" />{r.city}</div></div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4"><div className="text-xs text-gray-600"><Mail className="h-3 w-3 inline mr-0.5" />{r.email}</div><div className="text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 inline mr-0.5" />{r.phone}</div></td>
+                    <td className="px-5 py-4 text-sm text-gray-500">{r.inscriptionDate}</td>
+                    <td className="px-5 py-4"><div className="text-xs text-gray-600"><ShoppingBag className="h-3 w-3 inline mr-0.5" />{r.basketCount} <span className="text-pink-500 ml-1"><Handshake className="h-3 w-3 inline mr-0.5" />{r.donationsAmount}€</span></div></td>
+                    <td className="px-5 py-4 text-xs text-gray-400"><Clock className="h-3 w-3 inline mr-0.5" />{r.lastActivity}</td>
+                    <td className="px-5 py-4"><StatusBadge status={r.status} /></td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} className={`p-1.5 transition-colors cursor-pointer ${expandedId === r.id ? "text-[#3744C8]" : "text-gray-400 hover:text-[#3744C8]"}`} title="Voir"><Eye className="h-4 w-4" /></button>
+                        {r.status === "suspendu" ? (
+                          <button onClick={() => setConfirmAction({ type: "unsuspend", id: r.id, name: r.fullName })} className="p-1.5 text-orange-400 hover:text-green-600 transition-colors cursor-pointer" title="Réactiver"><RotateCcw className="h-4 w-4" /></button>
+                        ) : (
+                          <button onClick={() => setConfirmAction({ type: "suspend", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors cursor-pointer" title="Suspendre"><Ban className="h-4 w-4" /></button>
+                        )}
+                        <button onClick={() => setConfirmAction({ type: "delete", id: r.id, name: r.fullName })} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>
-                )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
+                  {expandedId === r.id && (
+                    <tr className="bg-[#fafbff]">
+                      <td colSpan={7} className="px-5 py-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
+                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Identité</div>
+                            <div className="space-y-1.5">
+                              <div className="font-medium text-gray-900">{r.fullName}</div>
+                              <div className="text-xs text-gray-500 flex items-center gap-1"><Mail className="h-3 w-3" />{r.email}</div>
+                              <div className="text-xs text-gray-500 flex items-center gap-1"><Phone className="h-3 w-3" />{r.phone}</div>
+                              <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="h-3 w-3" />{r.city}</div>
+                            </div>
+                          </div>
+                          <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
+                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Statistiques</div>
+                            <div className="space-y-1.5">
+                              <div className="flex justify-between"><span className="text-gray-500">Paniers achetés</span><span className="font-semibold text-gray-900">{r.basketCount}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-500">Total dons</span><span className="font-semibold text-pink-600">{r.donationsAmount.toFixed(2)}€</span></div>
+                            </div>
+                          </div>
+                          <div className="bg-white rounded-xl p-4 border border-[#e2e5f0]">
+                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Compte</div>
+                            <div className="space-y-1.5">
+                              <div className="flex justify-between"><span className="text-gray-500">Inscription</span><span className="font-medium text-gray-900">{r.inscriptionDate}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-500">Dernière activité</span><span className="font-medium text-gray-900">{r.lastActivity}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-500">Statut</span><StatusBadge status={r.status} /></div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <ConfirmModal

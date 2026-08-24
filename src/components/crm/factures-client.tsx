@@ -577,69 +577,71 @@ function LigneCommission({
 
       {detailOuvert && (
         <div className="mt-3 pt-3 border-t border-[#f0f1f5]">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-gray-400 text-left">
-                <th className="font-medium pb-1">Commande</th>
-                <th className="font-medium pb-1">Date</th>
-                <th className="font-medium pb-1 text-center">Montant initial</th>
-                <th className="font-medium pb-1 text-center">Vente</th>
-                <th className="font-medium pb-1 text-center">Taux</th>
-                <th className="font-medium pb-1 text-right">Commission</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recap.commandes.map((c) => {
-                // Dès qu'un remboursement est en jeu, toute la ligne passe au
-                // rouge : on parcourt ce tableau en diagonale, et une couleur
-                // sur le seul montant se laisse manquer.
-                const touchee = c.rembourse > 0 || c.commission < 0;
-                return (
-                  <tr
-                    key={c.reference + c.date}
-                    className={`border-t border-[#f7f8fc] ${touchee ? "text-red-600" : ""}`}
-                  >
-                    <td className={`py-1 font-mono ${touchee ? "" : "text-gray-700"}`}>
-                      {c.reference}
-                      {c.regularisation && (
-                        <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-700">
-                          régul.
-                        </span>
-                      )}
-                    </td>
-                    <td className={`py-1 ${touchee ? "" : "text-gray-500"}`}>
-                      {new Date(c.date).toLocaleDateString("fr-FR")}
-                      {c.remboursementIntegral ? (
-                        <span className="ml-2">remboursée intégralement</span>
-                      ) : c.rembourse > 0 ? (
-                        <span className="ml-2">
-                          remboursée partiellement ({euros(c.rembourse)})
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className={`py-1 text-center ${touchee ? "" : "text-gray-600"}`}>
-                      {euros(c.montantInitial)}
-                    </td>
-                    <td className={`py-1 text-center ${touchee ? "" : "text-gray-600"}`}>
-                      {euros(c.vente)}
-                    </td>
-                    <td className={`py-1 text-center ${touchee ? "" : "text-gray-500"}`}>
-                      {/* Le taux vaut pour la commande, pas pour ce qu'il en
-                          reste : il s'affiche même intégralement remboursée. */}
-                      {c.tauxApplique !== null
-                        ? `${c.tauxApplique.toFixed(2).replace(".", ",")} %`
-                        : "—"}
-                    </td>
-                    <td
-                      className={`py-1 text-right font-medium ${touchee ? "" : "text-gray-800"}`}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-gray-400 text-left">
+                  <th className="font-medium pb-1">Commande</th>
+                  <th className="font-medium pb-1">Date</th>
+                  <th className="font-medium pb-1 text-center">Montant initial</th>
+                  <th className="font-medium pb-1 text-center">Vente</th>
+                  <th className="font-medium pb-1 text-center">Taux</th>
+                  <th className="font-medium pb-1 text-right">Commission</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recap.commandes.map((c) => {
+                  // Dès qu'un remboursement est en jeu, toute la ligne passe au
+                  // rouge : on parcourt ce tableau en diagonale, et une couleur
+                  // sur le seul montant se laisse manquer.
+                  const touchee = c.rembourse > 0 || c.commission < 0;
+                  return (
+                    <tr
+                      key={c.reference + c.date}
+                      className={`border-t border-[#f7f8fc] ${touchee ? "text-red-600" : ""}`}
                     >
-                      {euros(c.commission)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className={`py-1 font-mono ${touchee ? "" : "text-gray-700"}`}>
+                        {c.reference}
+                        {c.regularisation && (
+                          <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-700">
+                            régul.
+                          </span>
+                        )}
+                      </td>
+                      <td className={`py-1 ${touchee ? "" : "text-gray-500"}`}>
+                        {new Date(c.date).toLocaleDateString("fr-FR")}
+                        {c.remboursementIntegral ? (
+                          <span className="ml-2">remboursée intégralement</span>
+                        ) : c.rembourse > 0 ? (
+                          <span className="ml-2">
+                            remboursée partiellement ({euros(c.rembourse)})
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className={`py-1 text-center ${touchee ? "" : "text-gray-600"}`}>
+                        {euros(c.montantInitial)}
+                      </td>
+                      <td className={`py-1 text-center ${touchee ? "" : "text-gray-600"}`}>
+                        {euros(c.vente)}
+                      </td>
+                      <td className={`py-1 text-center ${touchee ? "" : "text-gray-500"}`}>
+                        {/* Le taux vaut pour la commande, pas pour ce qu'il en
+                            reste : il s'affiche même intégralement remboursée. */}
+                        {c.tauxApplique !== null
+                          ? `${c.tauxApplique.toFixed(2).replace(".", ",")} %`
+                          : "—"}
+                      </td>
+                      <td
+                        className={`py-1 text-right font-medium ${touchee ? "" : "text-gray-800"}`}
+                      >
+                        {euros(c.commission)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -127,58 +127,60 @@ export default function SupportTicketList({
 
   return (
     <>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border bg-muted/30">
-            <th className="text-left py-3 px-4 text-muted-foreground font-medium">ID</th>
-            <th className="text-left py-3 px-4 text-muted-foreground font-medium">Émetteur</th>
-            <th className="text-left py-3 px-4 text-muted-foreground font-medium">Catégorie</th>
-            <th className="text-left py-3 px-4 text-muted-foreground font-medium">Date</th>
-            <th className="text-left py-3 px-4 text-muted-foreground font-medium">Statut</th>
-            <th className="py-3 px-4" />
-          </tr>
-        </thead>
-        <tbody>
-          {tickets.map((ticket) => (
-            <tr
-              key={ticket.id}
-              className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
-              onClick={() => setSelectedTicket(ticket)}
-            >
-              <td className="py-3 px-4 font-mono text-xs text-muted-foreground">
-                #{ticket.id.slice(0, 8)}
-              </td>
-              <td className="py-3 px-4">
-                <div className="font-medium text-foreground">
-                  {ticket.commerceName ?? ticket.clientName ?? "—"}
-                </div>
-              </td>
-              <td className="py-3 px-4 text-muted-foreground">{ticket.category}</td>
-              <td className="py-3 px-4 text-muted-foreground">
-                {new Date(ticket.createdAt).toLocaleDateString("fr-FR")}
-              </td>
-              <td className="py-3 px-4">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[ticket.status] ?? ""}`}
-                >
-                  {statusLabels[ticket.status] ?? ticket.status}
-                </span>
-                {ticket.status === "resolved" && ticket.messages?.some((m) => m.sender === "ai") && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-200">
-                    🤖 IA
-                  </span>
-                )}
-              </td>
-              <td className="py-3 px-4">
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  Voir
-                </Button>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30">
+              <th className="text-left py-3 px-4 text-muted-foreground font-medium">ID</th>
+              <th className="text-left py-3 px-4 text-muted-foreground font-medium">Émetteur</th>
+              <th className="text-left py-3 px-4 text-muted-foreground font-medium">Catégorie</th>
+              <th className="text-left py-3 px-4 text-muted-foreground font-medium">Date</th>
+              <th className="text-left py-3 px-4 text-muted-foreground font-medium">Statut</th>
+              <th className="py-3 px-4" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {tickets.map((ticket) => (
+              <tr
+                key={ticket.id}
+                className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
+                onClick={() => setSelectedTicket(ticket)}
+              >
+                <td className="py-3 px-4 font-mono text-xs text-muted-foreground">
+                  #{ticket.id.slice(0, 8)}
+                </td>
+                <td className="py-3 px-4">
+                  <div className="font-medium text-foreground">
+                    {ticket.commerceName ?? ticket.clientName ?? "—"}
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-muted-foreground">{ticket.category}</td>
+                <td className="py-3 px-4 text-muted-foreground">
+                  {new Date(ticket.createdAt).toLocaleDateString("fr-FR")}
+                </td>
+                <td className="py-3 px-4">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[ticket.status] ?? ""}`}
+                  >
+                    {statusLabels[ticket.status] ?? ticket.status}
+                  </span>
+                  {ticket.status === "resolved" && ticket.messages?.some((m) => m.sender === "ai") && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-200">
+                      🤖 IA
+                    </span>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Voir
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Dialog ticket */}
       <Dialog open={!!selectedTicket} onOpenChange={(open) => { if (!open) { setSelectedTicket(null); setReplyText(""); } }}>

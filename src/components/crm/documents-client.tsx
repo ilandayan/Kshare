@@ -231,74 +231,76 @@ export function DocumentsClient({ documents, filtre, conservationAnnees }: Props
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-[#e2e5f0] overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-[#f7f8fc] text-gray-500 text-xs">
-                <th className="text-left font-semibold px-4 py-2.5">Document</th>
-                <th className="text-left font-semibold px-3 py-2.5">Catégorie</th>
-                <th className="text-left font-semibold px-3 py-2.5">Date</th>
-                <th className="text-right font-semibold px-3 py-2.5">Poids</th>
-                <th className="px-3 py-2.5" />
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((d) => (
-                <tr key={d.id} className="border-t border-[#f0f1f5] hover:bg-[#fafbff]">
-                  <td className="px-4 py-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5">
-                        <Icone mime={d.mime_type} />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-medium text-gray-900">{d.title}</div>
-                        {d.notes && (
-                          <div className="text-xs text-gray-500 mt-0.5">{d.notes}</div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                      {LIBELLES_CATEGORIE[d.category as CategorieDocument] ?? d.category}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3 text-gray-500 whitespace-nowrap">
-                    {d.issued_on
-                      ? new Date(d.issued_on).toLocaleDateString("fr-FR")
-                      : `déposé le ${new Date(d.created_at).toLocaleDateString("fr-FR")}`}
-                  </td>
-                  <td className="px-3 py-3 text-right text-gray-500 whitespace-nowrap">
-                    {poids(d.file_size)}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => telecharger(d.id)}
-                        title="Télécharger"
-                        aria-label="Télécharger"
-                        className="p-2 rounded-lg border border-[#e2e5f0] text-gray-500 hover:text-[#3744C8] hover:border-[#3744C8]/40 hover:bg-[#f7f8ff] transition-colors cursor-pointer"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => supprimer(d.id, d.title)}
-                        disabled={enCours === d.id}
-                        title="Supprimer"
-                        aria-label="Supprimer"
-                        className="p-2 rounded-lg border border-[#e2e5f0] text-gray-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors disabled:opacity-40 cursor-pointer"
-                      >
-                        {enCours === d.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#f7f8fc] text-gray-500 text-xs">
+                  <th className="text-left font-semibold px-4 py-2.5">Document</th>
+                  <th className="text-left font-semibold px-3 py-2.5">Catégorie</th>
+                  <th className="text-left font-semibold px-3 py-2.5">Date</th>
+                  <th className="text-right font-semibold px-3 py-2.5">Poids</th>
+                  <th className="px-3 py-2.5" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {documents.map((d) => (
+                  <tr key={d.id} className="border-t border-[#f0f1f5] hover:bg-[#fafbff]">
+                    <td className="px-4 py-3">
+                      <div className="flex items-start gap-2">
+                        <span className="text-gray-400 mt-0.5">
+                          <Icone mime={d.mime_type} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-900">{d.title}</div>
+                          {d.notes && (
+                            <div className="text-xs text-gray-500 mt-0.5">{d.notes}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                        {LIBELLES_CATEGORIE[d.category as CategorieDocument] ?? d.category}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-gray-500 whitespace-nowrap">
+                      {d.issued_on
+                        ? new Date(d.issued_on).toLocaleDateString("fr-FR")
+                        : `déposé le ${new Date(d.created_at).toLocaleDateString("fr-FR")}`}
+                    </td>
+                    <td className="px-3 py-3 text-right text-gray-500 whitespace-nowrap">
+                      {poids(d.file_size)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => telecharger(d.id)}
+                          title="Télécharger"
+                          aria-label="Télécharger"
+                          className="p-2 rounded-lg border border-[#e2e5f0] text-gray-500 hover:text-[#3744C8] hover:border-[#3744C8]/40 hover:bg-[#f7f8ff] transition-colors cursor-pointer"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => supprimer(d.id, d.title)}
+                          disabled={enCours === d.id}
+                          title="Supprimer"
+                          aria-label="Supprimer"
+                          className="p-2 rounded-lg border border-[#e2e5f0] text-gray-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors disabled:opacity-40 cursor-pointer"
+                        >
+                          {enCours === d.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
