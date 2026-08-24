@@ -337,7 +337,8 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
 
 export function ProspectionClient({
   prospects, total, compteurs, relancesDues, filtreStatut, recherche, page, parPage,
-  filtreType, filtreRegion, filtreCuisine, types, regions, cuisines,
+  filtreType, filtreRegion, filtreCuisine, filtreVille, filtreCacherout, filtreContact,
+  types, regions, cuisines, villes, cacherouts,
 }: {
   prospects: ProspectRow[];
   total: number;
@@ -347,9 +348,14 @@ export function ProspectionClient({
   filtreType: string | null;
   filtreRegion: string | null;
   filtreCuisine: string | null;
+  filtreVille: string | null;
+  filtreCacherout: string | null;
+  filtreContact: string | null;
   types: { valeur: string; nombre: number }[];
   regions: { valeur: string; nombre: number }[];
   cuisines: { valeur: string; nombre: number }[];
+  villes: { valeur: string; nombre: number }[];
+  cacherouts: { valeur: string; nombre: number }[];
   recherche: string;
   page: number;
   parPage: number;
@@ -409,12 +415,16 @@ export function ProspectionClient({
         <button type="submit" className="px-4 py-2 rounded-xl bg-[#3744C8] text-white text-sm font-semibold hover:bg-[#2d38a8] cursor-pointer">
           Rechercher
         </button>
-        {(recherche || filtreStatut || filtreType || filtreRegion || filtreCuisine) && (
+        {(recherche || filtreStatut || filtreType || filtreRegion || filtreCuisine ||
+          filtreVille || filtreCacherout || filtreContact) && (
           <button
             type="button"
             onClick={() => {
               setQ("");
-              naviguer({ q: null, statut: null, type: null, region: null, cuisine: null });
+              naviguer({
+                q: null, statut: null, type: null, region: null,
+                cuisine: null, ville: null, cacherout: null, contact: null,
+              });
             }}
             className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 cursor-pointer"
           >
@@ -450,6 +460,42 @@ export function ProspectionClient({
               {CUISINE_LABELS[c.valeur] ?? c.valeur} ({c.nombre})
             </option>
           ))}
+        </select>
+
+        <select
+          value={filtreVille ?? ""}
+          onChange={(e) => naviguer({ ville: e.target.value || null })}
+          className="px-3 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm text-gray-700 cursor-pointer"
+        >
+          <option value="">Toutes les villes</option>
+          {villes.map((v) => (
+            <option key={v.valeur} value={v.valeur}>{v.valeur} ({v.nombre})</option>
+          ))}
+        </select>
+
+        <select
+          value={filtreCacherout ?? ""}
+          onChange={(e) => naviguer({ cacherout: e.target.value || null })}
+          className="px-3 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm text-gray-700 cursor-pointer"
+        >
+          <option value="">Toutes les certifications</option>
+          {cacherouts.map((c) => (
+            <option key={c.valeur} value={c.valeur}>{c.valeur} ({c.nombre})</option>
+          ))}
+        </select>
+
+        {/* Ce filtre ne porte pas sur ce qu'est le prospect mais sur ce qu'on
+            peut en faire : une file d'appels n'a que faire des fiches sans
+            numero, et un envoi groupe ne concerne que celles avec adresse. */}
+        <select
+          value={filtreContact ?? ""}
+          onChange={(e) => naviguer({ contact: e.target.value || null })}
+          className="px-3 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm text-gray-700 cursor-pointer"
+        >
+          <option value="">Joignables ou non</option>
+          <option value="telephone">Avec téléphone</option>
+          <option value="email">Avec e-mail</option>
+          <option value="aucune">Sans coordonnées</option>
         </select>
 
         <select

@@ -27,6 +27,16 @@ AS $fn$
   from public.prospects
   where cuisine_type is not null and cuisine_type <> ''
   group by cuisine_type
+  union all
+  select 'ville'::text, city, count(*)::integer
+  from public.prospects
+  where city is not null and city <> ''
+  group by city
+  union all
+  select 'cacherout'::text, hashgakha, count(*)::integer
+  from public.prospects
+  where hashgakha is not null and hashgakha <> ''
+  group by hashgakha
   order by 1, 3 desc;
 $fn$;
 

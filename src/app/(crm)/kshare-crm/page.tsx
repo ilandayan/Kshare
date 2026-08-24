@@ -47,9 +47,11 @@ export default async function ProspectionPage({
   searchParams: Promise<{
     statut?: string; q?: string; ville?: string; page?: string;
     type?: string; region?: string; cuisine?: string;
+    cacherout?: string; contact?: string;
   }>;
 }) {
-  const { statut, q, ville, page, type, region, cuisine } = await searchParams;
+  const { statut, q, ville, page, type, region, cuisine, cacherout, contact } =
+    await searchParams;
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
   const supabase = createAdminClient();
 
@@ -78,7 +80,22 @@ export default async function ProspectionPage({
   if (type) requete = requete.eq("commerce_type", type);
   if (region) requete = requete.eq("region", region);
   if (cuisine) requete = requete.eq("cuisine_type", cuisine);
-  if (ville) requete = requete.ilike("city", `%${ville}%`);
+  if (cacherout) requete = requete.eq("hashgakha", cacherout);
+  if (ville) requete = requete.eq("city", ville);
+
+  // Filtrer sur ce qu'on peut faire du prospect, et non sur ce qu'il est :
+  // 106 fiches n'ont aucune coordonnee et n'ont rien a faire dans une file
+  // d'appels, tandis que les 173 avec adresse permettent un envoi groupe.
+  if (contact === "telephone") {
+    requete = requete.or("phone.not.is.null,mobile.not.is.null");
+  } else if (contact === "email") {
+    requete = requete.not("email", "is", null);
+  } else if (contact === "aucune") {
+    requete = requete
+      .is("phone", null)
+      .is("mobile", null)
+      .is("email", null);
+  }
   if (q) {
     requete = requete.or(
       `company_name.ilike.%${q}%,city.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`,
@@ -106,6 +123,8 @@ export default async function ProspectionPage({
   const types = facette("type");
   const regions = facette("region");
   const cuisines = facette("cuisine");
+  const villes = facette("ville");
+  const cacherouts = facette("cacherout");
 
   // Relances dues aujourd'hui ou en retard : la file du jour.
   const finJournee = new Date();
@@ -126,9 +145,14 @@ export default async function ProspectionPage({
       filtreType={type ?? null}
       filtreRegion={region ?? null}
       filtreCuisine={cuisine ?? null}
+      filtreVille={ville ?? null}
+      filtreCacherout={cacherout ?? null}
+      filtreContact={contact ?? null}
       types={types}
       regions={regions}
       cuisines={cuisines}
+      villes={villes}
+      cacherouts={cacherouts}
       recherche={q ?? ""}
       page={pageNum}
       parPage={PAGE}
