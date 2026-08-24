@@ -46,10 +46,10 @@ export default async function ProspectionPage({
 }: {
   searchParams: Promise<{
     statut?: string; q?: string; ville?: string; page?: string;
-    type?: string; region?: string;
+    type?: string; region?: string; cuisine?: string;
   }>;
 }) {
-  const { statut, q, ville, page, type, region } = await searchParams;
+  const { statut, q, ville, page, type, region, cuisine } = await searchParams;
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
   const supabase = createAdminClient();
 
@@ -70,13 +70,14 @@ export default async function ProspectionPage({
   let requete = supabase
     .from("prospects")
     .select(
-      "id, company_name, city, postal_code, address, phone, mobile, email, website, commerce_type, region, category, hashgakha, status, contacted_at, next_action_at, first_name, last_name, admin_notes",
+      "id, company_name, city, postal_code, address, phone, mobile, email, website, commerce_type, region, cuisine_type, sources, external_links, category, hashgakha, status, contacted_at, next_action_at, first_name, last_name, admin_notes",
       { count: "exact" },
     );
 
   if (statut) requete = requete.eq("status", statut);
   if (type) requete = requete.eq("commerce_type", type);
   if (region) requete = requete.eq("region", region);
+  if (cuisine) requete = requete.eq("cuisine_type", cuisine);
   if (ville) requete = requete.ilike("city", `%${ville}%`);
   if (q) {
     requete = requete.or(
@@ -104,6 +105,7 @@ export default async function ProspectionPage({
 
   const types = facette("type");
   const regions = facette("region");
+  const cuisines = facette("cuisine");
 
   // Relances dues aujourd'hui ou en retard : la file du jour.
   const finJournee = new Date();
@@ -123,8 +125,10 @@ export default async function ProspectionPage({
       filtreStatut={statut ?? null}
       filtreType={type ?? null}
       filtreRegion={region ?? null}
+      filtreCuisine={cuisine ?? null}
       types={types}
       regions={regions}
+      cuisines={cuisines}
       recherche={q ?? ""}
       page={pageNum}
       parPage={PAGE}

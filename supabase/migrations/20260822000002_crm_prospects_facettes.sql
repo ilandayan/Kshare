@@ -20,6 +20,13 @@ AS $fn$
   from public.prospects
   where region is not null and region <> ''
   group by region
+  union all
+  -- La categorie cachere de l'etablissement : bassari, halavi ou mix. Elle dit
+  -- quels paniers il pourrait publier, c'est donc un axe de prospection.
+  select 'cuisine'::text, cuisine_type, count(*)::integer
+  from public.prospects
+  where cuisine_type is not null and cuisine_type <> ''
+  group by cuisine_type
   order by 1, 3 desc;
 $fn$;
 

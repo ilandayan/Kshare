@@ -24,6 +24,11 @@ export interface ProspectRow {
   website: string | null;
   commerce_type: string | null;
   region: string | null;
+  cuisine_type: string | null;
+  /** Annuaires ou le commerce a ete trouve, separes par des virgules. */
+  sources: string | null;
+  /** Fiches d'annuaire : { alloj: "https://...", mangercacher: "https://..." }. */
+  external_links: Record<string, string> | null;
   category: string | null;
   hashgakha: string | null;
   status: string;
@@ -33,6 +38,18 @@ export interface ProspectRow {
   last_name: string | null;
   admin_notes: string | null;
 }
+
+/**
+ * Categorie cachere de l'etablissement, telle qu'importee.
+ *
+ * Elle dit quels paniers il pourrait publier : une adresse bassari ne fera
+ * jamais de halavi. C'est donc un axe de prospection, pas une decoration.
+ */
+const CUISINE_LABELS: Record<string, string> = {
+  bassari: "Bassari",
+  halavi:  "Halavi",
+  mix:     "Mix",
+};
 
 /** Types de commerce du fichier de prospection. */
 const TYPE_LABELS: Record<string, string> = {
@@ -125,6 +142,11 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
               {TYPE_LABELS[prospect.commerce_type] ?? prospect.commerce_type}
             </span>
           )}
+          {prospect.cuisine_type && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+              {CUISINE_LABELS[prospect.cuisine_type] ?? prospect.cuisine_type}
+            </span>
+          )}
           {prospect.city && (
             <span className="inline-flex items-center gap-1 text-xs text-gray-400">
               <MapPin className="h-3 w-3" /> {prospect.city}
@@ -177,6 +199,28 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
               )}
               {prospect.hashgakha && (
                 <span className="text-xs text-gray-400">Cacherout : {prospect.hashgakha}</span>
+              )}
+              {prospect.external_links && Object.keys(prospect.external_links).length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {/* Les fiches d'annuaire : on y verifie l'adresse et les horaires
+                      avant d'appeler, plutot que de le demander au telephone. */}
+                  {Object.entries(prospect.external_links).map(([annuaire, lien]) => (
+                    <a
+                      key={annuaire}
+                      href={lien}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2 py-0.5 rounded-full text-xs bg-[#eef0f8] text-[#3744C8] hover:bg-[#e2e5f0]"
+                    >
+                      {annuaire}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {prospect.sources && (
+                <span className="text-xs text-gray-400">
+                  Référencé sur : {prospect.sources.split(",").join(", ")}
+                </span>
               )}
             </div>
 
@@ -293,7 +337,7 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
 
 export function ProspectionClient({
   prospects, total, compteurs, relancesDues, filtreStatut, recherche, page, parPage,
-  filtreType, filtreRegion, types, regions,
+  filtreType, filtreRegion, filtreCuisine, types, regions, cuisines,
 }: {
   prospects: ProspectRow[];
   total: number;
@@ -302,8 +346,10 @@ export function ProspectionClient({
   filtreStatut: string | null;
   filtreType: string | null;
   filtreRegion: string | null;
+  filtreCuisine: string | null;
   types: { valeur: string; nombre: number }[];
   regions: { valeur: string; nombre: number }[];
+  cuisines: { valeur: string; nombre: number }[];
   recherche: string;
   page: number;
   parPage: number;
@@ -363,12 +409,12 @@ export function ProspectionClient({
         <button type="submit" className="px-4 py-2 rounded-xl bg-[#3744C8] text-white text-sm font-semibold hover:bg-[#2d38a8] cursor-pointer">
           Rechercher
         </button>
-        {(recherche || filtreStatut || filtreType || filtreRegion) && (
+        {(recherche || filtreStatut || filtreType || filtreRegion || filtreCuisine) && (
           <button
             type="button"
             onClick={() => {
               setQ("");
-              naviguer({ q: null, statut: null, type: null, region: null });
+              naviguer({ q: null, statut: null, type: null, region: null, cuisine: null });
             }}
             className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 cursor-pointer"
           >
@@ -389,6 +435,19 @@ export function ProspectionClient({
           {types.map((t) => (
             <option key={t.valeur} value={t.valeur}>
               {TYPE_LABELS[t.valeur] ?? t.valeur} ({t.nombre})
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filtreCuisine ?? ""}
+          onChange={(e) => naviguer({ cuisine: e.target.value || null })}
+          className="px-3 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm text-gray-700 cursor-pointer"
+        >
+          <option value="">Toutes les cacherouts</option>
+          {cuisines.map((c) => (
+            <option key={c.valeur} value={c.valeur}>
+              {CUISINE_LABELS[c.valeur] ?? c.valeur} ({c.nombre})
             </option>
           ))}
         </select>
