@@ -53,7 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               href="/kshare-crm"
               className="text-sm font-medium text-white/80 hover:text-white transition-colors"
             >
-              Gestion →
+              CRM →
             </Link>
             <AdminUserMenu adminName={adminName} />
           </div>

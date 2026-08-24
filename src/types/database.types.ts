@@ -414,7 +414,7 @@ export type Database = {
           {
             foreignKeyName: "commerce_acces_commerce_id_fkey"
             columns: ["commerce_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "commerces"
             referencedColumns: ["id"]
           },
@@ -2396,6 +2396,14 @@ export type Database = {
           ventes_30j: number
         }[]
       }
+      crm_prospects_facettes: {
+        Args: never
+        Returns: {
+          facette: string
+          nombre: number
+          valeur: string
+        }[]
+      }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       declencher_cron: { Args: { p_route: string }; Returns: number }
       declencher_dons_differes: { Args: never; Returns: number }
@@ -2649,6 +2657,7 @@ export type Database = {
       longtransactionsenabled: { Args: never; Returns: boolean }
       mes_commerces: { Args: never; Returns: string[] }
       mes_commerces_geres: { Args: never; Returns: string[] }
+      mes_employes: { Args: never; Returns: string[] }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }

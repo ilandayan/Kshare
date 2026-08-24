@@ -102,17 +102,17 @@ export async function middleware(request: NextRequest) {
 
     // Shop routes — commerce uniquement → rediriger vers HOME (pas /connexion pour éviter les boucles)
     if (pathname.startsWith("/shop") && role !== "commerce") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/connexion?changer=1", request.url));
     }
 
     // Asso routes — association uniquement
     if (pathname.startsWith("/asso") && role !== "association") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/connexion?changer=1", request.url));
     }
 
     // Client routes — client uniquement
     if (pathname.startsWith("/client") && role !== "client") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/connexion?changer=1", request.url));
     }
 
     // Admin routes — admin uniquement.
@@ -125,21 +125,28 @@ export async function middleware(request: NextRequest) {
       (pathname.startsWith("/kshare-admin") || pathname.startsWith("/kshare-crm")) &&
       role !== "admin"
     ) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/connexion?changer=1", request.url));
     }
 
-    // Un utilisateur deja connecte qui demande /connexion n'est PAS renvoye vers
-    // son espace.
+    // Un utilisateur deja connecte qui demande /connexion repart vers son
+    // espace : cliquer « Espace commercant » quand on est deja commercant doit
+    // ouvrir son tableau de bord, pas un formulaire.
     //
-    // Cette redirection existait par confort, et elle enfermait : quelqu'un
-    // connecte avec un compte commerce ne pouvait plus atteindre le formulaire
-    // pour passer sur son compte admin. /kshare-admin le renvoyait a l'accueil
-    // faute du bon role, et /connexion le renvoyait au tableau de bord
-    // commercant. Aucune porte de sortie, sans rapport avec ses identifiants.
-    //
-    // La page affiche desormais qui est connecte et propose de changer de
-    // compte. La redirection apres connexion, elle, reste faite par la page,
-    // qui connait le role obtenu.
+    // Sauf s'il vient pour changer de compte. Sans cette porte, les deux regles
+    // se refermaient l'une sur l'autre : connecte en commerce, /kshare-admin
+    // renvoyait a l'accueil faute du bon role et /connexion renvoyait au
+    // tableau de bord commercant — aucune sortie, sans rapport avec les
+    // identifiants. Les gardes ci-dessus posent donc `changer=1` en renvoyant
+    // ici, et la page propose alors de se deconnecter.
+    if (pathname === "/connexion" && request.nextUrl.searchParams.get("changer") !== "1") {
+      const redirectMap: Record<string, string> = {
+        commerce:    "/shop/dashboard",
+        association: "/asso/dashboard",
+        admin:       "/kshare-admin",
+        client:      "/client/paniers",
+      };
+      return NextResponse.redirect(new URL(redirectMap[role] ?? "/", request.url));
+    }
   }
 
   // Ajouter le pathname dans les headers pour lecture dans les layouts

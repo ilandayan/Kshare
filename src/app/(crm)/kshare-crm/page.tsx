@@ -17,6 +17,22 @@ export const STATUT_LABELS: Record<string, string> = {
   closed: "Fermé",
 };
 
+/**
+ * Types de commerce, tels qu'ils ont ete importes du fichier de prospection.
+ *
+ * `commerce_type` est renseigne sur les 1055 lignes ; `category` porte les
+ * memes valeurs mais en oublie deux. C'est donc `commerce_type` qui fait foi.
+ */
+export const TYPE_LABELS: Record<string, string> = {
+  restaurant:  "Restaurant",
+  traiteur:    "Traiteur",
+  boucherie:   "Boucherie",
+  supermarche: "Supermarché",
+  boulangerie: "Boulangerie",
+  epicerie:    "Épicerie",
+  autre:       "Autre",
+};
+
 const PAGE = 100;
 
 /** Statuts comptés sur la page. Doit rester aligné sur STATUTS_PROSPECT. */
@@ -28,9 +44,12 @@ const STATUTS = [
 export default async function ProspectionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; q?: string; ville?: string; page?: string }>;
+  searchParams: Promise<{
+    statut?: string; q?: string; ville?: string; page?: string;
+    type?: string; region?: string;
+  }>;
 }) {
-  const { statut, q, ville, page } = await searchParams;
+  const { statut, q, ville, page, type, region } = await searchParams;
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
   const supabase = createAdminClient();
 
@@ -51,11 +70,13 @@ export default async function ProspectionPage({
   let requete = supabase
     .from("prospects")
     .select(
-      "id, company_name, city, postal_code, address, phone, mobile, email, website, category, hashgakha, status, contacted_at, next_action_at, first_name, last_name, admin_notes",
+      "id, company_name, city, postal_code, address, phone, mobile, email, website, commerce_type, region, category, hashgakha, status, contacted_at, next_action_at, first_name, last_name, admin_notes",
       { count: "exact" },
     );
 
   if (statut) requete = requete.eq("status", statut);
+  if (type) requete = requete.eq("commerce_type", type);
+  if (region) requete = requete.eq("region", region);
   if (ville) requete = requete.ilike("city", `%${ville}%`);
   if (q) {
     requete = requete.or(
@@ -70,6 +91,19 @@ export default async function ProspectionPage({
     .order("contacted_at", { ascending: true, nullsFirst: true })
     .order("company_name", { ascending: true })
     .range((pageNum - 1) * PAGE, pageNum * PAGE - 1);
+
+  // Les valeurs proposées aux filtres sont comptées en base : les ramener pour
+  // les compter en mémoire buterait sur la limite de mille lignes de PostgREST,
+  // et le fichier en compte 1055. C'est le piège qui avait déjà faussé les
+  // compteurs de statuts.
+  const { data: facettes } = await supabase.rpc("crm_prospects_facettes");
+  const facette = (nom: string) =>
+    (facettes ?? [])
+      .filter((f) => f.facette === nom)
+      .map((f) => ({ valeur: f.valeur, nombre: f.nombre }));
+
+  const types = facette("type");
+  const regions = facette("region");
 
   // Relances dues aujourd'hui ou en retard : la file du jour.
   const finJournee = new Date();
@@ -87,6 +121,10 @@ export default async function ProspectionPage({
       compteurs={compteurs}
       relancesDues={relancesDues ?? 0}
       filtreStatut={statut ?? null}
+      filtreType={type ?? null}
+      filtreRegion={region ?? null}
+      types={types}
+      regions={regions}
       recherche={q ?? ""}
       page={pageNum}
       parPage={PAGE}
