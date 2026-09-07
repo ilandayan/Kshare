@@ -7,10 +7,10 @@
  * taux BNC est passé de 24,6 % à 25,6 % au 1er janvier 2026. Ils sont donc
  * rassemblés ici, datés, plutôt que dispersés dans les écrans.
  *
- * **À confirmer par Ilan** : la catégorie d'activité. Une commission
- * d'intermédiaire relève normalement des BIC — prestation de services
- * commerciale — mais c'est la déclaration d'activité qui tranche, et l'écart
- * de taux est de plus de quatre points.
+ Catégorie confirmée par Ilan le 7 septembre 2026 : l'Urssaf le classe en
+ * profession libérale non réglementée, donc en BNC. Le raisonnement métier
+ * disait BIC — une commission d'intermédiaire est un acte de commerce — mais
+ * c'est la déclaration d'activité qui tranche, et elle dit autre chose.
  */
 
 export const ANNEE_BAREME = 2026;
@@ -27,11 +27,12 @@ export const LIBELLES_CATEGORIE: Record<CategorieActivite, string> = {
 /**
  * Catégorie retenue par défaut.
  *
- * Kshare met en relation des commerces et des clients et prélève une
- * commission : c'est une activité d'intermédiaire commercial, donc BIC. À
- * corriger si la déclaration d'activité dit autre chose.
+ * Ilan est déclaré en profession libérale non réglementée, ce qui le place en
+ * BNC. La valeur précédente, "bic_services", sous-estimait les cotisations de
+ * plus de quatre points : le CRM annonçait une provision suffisante alors
+ * qu'elle ne l'était pas.
  */
-export const CATEGORIE_PAR_DEFAUT: CategorieActivite = "bic_services";
+export const CATEGORIE_PAR_DEFAUT: CategorieActivite = "bnc";
 
 /** Taux global de cotisations sociales, en pourcentage du chiffre d'affaires. */
 export const TAUX_COTISATIONS: Record<CategorieActivite, number> = {

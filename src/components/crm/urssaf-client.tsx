@@ -31,7 +31,10 @@ function arrondi(v: number): number {
 export function UrssafClient({ annee, annees, trimestres, bareme }: Props) {
   const router = useRouter();
   const [copie, setCopie] = useState<string | null>(null);
-  const [versementLiberatoire, setVersementLiberatoire] = useState(false);
+  // Ilan a pris l'option : l'impôt est prélevé à chaque déclaration
+  // trimestrielle, pas en mai. La case reste modifiable, car l'option peut être
+  // dénoncée avant le 30 septembre pour l'année suivante.
+  const [versementLiberatoire, setVersementLiberatoire] = useState(true);
 
   const total = arrondi(trimestres.reduce((s, t) => s + t.aDeclarer, 0));
   const tauxTotal = bareme.tauxCotisations + bareme.tauxCfp + (versementLiberatoire ? bareme.tauxVersementLiberatoire : 0);
