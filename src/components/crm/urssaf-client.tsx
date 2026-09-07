@@ -31,10 +31,11 @@ function arrondi(v: number): number {
 export function UrssafClient({ annee, annees, trimestres, bareme }: Props) {
   const router = useRouter();
   const [copie, setCopie] = useState<string | null>(null);
-  // Ilan a pris l'option : l'impôt est prélevé à chaque déclaration
-  // trimestrielle, pas en mai. La case reste modifiable, car l'option peut être
-  // dénoncée avant le 30 septembre pour l'année suivante.
-  const [versementLiberatoire, setVersementLiberatoire] = useState(true);
+  // Décoché : l'option a beau avoir été prise, elle n'est pas ouverte à Ilan.
+  // Elle suppose un revenu fiscal de référence sous environ 28 000 € par part ;
+  // le sien est de 59 449 € pour une part. Cocher la case par défaut afficherait
+  // un impôt de 2,2 % du chiffre d'affaires là où le barème s'applique.
+  const [versementLiberatoire, setVersementLiberatoire] = useState(false);
 
   const total = arrondi(trimestres.reduce((s, t) => s + t.aDeclarer, 0));
   const tauxTotal = bareme.tauxCotisations + bareme.tauxCfp + (versementLiberatoire ? bareme.tauxVersementLiberatoire : 0);
