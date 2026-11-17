@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
           "/",
           "/notre-mission",
           "/je-suis-client",
+          "/je-suis-commercant",
           "/contact",
           "/cgu",
           "/faq",

@@ -1,20 +1,32 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PwaRegister } from '@/components/pwa-register';
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
+// Polices servies depuis le dépôt plutôt que téléchargées chez Google à chaque
+// build. `next/font/google` va chercher les fichiers sur fonts.gstatic.com au
+// moment de la compilation : le jour où la CI n'a pas pu les joindre, le build
+// a échoué alors que rien n'avait changé dans le code. Les fichiers sont ici,
+// le build ne dépend plus du réseau, et aucune requête ne part vers Google
+// depuis le navigateur du visiteur.
+//
+// Ce sont les fichiers variables du sous-ensemble latin, qui couvre les accents
+// français, le œ et le signe €. Les deux familles restent sous licence SIL
+// Open Font, voir src/app/fonts/OFL.txt.
+const plusJakarta = localFont({
+  src: './fonts/PlusJakartaSans-latin-var.woff2',
   variable: '--font-display',
-  weight: ['400', '500', '600', '700', '800'],
+  weight: '400 800',
+  display: 'swap',
 });
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
+const dmSans = localFont({
+  src: './fonts/DMSans-latin-var.woff2',
   variable: '--font-body',
-  weight: ['400', '500', '600', '700'],
+  weight: '400 700',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
