@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import {
   changerStatutProspect, ajouterActivite, planifierRelance, modifierProspect,
-  type StatutProspect,
+  type StatutProspect, type AntiGaspi,
 } from "@/app/(crm)/kshare-crm/_actions";
 
 export interface ProspectRow {
@@ -37,7 +37,32 @@ export interface ProspectRow {
   first_name: string | null;
   last_name: string | null;
   admin_notes: string | null;
+  /** tgtg, phenix, tgtg_phenix, aucune ; null tant que ce n'est pas vérifié. */
+  antigaspi: string | null;
 }
+
+/**
+ * Présence sur les applis anti-gaspi concurrentes.
+ *
+ * Un commerce déjà sur TGTG connaît le modèle et sait ce qu'il y perd : c'est
+ * l'argument du paiement chaque mardi contre tous les trois mois. Un commerce
+ * sur aucune appli est à convaincre du principe même.
+ */
+const ANTIGASPI_LABELS: Record<AntiGaspi, string> = {
+  tgtg:        "TGTG",
+  phenix:      "Phénix",
+  tgtg_phenix: "TGTG + Phénix",
+  aucune:      "Aucune appli",
+};
+
+const ANTIGASPI_CLS: Record<AntiGaspi, string> = {
+  tgtg:        "bg-emerald-50 text-emerald-700",
+  phenix:      "bg-sky-50 text-sky-700",
+  tgtg_phenix: "bg-teal-50 text-teal-700",
+  aucune:      "bg-gray-100 text-gray-600",
+};
+
+const ORDRE_ANTIGASPI: AntiGaspi[] = ["tgtg", "phenix", "tgtg_phenix", "aucune"];
 
 /**
  * Categorie cachere de l'etablissement, telle qu'importee.
@@ -145,6 +170,11 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
           {prospect.cuisine_type && (
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
               {CUISINE_LABELS[prospect.cuisine_type] ?? prospect.cuisine_type}
+            </span>
+          )}
+          {prospect.antigaspi && prospect.antigaspi !== "aucune" && (
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ANTIGASPI_CLS[prospect.antigaspi as AntiGaspi] ?? "bg-gray-100 text-gray-600"}`}>
+              {ANTIGASPI_LABELS[prospect.antigaspi as AntiGaspi] ?? prospect.antigaspi}
             </span>
           )}
           {prospect.city && (
@@ -272,6 +302,42 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
             </div>
           </div>
 
+          {/* Applis anti-gaspi : une question à poser pendant l'appel. Cliquer
+              la valeur active la remet à « non vérifié ». */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">
+              Applis anti-gaspi
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {ORDRE_ANTIGASPI.map((a) => {
+                const actif = prospect.antigaspi === a;
+                return (
+                  <button
+                    key={a}
+                    onClick={() =>
+                      agir(
+                        () => modifierProspect(prospect.id, { antigaspi: actif ? null : a }),
+                        actif ? "Anti-gaspi : non vérifié" : `Anti-gaspi : ${ANTIGASPI_LABELS[a]}`,
+                      )
+                    }
+                    disabled={isPending}
+                    aria-pressed={actif}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                      actif
+                        ? `${ANTIGASPI_CLS[a]} ring-2 ring-offset-1 ring-[#3744C8]/40`
+                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                    }`}
+                  >
+                    {ANTIGASPI_LABELS[a]}
+                  </button>
+                );
+              })}
+              {!prospect.antigaspi && (
+                <span className="px-2.5 py-1 text-xs text-gray-400 italic">Non vérifié</span>
+              )}
+            </div>
+          </div>
+
           {/* Journal et relance */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -338,6 +404,7 @@ function ProspectCard({ prospect }: { prospect: ProspectRow }) {
 export function ProspectionClient({
   prospects, total, compteurs, relancesDues, filtreStatut, recherche, page, parPage,
   filtreType, filtreRegion, filtreCuisine, filtreVille, filtreCacherout, filtreContact,
+  filtreAntigaspi, antigaspiCompteurs,
   types, regions, cuisines, villes, cacherouts,
 }: {
   prospects: ProspectRow[];
@@ -351,6 +418,8 @@ export function ProspectionClient({
   filtreVille: string | null;
   filtreCacherout: string | null;
   filtreContact: string | null;
+  filtreAntigaspi: string | null;
+  antigaspiCompteurs: { tgtg: number; phenix: number; une: number; aucune: number; inconnu: number };
   types: { valeur: string; nombre: number }[];
   regions: { valeur: string; nombre: number }[];
   cuisines: { valeur: string; nombre: number }[];
@@ -416,7 +485,7 @@ export function ProspectionClient({
           Rechercher
         </button>
         {(recherche || filtreStatut || filtreType || filtreRegion || filtreCuisine ||
-          filtreVille || filtreCacherout || filtreContact) && (
+          filtreVille || filtreCacherout || filtreContact || filtreAntigaspi) && (
           <button
             type="button"
             onClick={() => {
@@ -424,6 +493,7 @@ export function ProspectionClient({
               naviguer({
                 q: null, statut: null, type: null, region: null,
                 cuisine: null, ville: null, cacherout: null, contact: null,
+                antigaspi: null,
               });
             }}
             className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 cursor-pointer"
@@ -496,6 +566,20 @@ export function ProspectionClient({
           <option value="telephone">Avec téléphone</option>
           <option value="email">Avec e-mail</option>
           <option value="aucune">Sans coordonnées</option>
+        </select>
+
+        <select
+          value={filtreAntigaspi ?? ""}
+          onChange={(e) => naviguer({ antigaspi: e.target.value || null })}
+          aria-label="Filtrer par appli anti-gaspi"
+          className="px-3 py-2 rounded-xl border border-[#e2e5f0] bg-white text-sm text-gray-700 cursor-pointer"
+        >
+          <option value="">Anti-gaspi : tous</option>
+          <option value="tgtg">Sur TGTG ({antigaspiCompteurs.tgtg})</option>
+          <option value="phenix">Sur Phénix ({antigaspiCompteurs.phenix})</option>
+          <option value="une">Sur TGTG ou Phénix ({antigaspiCompteurs.une})</option>
+          <option value="aucune">Sur aucune appli ({antigaspiCompteurs.aucune})</option>
+          <option value="inconnu">Non vérifié ({antigaspiCompteurs.inconnu})</option>
         </select>
 
         <select

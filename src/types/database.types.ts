@@ -1607,6 +1607,7 @@ export type Database = {
         Row: {
           address: string | null
           admin_notes: string | null
+          antigaspi: string | null
           category: string | null
           city: string | null
           commerce_type: string | null
@@ -1637,6 +1638,7 @@ export type Database = {
         Insert: {
           address?: string | null
           admin_notes?: string | null
+          antigaspi?: string | null
           category?: string | null
           city?: string | null
           commerce_type?: string | null
@@ -1667,6 +1669,7 @@ export type Database = {
         Update: {
           address?: string | null
           admin_notes?: string | null
+          antigaspi?: string | null
           category?: string | null
           city?: string | null
           commerce_type?: string | null

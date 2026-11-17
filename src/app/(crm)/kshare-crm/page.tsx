@@ -47,10 +47,10 @@ export default async function ProspectionPage({
   searchParams: Promise<{
     statut?: string; q?: string; ville?: string; page?: string;
     type?: string; region?: string; cuisine?: string;
-    cacherout?: string; contact?: string;
+    cacherout?: string; contact?: string; antigaspi?: string;
   }>;
 }) {
-  const { statut, q, ville, page, type, region, cuisine, cacherout, contact } =
+  const { statut, q, ville, page, type, region, cuisine, cacherout, contact, antigaspi } =
     await searchParams;
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
   const supabase = createAdminClient();
@@ -72,7 +72,7 @@ export default async function ProspectionPage({
   let requete = supabase
     .from("prospects")
     .select(
-      "id, company_name, city, postal_code, address, phone, mobile, email, website, commerce_type, region, cuisine_type, sources, external_links, category, hashgakha, status, contacted_at, next_action_at, first_name, last_name, admin_notes",
+      "id, company_name, city, postal_code, address, phone, mobile, email, website, commerce_type, region, cuisine_type, sources, external_links, category, hashgakha, status, contacted_at, next_action_at, first_name, last_name, admin_notes, antigaspi",
       { count: "exact" },
     );
 
@@ -82,6 +82,21 @@ export default async function ProspectionPage({
   if (cuisine) requete = requete.eq("cuisine_type", cuisine);
   if (cacherout) requete = requete.eq("hashgakha", cacherout);
   if (ville) requete = requete.eq("city", ville);
+
+  // « Sur TGTG » inclut les commerces présents sur les deux applis, de même
+  // pour Phénix. « Non vérifié » et « sur aucune » restent distincts : l'ancien
+  // CRM les confondait.
+  if (antigaspi === "tgtg") {
+    requete = requete.in("antigaspi", ["tgtg", "tgtg_phenix"]);
+  } else if (antigaspi === "phenix") {
+    requete = requete.in("antigaspi", ["phenix", "tgtg_phenix"]);
+  } else if (antigaspi === "une") {
+    requete = requete.in("antigaspi", ["tgtg", "phenix", "tgtg_phenix"]);
+  } else if (antigaspi === "aucune") {
+    requete = requete.eq("antigaspi", "aucune");
+  } else if (antigaspi === "inconnu") {
+    requete = requete.is("antigaspi", null);
+  }
 
   // Filtrer sur ce qu'on peut faire du prospect, et non sur ce qu'il est :
   // 106 fiches n'ont aucune coordonnee et n'ont rien a faire dans une file
@@ -126,6 +141,17 @@ export default async function ProspectionPage({
   const villes = facette("ville");
   const cacherouts = facette("cacherout");
 
+  // Les compteurs du filtre anti-gaspi, cumulés comme le filtre les applique.
+  const ag = Object.fromEntries(facette("antigaspi").map((f) => [f.valeur, f.nombre]));
+  const nb = (k: string) => (ag[k] as number | undefined) ?? 0;
+  const antigaspiCompteurs = {
+    tgtg: nb("tgtg") + nb("tgtg_phenix"),
+    phenix: nb("phenix") + nb("tgtg_phenix"),
+    une: nb("tgtg") + nb("phenix") + nb("tgtg_phenix"),
+    aucune: nb("aucune"),
+    inconnu: nb("inconnu"),
+  };
+
   // Relances dues aujourd'hui ou en retard : la file du jour.
   const finJournee = new Date();
   finJournee.setHours(23, 59, 59, 999);
@@ -148,6 +174,8 @@ export default async function ProspectionPage({
       filtreVille={ville ?? null}
       filtreCacherout={cacherout ?? null}
       filtreContact={contact ?? null}
+      filtreAntigaspi={antigaspi ?? null}
+      antigaspiCompteurs={antigaspiCompteurs}
       types={types}
       regions={regions}
       cuisines={cuisines}

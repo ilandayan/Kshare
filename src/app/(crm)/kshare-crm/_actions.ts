@@ -40,6 +40,14 @@ export const STATUTS_PROSPECT = [
 export type StatutProspect = (typeof STATUTS_PROSPECT)[number];
 
 /**
+ * Applis anti-gaspi du prospect, alignées sur la contrainte de la table.
+ * Non exportée : un fichier « use server » n'expose que des fonctions.
+ */
+const ANTIGASPI = ["tgtg", "phenix", "tgtg_phenix", "aucune"] as const;
+
+export type AntiGaspi = (typeof ANTIGASPI)[number];
+
+/**
  * Change le statut d'un prospect et en garde la trace.
  *
  * Le changement est journalisé comme activité : sans historique, on ne sait
@@ -157,10 +165,20 @@ export async function modifierProspect(
     first_name?: string | null;
     last_name?: string | null;
     admin_notes?: string | null;
+    /** null remet la fiche à « non vérifié ». */
+    antigaspi?: AntiGaspi | null;
   },
 ): Promise<CrmActionResult> {
   const ctx = await requireAdmin();
   if (!ctx) return { success: false, error: "Non autorisé." };
+
+  if (
+    champs.antigaspi !== undefined &&
+    champs.antigaspi !== null &&
+    !ANTIGASPI.includes(champs.antigaspi)
+  ) {
+    return { success: false, error: "Valeur anti-gaspi inconnue." };
+  }
 
   const nettoyes = Object.fromEntries(
     Object.entries(champs).map(([k, v]) => [k, typeof v === "string" ? v.trim() || null : v]),
